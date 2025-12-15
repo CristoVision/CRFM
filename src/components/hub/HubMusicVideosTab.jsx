@@ -13,7 +13,7 @@ import React, { useState, useEffect, useCallback } from 'react';
     import MusicVideoUploadModal from './MusicVideoUploadModal';
     import EditMusicVideoModal from './EditMusicVideoModal';
     import ConfirmationDialog from '@/components/common/ConfirmationDialog';
-    import ContributionModal from '@/components/hub/contributionModal';
+    import ContributionModal from '@/components/hub/ContributionModal';
 
     const ITEMS_PER_PAGE = 8;
 
