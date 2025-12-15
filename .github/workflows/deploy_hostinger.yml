@@ -45,15 +45,18 @@ jobs:
 
       - name: Build metadata
         run: |
-          echo "VITE_BUILD_SHA=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+          sha_short="$(printf '%s' "$GITHUB_SHA" | cut -c1-7)"
+          echo "VITE_BUILD_SHA=$sha_short" >> "$GITHUB_ENV"
           echo "VITE_BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
-          if [ -n "${{ steps.semantic.outputs.new_release_version }}" ]; then
-            echo "VITE_APP_VERSION=${{ steps.semantic.outputs.new_release_version }}" >> "$GITHUB_ENV"
-          elif [ -n "${{ steps.semantic.outputs.last_release_version }}" ]; then
-            echo "VITE_APP_VERSION=${{ steps.semantic.outputs.last_release_version }}" >> "$GITHUB_ENV"
-          else
-            echo "VITE_APP_VERSION=$(node -p \"require('./package.json').version\")" >> "$GITHUB_ENV"
+
+          version="${{ steps.semantic.outputs.new_release_version }}"
+          if [ -z "$version" ]; then
+            version="${{ steps.semantic.outputs.last_release_version }}"
           fi
+          if [ -z "$version" ]; then
+            version="$(node -p "require('./package.json').version")"
+          fi
+          echo "VITE_APP_VERSION=$version" >> "$GITHUB_ENV"
 
       - name: Install
         run: npm ci
