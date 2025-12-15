@@ -9,6 +9,7 @@ import { toast } from '@/components/ui/use-toast';
 import { requestWalletAction } from '@/lib/walletActions';
 import { redeemCode } from '@/lib/billingActions';
 import { AlertCircle, CheckCircle, Loader2, ShieldCheck } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
 const ACTION_COPY = {
   add_funds: {
@@ -68,16 +69,45 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
     };
 
     setSubmitting(true);
-    const result = actionType === 'redeem_code'
-      ? await redeemCode({ code: formState.code, metadata })
-      : await requestWalletAction({
-        userId,
-        actionType,
-        amount: actionType === 'redeem_code' ? null : formState.amount,
-        code: actionType === 'redeem_code' ? formState.code : null,
-        metadata,
-        maxDebit: actionType === 'withdraw' ? balance : undefined,
-      });
+    let result;
+    if (actionType === 'add_funds' && formState.method === 'card') {
+      const amountCc = Number(formState.amount);
+      if (!Number.isFinite(amountCc) || amountCc <= 0) {
+        toast({ title: 'Invalid amount', description: 'Enter a positive amount.', variant: 'destructive' });
+        setSubmitting(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase.functions.invoke('stripe-create-checkout-session', {
+          body: {
+            amount_cc: Number(amountCc.toFixed(2)),
+            success_url: `${window.location.origin}/wallet?checkout=success`,
+            cancel_url: `${window.location.origin}/wallet?checkout=cancel`,
+          },
+        });
+
+        if (error) throw error;
+        if (!data?.url) throw new Error('Missing checkout URL.');
+
+        window.location.href = data.url;
+        setSubmitting(false);
+        return;
+      } catch (err) {
+        result = { success: false, error: err.message || 'Could not start Stripe checkout.' };
+      }
+    } else {
+      result = actionType === 'redeem_code'
+        ? await redeemCode({ code: formState.code, metadata })
+        : await requestWalletAction({
+          userId,
+          actionType,
+          amount: actionType === 'redeem_code' ? null : formState.amount,
+          code: actionType === 'redeem_code' ? formState.code : null,
+          metadata,
+          maxDebit: actionType === 'withdraw' ? balance : undefined,
+        });
+    }
     setSubmitting(false);
 
     if (result.success) {

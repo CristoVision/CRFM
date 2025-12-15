@@ -23,6 +23,27 @@ GitHub → `Settings → Secrets and variables → Actions`:
 - `VITE_SUPABASE_URL` (ej. `https://<project>.supabase.co`)
 - `VITE_SUPABASE_ANON_KEY` (si Supabase te da “publishable key”, úsala aquí)
 
+## Pagos (Stripe) — Edge Functions
+Este repo incluye Edge Functions de Supabase para iniciar Checkout y procesar el webhook de Stripe.
+
+### Archivos
+- `supabase/functions/stripe-create-checkout-session/index.ts`
+- `supabase/functions/stripe-webhook/index.ts`
+- SQL: `stripe_wallet.sql` (tablas + RPC idempotente)
+
+### Secrets (Supabase Edge Functions)
+Configura en tu proyecto Supabase (CLI: `supabase secrets set ...`):
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `CC_TO_USD` (default recomendado: `0.01`)
+
+### URLs
+- Webhook endpoint: `https://<project-ref>.supabase.co/functions/v1/stripe-webhook`
+- Checkout session: llamado desde la app vía `supabase.functions.invoke('stripe-create-checkout-session', ...)`
+
 ## Versiones visibles (Web)
 La web muestra la versión en la página `About` (parte inferior):
 - Archivo: `src/lib/buildInfo.js`

@@ -149,6 +149,24 @@ function WalletPage() {
       fetchTransactions(1, 'recent', initialFilters);
     }
   }, [user, fetchWalletBalance, fetchTransactions]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const checkout = params.get('checkout');
+    if (!checkout) return;
+
+    if (checkout === 'success') {
+      toast({ title: 'Payment received', description: 'Your top-up will appear once confirmed.', className: 'bg-green-600 text-white' });
+      fetchWalletBalance();
+      fetchTransactions(1, viewMode, activeFilters);
+    } else if (checkout === 'cancel') {
+      toast({ title: 'Checkout canceled', description: 'No payment was completed.' });
+    }
+
+    params.delete('checkout');
+    const next = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+    window.history.replaceState({}, '', next);
+  }, [activeFilters, fetchTransactions, fetchWalletBalance, user, viewMode]);
   const handleApplyFilters = newFilters => {
     setActiveFilters(newFilters);
     setViewMode('all'); // Switch to 'all' mode when filters are applied
