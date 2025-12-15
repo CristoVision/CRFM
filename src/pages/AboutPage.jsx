@@ -5,6 +5,7 @@ import RequestCreatorTagsTab from '@/components/about/RequestCreatorTagsTab';
 import PublicAppsDisplay from '@/components/about/PublicAppsDisplay';
 import PublicGamesDisplay from '@/components/about/PublicGamesDisplay';
 import SupportContactPanel from '@/components/about/SupportContactPanel';
+import { buildInfo, formatBuildLabel } from '@/lib/buildInfo';
 function TextContent({
   title,
   children,
@@ -120,6 +121,10 @@ function AboutPage() {
                 <RequestCreatorTagsTab />
               </TabsContent>
             </Tabs>
+            <div className="mt-6 text-center text-xs text-muted-foreground">
+              {formatBuildLabel(buildInfo)}
+              {buildInfo.time ? ` · ${buildInfo.time}` : ''}
+            </div>
           </div>
         </div>;
 }
