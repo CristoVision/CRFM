@@ -344,18 +344,20 @@ import MobileSyncControls from '@/components/lrcEditorComponents/MobileSyncContr
         <>
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
           <DialogContent className="max-w-4xl xl:max-w-5xl w-[95vw] h-[90vh] glass-effect-light text-white flex flex-col p-0">
-            <DialogHeader className="p-4 border-b border-white/10 flex flex-row justify-between items-center space-x-2">
-              <DialogTitle className="flex items-center text-lg sm:text-xl">
+            <DialogHeader className="p-4 border-b border-white/10 flex flex-row justify-between items-center space-x-4">
+              <DialogTitle className="flex items-center text-lg sm:text-xl flex-shrink overflow-hidden">
                 <Edit2 className="w-5 h-5 mr-2 text-yellow-400 flex-shrink-0" />
-                <span className="truncate max-w-[150px] xs:max-w-[200px] sm:max-w-xs md:max-w-sm lg:max-w-md">LRC Editor: {track.title}</span>
+                <span className="truncate max-w-[calc(100%-80px)]">{track.title}</span>
               </DialogTitle>
-              <div className="flex items-center space-x-2 ml-auto">
+              <div className="flex flex-shrink-0 items-center gap-2 ml-auto">
                 <Button onClick={handleNextTrack} variant="outline" size="sm" className="golden-gradient text-black text-xs sm:text-sm" disabled={isLastTrack || isSaving}>
                   {isSaving && nextAction === handleNextTrack ? <Loader2 className="w-4 h-4 mr-1 sm:mr-2 animate-spin" /> : null}
                   Next Track
                   {!isSaving && <ChevronRight className="w-4 h-4 ml-1 sm:ml-1" />}
                 </Button>
-                
+                <Button size="icon" variant="ghost" onClick={handleCloseAttempt} className="text-gray-400 hover:text-yellow-400">
+                  <CloseIcon className="w-5 h-5" />
+                </Button>
               </div>
             </DialogHeader>
 

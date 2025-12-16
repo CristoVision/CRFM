@@ -179,10 +179,10 @@ const HubPage = () => {
       
       <Suspense fallback={<LoadingSpinner />}>
         {isCreateTrackModalOpen && <CreateTrackModal isOpen={isCreateTrackModalOpen} onOpenChange={() => setIsCreateTrackModalOpen(false)} onTrackCreated={() => { /* refresh logic if needed */ }} />}
-        {isCreateAlbumModalOpen && <CreateAlbumModal isOpen={isCreateAlbumModalOpen} onClose={() => setIsCreateAlbumModalOpen(false)} onAlbumCreated={() => { /* refresh logic */ }} />}
-        {isCreatePlaylistModalOpen && <CreatePlaylistModal isOpen={isCreatePlaylistModalOpen} onClose={() => setIsCreatePlaylistModalOpen(false)} onPlaylistCreated={() => { /* refresh logic */ }} />}
+        {isCreateAlbumModalOpen && <CreateAlbumModal isOpen={isCreateAlbumModalOpen} onOpenChange={() => setIsCreateAlbumModalOpen(false)} onAlbumCreated={() => { /* refresh logic */ }} />}
+        {isCreatePlaylistModalOpen && <CreatePlaylistModal isOpen={isCreatePlaylistModalOpen} onOpenChange={() => setIsCreatePlaylistModalOpen(false)} onPlaylistCreated={() => { /* refresh logic */ }} />}
         {isUploadVideoModalOpen && <MusicVideoUploadModal isOpen={isUploadVideoModalOpen} onOpenChange={setIsUploadVideoModalOpen} onVideoUploaded={() => { /* refresh logic */ }} />}
-        {isLrcEditorModalOpen && <LrcEditorModal isOpen={isLrcEditorModalOpen} onClose={() => setIsLrcEditorModalOpen(false)} track={editingTrackForLyrics} onLyricsUpdated={() => { /* refresh logic */ }} />}
+        {isLrcEditorModalOpen && <LrcEditorModal isOpen={isLrcEditorModalOpen} onOpenChange={() => setIsLrcEditorModalOpen(false)} track={editingTrackForLyrics} onLyricsUpdated={() => { /* refresh logic */ }} />}
       </Suspense>
     </div>
   );
