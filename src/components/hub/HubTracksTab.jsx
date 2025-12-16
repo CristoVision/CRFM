@@ -14,7 +14,7 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { motion, AnimatePresence } from 'framer-motion';
     import { useLocation, useNavigate } from 'react-router-dom';
 
-    const HubTracksTab = () => {
+    const HubTracksTab = ({ uploadGate }) => {
       const { user } = useAuth();
       const location = useLocation();
       const navigate = useNavigate();
@@ -71,6 +71,10 @@ import React, { useState, useEffect, useCallback } from 'react';
       }, [location.state, navigate, location.pathname]);
       
       const handleUploadTrack = () => {
+        if (uploadGate?.guard) {
+          uploadGate.guard('track', () => setIsCreateModalOpen(true));
+          return;
+        }
         setIsCreateModalOpen(true);
       };
       

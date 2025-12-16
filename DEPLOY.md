@@ -33,6 +33,7 @@ Este repo incluye Edge Functions de Supabase para iniciar Checkout y procesar el
 - `supabase/functions/stripe-webhook/index.ts`
 - SQL: `stripe_wallet.sql` (tablas + RPC idempotente)
 - SQL: `stripe_creator_billing.sql` (suscripciones + fees + créditos)
+- SQL: `stripe_upload_enforcement.sql` (enforcement server-side + consumo de créditos)
 
 ### Secrets (Supabase Edge Functions)
 Configura en tu proyecto Supabase (CLI: `supabase secrets set ...`):

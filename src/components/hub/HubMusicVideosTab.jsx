@@ -17,7 +17,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
     const ITEMS_PER_PAGE = 8;
 
-    const HubMusicVideosTab = () => {
+    const HubMusicVideosTab = ({ uploadGate }) => {
       const { user } = useAuth();
       const [videos, setVideos] = useState([]);
       const [loading, setLoading] = useState(true);
@@ -98,6 +98,14 @@ import React, { useState, useEffect, useCallback } from 'react';
           setPage(nextPage);
           fetchVideos(nextPage, searchQuery);
         }
+      };
+
+      const handleOpenUpload = () => {
+        if (uploadGate?.guard) {
+          uploadGate.guard('video', () => setIsUploadModalOpen(true));
+          return;
+        }
+        setIsUploadModalOpen(true);
       };
 
       const handleVideoUploaded = (newVideo) => {
@@ -184,9 +192,9 @@ import React, { useState, useEffect, useCallback } from 'react';
             <div className="flex items-center gap-2">
               <Button variant={viewMode === 'grid' ? 'default' : 'outline'} onClick={() => setViewMode('grid')} className={`${viewMode === 'grid' ? 'golden-gradient text-black' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-yellow-300'}`} size="sm"><LayoutGrid className="w-4 h-4"/></Button>
               <Button variant={viewMode === 'list' ? 'default' : 'outline'} onClick={() => setViewMode('list')} className={`${viewMode === 'list' ? 'golden-gradient text-black' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-yellow-300'}`} size="sm"><List className="w-4 h-4"/></Button>
-              <Button onClick={() => setIsUploadModalOpen(true)} className="golden-gradient text-black font-semibold hover:opacity-90 transition-opacity proximity-glow-button" size="sm">
-                <PlusCircle className="w-4 h-4 mr-2" />Upload Video
-              </Button>
+	              <Button onClick={handleOpenUpload} className="golden-gradient text-black font-semibold hover:opacity-90 transition-opacity proximity-glow-button" size="sm">
+	                <PlusCircle className="w-4 h-4 mr-2" />Upload Video
+	              </Button>
             </div>
           </div>
 
@@ -197,11 +205,11 @@ import React, { useState, useEffect, useCallback } from 'react';
               <p className="text-gray-400 text-sm mb-6">
                  {searchQuery ? "Try adjusting your search query." : "You haven't uploaded any music videos yet."}
               </p>
-              {!searchQuery &&
-                <Button onClick={() => setIsUploadModalOpen(true)} className="golden-gradient text-black font-semibold hover:opacity-90 transition-opacity">
-                  <PlusCircle className="w-5 h-5 mr-2" />Upload Your First Video
-                </Button>
-              }
+	              {!searchQuery &&
+	                <Button onClick={handleOpenUpload} className="golden-gradient text-black font-semibold hover:opacity-90 transition-opacity">
+	                  <PlusCircle className="w-5 h-5 mr-2" />Upload Your First Video
+	                </Button>
+	              }
             </div>
           )}
 

@@ -13,7 +13,7 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { Input } from '@/components/ui/input';
     import { motion, AnimatePresence } from 'framer-motion';
 
-    const HubAlbumsTab = () => {
+    const HubAlbumsTab = ({ uploadGate }) => {
       const { user } = useAuth();
       const [albums, setAlbums] = useState([]);
       const [loading, setLoading] = useState(true);
@@ -60,6 +60,10 @@ import React, { useState, useEffect, useCallback } from 'react';
       }, [fetchAlbums]);
       
       const handleUploadAlbum = () => {
+        if (uploadGate?.guard) {
+          uploadGate.guard('album', () => setIsCreateModalOpen(true));
+          return;
+        }
         setIsCreateModalOpen(true);
       };
       

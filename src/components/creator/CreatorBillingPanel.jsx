@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from '@/components/ui/use-toast';
@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Loader2, CreditCard, Sparkles, Receipt, AlertTriangle } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { loadStripe } from '@stripe/stripe-js';
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from '@stripe/react-stripe-js';
@@ -18,6 +19,9 @@ const safeString = (value) => (value == null ? '' : String(value));
 
 const CreatorBillingPanel = () => {
   const { user, profile, refreshUserProfile } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const autoCheckoutStartedRef = useRef(false);
 
   const [loadingCredits, setLoadingCredits] = useState(false);
   const [credits, setCredits] = useState({ track: 0, album: 0 });
@@ -48,6 +52,11 @@ const CreatorBillingPanel = () => {
         if (row.fee_type === 'album') next.album = Number(row.credits) || 0;
       });
       setCredits(next);
+      try {
+        window.dispatchEvent(new CustomEvent('crfm:creator_credits_updated', { detail: next }));
+      } catch {
+        // ignore
+      }
     } catch {
       setCredits({ track: 0, album: 0 });
     } finally {
@@ -107,6 +116,37 @@ const CreatorBillingPanel = () => {
     },
     [user?.id, canUseStripe]
   );
+
+  useEffect(() => {
+    if (!user?.id) return;
+    if (autoCheckoutStartedRef.current) return;
+
+    const params = new URLSearchParams(location.search || '');
+    const billingAction = params.get('billing_action');
+    const feeType = params.get('fee_type');
+
+    if (billingAction !== 'upload_fee') return;
+    if (feeType !== 'track' && feeType !== 'album') return;
+
+    autoCheckoutStartedRef.current = true;
+
+    params.delete('billing_action');
+    params.delete('fee_type');
+
+    navigate(
+      {
+        pathname: location.pathname,
+        search: params.toString() ? `?${params.toString()}` : '',
+      },
+      { replace: true }
+    );
+
+    startEmbeddedCheckout({
+      kind: 'upload_fee',
+      payload: { fee_type: feeType },
+      label: feeType === 'track' ? 'Track Upload Fee' : 'Album Upload Fee',
+    });
+  }, [location.pathname, location.search, navigate, startEmbeddedCheckout, user?.id]);
 
   const handleCloseCheckout = () => {
     if (checkoutLoading) return;

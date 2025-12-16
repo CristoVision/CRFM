@@ -12,7 +12,7 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { motion, AnimatePresence } from 'framer-motion';
     import { useNavigate } from 'react-router-dom';
 
-    const HubPlaylistsTab = () => {
+    const HubPlaylistsTab = ({ uploadGate }) => {
       const { user } = useAuth();
       const navigate = useNavigate();
       const [playlists, setPlaylists] = useState([]);
@@ -53,8 +53,17 @@ import React, { useState, useEffect, useCallback } from 'react';
       }, [fetchPlaylists]);
 
       const handleCreatePlaylist = () => {
-        setSelectedPlaylist(null); // Ensure no playlist is selected for create
-        setIsCreateModalOpen(true);
+        const open = () => {
+          setSelectedPlaylist(null); // Ensure no playlist is selected for create
+          setIsCreateModalOpen(true);
+        };
+
+        if (uploadGate?.guard) {
+          uploadGate.guard('playlist', open);
+          return;
+        }
+
+        open();
       };
       
       const handleEdit = (playlist) => {
