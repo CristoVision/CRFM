@@ -8,13 +8,15 @@ import { toast } from '@/components/ui/use-toast';
 import { Loader2, PlaySquare, RefreshCw, UploadCloud, X } from 'lucide-react';
 
 const ACCEPTED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'image/gif'];
+const MAX_VIDEO_COVER_ART_SECONDS = 20;
+const MAX_VIDEO_COVER_ART_TOLERANCE_SECONDS = 0.5;
 
 const VideoCoverArtSelector = ({
   userId,
   value,
   onChange,
-  label = 'Video cover art (5 seconds)',
-  description = 'Upload a short looping video cover art or pick one you have already uploaded. Stored in bucket: videocoverart.',
+  label = `Video cover art (up to ${MAX_VIDEO_COVER_ART_SECONDS}s)`,
+  description = `Upload a short looping video cover art (up to ${MAX_VIDEO_COVER_ART_SECONDS}s) or pick one you have already uploaded. Stored in bucket: videocoverart.`,
   disabled = false,
   note,
 }) => {
@@ -68,8 +70,12 @@ const VideoCoverArtSelector = ({
       video.preload = 'metadata';
       video.onloadedmetadata = () => {
         URL.revokeObjectURL(url);
-        if (video.duration && video.duration > 5.25) {
-          toast({ title: 'Video too long', description: 'Please upload a clip of 5 seconds or less.', variant: 'destructive' });
+        if (video.duration && video.duration > MAX_VIDEO_COVER_ART_SECONDS + MAX_VIDEO_COVER_ART_TOLERANCE_SECONDS) {
+          toast({
+            title: 'Video too long',
+            description: `Please upload a clip of ${MAX_VIDEO_COVER_ART_SECONDS}s or less.`,
+            variant: 'destructive',
+          });
           resolve(false);
         } else {
           resolve(true);
@@ -99,7 +105,7 @@ const VideoCoverArtSelector = ({
     try {
       const url = await uploadFileToSupabase(file, 'videocoverart', userId, true);
       onChange?.(url);
-      toast({ title: 'Video cover art uploaded', description: '5-second loop ready to use.', variant: 'success' });
+      toast({ title: 'Video cover art uploaded', description: 'Loop ready to use.', variant: 'success' });
       fetchExistingVideos();
     } catch (error) {
       console.error('Error uploading video cover art', error);
@@ -165,7 +171,7 @@ const VideoCoverArtSelector = ({
           <p className="text-xs text-gray-400">{existingVideos.length} found</p>
         </div>
         {existingVideos.length === 0 ? (
-          <p className="text-xs text-gray-500 border border-dashed border-white/10 rounded-md p-3">No uploads yet. Add a 5-second loop to get started.</p>
+          <p className="text-xs text-gray-500 border border-dashed border-white/10 rounded-md p-3">No uploads yet. Add a short loop to get started.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-auto pr-1 custom-scrollbar">
             {existingVideos.map((item) => (

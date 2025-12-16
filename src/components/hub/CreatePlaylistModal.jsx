@@ -176,7 +176,7 @@ import { ListMusic, PlusCircle, Loader2, Image as ImageIcon } from 'lucide-react
                   value={formData.video_cover_art_url}
                   onChange={handleVideoCoverArtChange}
                   disabled={isSubmitting}
-                  label="Video Cover Art (5s loop for playlist)"
+                  label="Video Cover Art (up to 20s loop for playlist)"
                   note="If set, tracks in this playlist will show this video cover art when they do not have their own."
                 />
               </div>

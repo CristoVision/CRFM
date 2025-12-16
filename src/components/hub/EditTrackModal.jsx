@@ -221,7 +221,7 @@ import VideoCoverArtSelector from '@/components/formElements/VideoCoverArtSelect
                   value={formData.video_cover_art_url}
                   onChange={handleVideoCoverArtChange}
                   disabled={isSubmitting}
-                  label="Video Cover Art (5s loop, optional)"
+                  label="Video Cover Art (up to 20s loop, optional)"
                   note="If empty, the album/playlist or static cover art will be shown."
                 />
               </div>

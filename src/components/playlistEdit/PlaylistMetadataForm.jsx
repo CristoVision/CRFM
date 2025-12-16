@@ -60,7 +60,7 @@ const PlaylistMetadataForm = ({ playlistData, onInputChange, onFileChange, cover
       value={videoCoverArtUrl}
       onChange={onVideoCoverArtChange}
       disabled={isSubmitting}
-      label="Video Cover Art (5s loop)"
+      label="Video Cover Art (up to 20s loop)"
       note="If set, this loop becomes the primary cover art for this playlist when tracks lack their own video cover art."
     />
   </div>

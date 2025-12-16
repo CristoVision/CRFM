@@ -82,7 +82,7 @@ const AlbumFormFields = ({
           onChange={onAlbumVideoCoverArtChange}
           disabled={isSubmitting}
           note="If set, this loop becomes the primary cover art. Tracks without their own video will inherit it."
-          label="Album Video Cover Art (5s loop, optional)"
+          label="Album Video Cover Art (up to 20s loop, optional)"
         />
         <div className="flex items-center space-x-2">
           <Switch

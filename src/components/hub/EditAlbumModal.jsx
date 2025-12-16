@@ -388,7 +388,7 @@ const EditAlbumModal = ({ isOpen, onOpenChange, album, onAlbumUpdated }) => {
               value={formData.video_cover_art_url}
               onChange={handleVideoCoverArtChange}
               disabled={isSubmitting}
-              label="Album Video Cover Art (5s loop, optional)"
+              label="Album Video Cover Art (up to 20s loop, optional)"
               note="When present, this becomes the primary cover art and is inherited by tracks unless they override it."
             />
           </div>

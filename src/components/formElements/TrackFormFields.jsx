@@ -84,7 +84,7 @@ const TrackFormFields = ({
           onChange={(url) => onVideoCoverArtChange?.(url)}
           disabled={isSubmitting}
           note={parentVideoCoverArtUrl ? 'If empty, the album/playlist video cover art will be used automatically.' : undefined}
-          label="Video Cover Art (5s loop, optional)"
+          label="Video Cover Art (up to 20s loop, optional)"
         />
       </div>
 
