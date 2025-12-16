@@ -355,9 +355,7 @@ import MobileSyncControls from '@/components/lrcEditorComponents/MobileSyncContr
                   Next Track
                   {!isSaving && <ChevronRight className="w-4 h-4 ml-1 sm:ml-1" />}
                 </Button>
-                <Button size="icon" variant="ghost" onClick={handleCloseAttempt} className="text-gray-400 hover:text-yellow-400">
-                  <CloseIcon className="w-5 h-5" />
-                </Button>
+                
               </div>
             </DialogHeader>
 

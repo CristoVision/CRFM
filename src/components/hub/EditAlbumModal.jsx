@@ -410,9 +410,7 @@ const EditAlbumModal = ({ isOpen, onOpenChange, album, onAlbumUpdated }) => {
           </div>
 
           <DialogFooter className="sm:justify-end pt-6">
-            <DialogClose asChild>
-              <Button type="button" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">Cancel</Button>
-            </DialogClose>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="bg-white/10 border-white/20 text-white hover:bg-white/20">Cancel</Button>
             <Button type="submit" disabled={isSubmitting} className="golden-gradient text-black font-semibold hover:opacity-90 transition-opacity proximity-glow-button">
               {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               Save Changes
