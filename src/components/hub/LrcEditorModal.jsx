@@ -343,7 +343,7 @@ import MobileSyncControls from '@/components/lrcEditorComponents/MobileSyncContr
       return (
         <>
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-          <DialogContent className="max-w-4xl xl:max-w-5xl w-[95vw] h-[90vh] glass-effect-light text-white flex flex-col p-0">
+          <DialogContent showClose={false} className="max-w-4xl xl:max-w-5xl w-[95vw] h-[90vh] glass-effect-light text-white flex flex-col p-0">
             <DialogHeader className="p-4 border-b border-white/10 flex flex-row justify-between items-center space-x-4">
               <DialogTitle className="flex items-center text-lg sm:text-xl flex-shrink overflow-hidden">
                 <Edit2 className="w-5 h-5 mr-2 text-yellow-400 flex-shrink-0" />
