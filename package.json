@@ -46,7 +46,8 @@
     "react-router-dom": "^6.16.0",
     "recharts": "^2.10.3",
     "tailwind-merge": "^1.14.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "yaml": "^2.8.2"
   },
   "devDependencies": {
     "@babel/generator": "^7.27.0",
