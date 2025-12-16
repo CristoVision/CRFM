@@ -178,7 +178,7 @@ const HubPage = () => {
       </Tabs>
       
       <Suspense fallback={<LoadingSpinner />}>
-        {isCreateTrackModalOpen && <CreateTrackModal isOpen={isCreateTrackModalOpen} onClose={() => setIsCreateTrackModalOpen(false)} onTrackCreated={() => { /* refresh logic if needed */ }} />}
+        {isCreateTrackModalOpen && <CreateTrackModal isOpen={isCreateTrackModalOpen} onOpenChange={() => setIsCreateTrackModalOpen(false)} onTrackCreated={() => { /* refresh logic if needed */ }} />}
         {isCreateAlbumModalOpen && <CreateAlbumModal isOpen={isCreateAlbumModalOpen} onClose={() => setIsCreateAlbumModalOpen(false)} onAlbumCreated={() => { /* refresh logic */ }} />}
         {isCreatePlaylistModalOpen && <CreatePlaylistModal isOpen={isCreatePlaylistModalOpen} onClose={() => setIsCreatePlaylistModalOpen(false)} onPlaylistCreated={() => { /* refresh logic */ }} />}
         {isUploadVideoModalOpen && <MusicVideoUploadModal isOpen={isUploadVideoModalOpen} onOpenChange={setIsUploadVideoModalOpen} onVideoUploaded={() => { /* refresh logic */ }} />}

@@ -2,8 +2,9 @@ import Stripe from 'https://esm.sh/stripe@17.7.0?target=deno';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0?target=deno';
 import { corsHeaders, handleCors } from '../_shared/cors.ts';
 
+type FeeType = 'track' | 'album';
 type Body = {
-  amount_cc: number;
+  fee_type: FeeType;
   success_url?: string;
   cancel_url?: string;
 };
@@ -25,6 +26,11 @@ function getBearerToken(req: Request) {
   return match?.[1] || null;
 }
 
+function resolvePriceId(feeType: FeeType) {
+  if (feeType === 'track') return Deno.env.get('STRIPE_PRICE_UPLOAD_TRACK');
+  return Deno.env.get('STRIPE_PRICE_UPLOAD_ALBUM');
+}
+
 Deno.serve(async (req) => {
   const cors = handleCors(req);
   if (cors) return cors;
@@ -33,7 +39,6 @@ Deno.serve(async (req) => {
   const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
-  const ccToUsd = Number(Deno.env.get('CC_TO_USD') || '0.01');
 
   if (!stripeSecretKey) return json({ error: 'Missing STRIPE_SECRET_KEY' }, { status: 500 });
   if (!supabaseUrl || !supabaseAnonKey) {
@@ -50,14 +55,14 @@ Deno.serve(async (req) => {
     return json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const amountCc = Number(body.amount_cc);
-  if (!Number.isFinite(amountCc) || amountCc <= 0) {
-    return json({ error: 'amount_cc must be > 0' }, { status: 400 });
-  }
+  const feeType = body.fee_type;
+  if (!feeType) return json({ error: 'Missing fee_type' }, { status: 400 });
+  const priceId = resolvePriceId(feeType);
+  if (!priceId) return json({ error: 'Missing price configuration for fee_type' }, { status: 500 });
 
   const origin = req.headers.get('origin') || 'https://crfministry.com';
-  const successUrl = body.success_url || `${origin}/wallet?checkout=success`;
-  const cancelUrl = body.cancel_url || `${origin}/wallet?checkout=cancel`;
+  const successUrl = body.success_url || `${origin}/hub?uploadfee=success`;
+  const cancelUrl = body.cancel_url || `${origin}/hub?uploadfee=cancel`;
 
   const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     global: { headers: { Authorization: `Bearer ${token}` } }
@@ -70,39 +75,20 @@ Deno.serve(async (req) => {
   if (userError || !user) return json({ error: 'Unauthorized' }, { status: 401 });
 
   const stripe = new Stripe(stripeSecretKey, { apiVersion: '2024-06-20' });
-  const usd = amountCc * ccToUsd;
-  const unitAmount = Math.round(usd * 100);
-
-  if (unitAmount < 50) {
-    return json({ error: 'Amount too small for card processing.' }, { status: 400 });
-  }
 
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
     success_url: successUrl,
     cancel_url: cancelUrl,
-    allow_promotion_codes: false,
     client_reference_id: user.id,
     metadata: {
+      kind: 'upload_fee',
       user_id: user.id,
-      amount_cc: amountCc.toFixed(2),
-      cc_to_usd: ccToUsd.toString()
+      fee_type: feeType,
+      price_id: priceId
     },
-    line_items: [
-      {
-        quantity: 1,
-        price_data: {
-          currency: 'usd',
-          unit_amount: unitAmount,
-          product_data: {
-            name: 'CrossCoins top-up',
-            description: `${amountCc.toFixed(2)} CC`
-          }
-        }
-      }
-    ]
+    line_items: [{ price: priceId, quantity: 1 }]
   });
 
   return json({ url: session.url, id: session.id });
 });
-

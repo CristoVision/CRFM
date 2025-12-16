@@ -43,6 +43,42 @@ Deno.serve(async (req) => {
     return json({ error: `Invalid signature: ${err?.message || String(err)}` }, { status: 400 });
   }
 
+  if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
+    const subscription = event.data.object as Stripe.Subscription;
+    const subscriptionId = subscription.id;
+    const customerId = typeof subscription.customer === 'string' ? subscription.customer : null;
+    const status = subscription.status || 'canceled';
+
+    if (!customerId) return json({ error: 'Missing subscription customer' }, { status: 400 });
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const { data: subRow, error: subLookupError } = await supabase
+      .from('stripe_creator_subscriptions')
+      .select('user_id')
+      .eq('subscription_id', subscriptionId)
+      .single();
+
+    if (subLookupError || !subRow?.user_id) {
+      return json({ received: true, ignored: true, reason: 'unknown_subscription' });
+    }
+
+    const { data, error } = await supabase.rpc('rpc_apply_stripe_creator_subscription', {
+      p_user_id: subRow.user_id,
+      p_stripe_event_id: event.id,
+      p_subscription_id: subscriptionId,
+      p_customer_id: customerId,
+      p_price_id: null,
+      p_status: status
+    });
+
+    if (error) {
+      if (error.code === '23505') return json({ received: true, deduped: true });
+      return json({ error: error.message }, { status: 500 });
+    }
+
+    return json({ received: true, applied: true, kind: 'subscription_status', data });
+  }
+
   if (event.type !== 'checkout.session.completed') {
     return json({ received: true, ignored: true });
   }
@@ -52,31 +88,85 @@ Deno.serve(async (req) => {
     return json({ received: true, ignored: true, reason: 'payment_status_not_paid' });
   }
 
+  const kind = session.metadata?.kind || 'topup';
   const userId = session.metadata?.user_id;
-  const amountCcRaw = session.metadata?.amount_cc;
-  const paymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : null;
 
-  const amountCc = Number(amountCcRaw);
-  if (!userId || !Number.isFinite(amountCc) || amountCc <= 0 || !paymentIntentId) {
-    return json({ error: 'Missing metadata for top-up' }, { status: 400 });
-  }
+  if (!userId) return json({ error: 'Missing user_id metadata' }, { status: 400 });
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  const { data, error } = await supabase.rpc('rpc_apply_stripe_topup', {
-    p_user_id: userId,
-    p_amount_cc: Number(amountCc.toFixed(2)),
-    p_stripe_event_id: event.id,
-    p_payment_intent_id: paymentIntentId,
-    p_checkout_session_id: session.id
-  });
+  if (kind === 'topup') {
+    const amountCcRaw = session.metadata?.amount_cc;
+    const paymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : null;
+    const amountCc = Number(amountCcRaw);
+    if (!Number.isFinite(amountCc) || amountCc <= 0 || !paymentIntentId) {
+      return json({ error: 'Missing metadata for top-up' }, { status: 400 });
+    }
 
-  if (error) {
-    // Make webhook retries safe by treating idempotency conflicts as success.
-    if (error.code === '23505') return json({ received: true, deduped: true });
-    return json({ error: error.message }, { status: 500 });
+    const { data, error } = await supabase.rpc('rpc_apply_stripe_topup', {
+      p_user_id: userId,
+      p_amount_cc: Number(amountCc.toFixed(2)),
+      p_stripe_event_id: event.id,
+      p_payment_intent_id: paymentIntentId,
+      p_checkout_session_id: session.id
+    });
+
+    if (error) {
+      if (error.code === '23505') return json({ received: true, deduped: true });
+      return json({ error: error.message }, { status: 500 });
+    }
+
+    return json({ received: true, applied: true, kind: 'topup', data });
   }
 
-  return json({ received: true, applied: true, data });
-});
+  if (kind === 'creator_subscription') {
+    const subscriptionId = typeof session.subscription === 'string' ? session.subscription : null;
+    const customerId = typeof session.customer === 'string' ? session.customer : null;
+    const priceId = session.metadata?.price_id || null;
 
+    if (!subscriptionId || !customerId) {
+      return json({ error: 'Missing subscription/customer on session' }, { status: 400 });
+    }
+
+    const { data, error } = await supabase.rpc('rpc_apply_stripe_creator_subscription', {
+      p_user_id: userId,
+      p_stripe_event_id: event.id,
+      p_subscription_id: subscriptionId,
+      p_customer_id: customerId,
+      p_price_id: priceId,
+      p_status: 'active'
+    });
+
+    if (error) {
+      if (error.code === '23505') return json({ received: true, deduped: true });
+      return json({ error: error.message }, { status: 500 });
+    }
+
+    return json({ received: true, applied: true, kind: 'creator_subscription', data });
+  }
+
+  if (kind === 'upload_fee') {
+    const feeType = session.metadata?.fee_type;
+    const paymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : null;
+    if (!paymentIntentId || (feeType !== 'track' && feeType !== 'album')) {
+      return json({ error: 'Missing fee metadata' }, { status: 400 });
+    }
+
+    const { data, error } = await supabase.rpc('rpc_apply_stripe_upload_fee', {
+      p_user_id: userId,
+      p_fee_type: feeType,
+      p_stripe_event_id: event.id,
+      p_payment_intent_id: paymentIntentId,
+      p_checkout_session_id: session.id
+    });
+
+    if (error) {
+      if (error.code === '23505') return json({ received: true, deduped: true });
+      return json({ error: error.message }, { status: 500 });
+    }
+
+    return json({ received: true, applied: true, kind: 'upload_fee', data });
+  }
+
+  return json({ received: true, ignored: true, kind });
+});

@@ -28,8 +28,11 @@ Este repo incluye Edge Functions de Supabase para iniciar Checkout y procesar el
 
 ### Archivos
 - `supabase/functions/stripe-create-checkout-session/index.ts`
+- `supabase/functions/stripe-create-subscription-checkout-session/index.ts`
+- `supabase/functions/stripe-create-upload-fee-checkout-session/index.ts`
 - `supabase/functions/stripe-webhook/index.ts`
 - SQL: `stripe_wallet.sql` (tablas + RPC idempotente)
+- SQL: `stripe_creator_billing.sql` (suscripciones + fees + créditos)
 
 ### Secrets (Supabase Edge Functions)
 Configura en tu proyecto Supabase (CLI: `supabase secrets set ...`):
@@ -39,10 +42,21 @@ Configura en tu proyecto Supabase (CLI: `supabase secrets set ...`):
 - `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `CC_TO_USD` (default recomendado: `0.01`)
+- `MIN_TOPUP_USD` (default recomendado: `5`)
+- `MAX_TOPUP_USD` (default recomendado: `100`)
+
+### Price IDs (Stripe)
+- `STRIPE_PRICE_UNLIMITED_MONTHLY`
+- `STRIPE_PRICE_UNLIMITED_6MO`
+- `STRIPE_PRICE_UNLIMITED_YEARLY`
+- `STRIPE_PRICE_UPLOAD_TRACK`
+- `STRIPE_PRICE_UPLOAD_ALBUM`
 
 ### URLs
 - Webhook endpoint: `https://<project-ref>.supabase.co/functions/v1/stripe-webhook`
 - Checkout session: llamado desde la app vía `supabase.functions.invoke('stripe-create-checkout-session', ...)`
+  - Suscripción: `supabase.functions.invoke('stripe-create-subscription-checkout-session', { body: { plan: 'monthly'|'six_months'|'yearly' } })`
+  - Upload fee: `supabase.functions.invoke('stripe-create-upload-fee-checkout-session', { body: { fee_type: 'track'|'album' } })`
 
 ## Versiones visibles (Web)
 La web muestra la versión en la página `About` (parte inferior):
