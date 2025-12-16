@@ -11,7 +11,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from '@stripe/react-stripe-js';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : null;
 
 const ACTIVE_SUB_STATUSES = new Set(['active', 'trialing']);
 
@@ -34,7 +35,7 @@ const CreatorBillingPanel = () => {
   const subscriptionStatus = safeString(profile?.stripe_subscription_status || '').toLowerCase();
   const hasActiveSubscription = useMemo(() => ACTIVE_SUB_STATUSES.has(subscriptionStatus), [subscriptionStatus]);
 
-  const canUseStripe = !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+  const canUseStripe = !!STRIPE_PUBLISHABLE_KEY;
 
   const loadCredits = useCallback(async () => {
     if (!user?.id) return;
@@ -341,9 +342,15 @@ const CreatorBillingPanel = () => {
 
           <div className="flex-1 overflow-auto rounded-lg border border-white/10 bg-black/20 p-3">
             {checkoutClientSecret ? (
-              <EmbeddedCheckoutProvider stripe={stripePromise} options={{ clientSecret: checkoutClientSecret }}>
-                <EmbeddedCheckout />
-              </EmbeddedCheckoutProvider>
+              stripePromise ? (
+                <EmbeddedCheckoutProvider stripe={stripePromise} options={{ clientSecret: checkoutClientSecret }}>
+                  <EmbeddedCheckout />
+                </EmbeddedCheckoutProvider>
+              ) : (
+                <div className="h-full flex items-center justify-center text-gray-300">
+                  Stripe is not configured on this deployment.
+                </div>
+              )
             ) : (
               <div className="h-full flex items-center justify-center text-gray-300">
                 <Loader2 className="w-6 h-6 animate-spin mr-3 text-yellow-300" />

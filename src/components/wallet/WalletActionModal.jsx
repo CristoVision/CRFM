@@ -16,7 +16,8 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import CheckoutForm from './CheckoutForm';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : null;
 
 const ACTION_COPY = {
   add_funds: {
@@ -65,6 +66,14 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
   const handleContinueToAddFunds = async () => {
     if (!userId) {
       toast({ title: 'Login required', description: 'Please sign in to continue.', variant: 'destructive' });
+      return;
+    }
+    if (!STRIPE_PUBLISHABLE_KEY || !stripePromise) {
+      toast({
+        title: 'Stripe not configured',
+        description: 'Missing VITE_STRIPE_PUBLISHABLE_KEY on this deployment.',
+        variant: 'destructive',
+      });
       return;
     }
     const amountCc = Number(formState.amount);
@@ -129,6 +138,26 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
 
   const renderAddFundsContent = () => {
     if (step === 'payment' && clientSecret) {
+      if (!stripePromise) {
+        return (
+          <>
+            <DialogHeader className="space-y-2">
+              <DialogTitle className="golden-text text-2xl flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-yellow-400" />
+                Stripe not configured
+              </DialogTitle>
+              <DialogDescription className="text-gray-300 leading-relaxed">
+                Missing <span className="font-semibold">VITE_STRIPE_PUBLISHABLE_KEY</span> on this deployment.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="pt-5">
+              <Button type="button" variant="outline" onClick={() => setStep('amount')} className="text-gray-300 border-gray-500 hover:border-yellow-400 hover:text-yellow-300">
+                Back
+              </Button>
+            </DialogFooter>
+          </>
+        );
+      }
       const options = { clientSecret };
       return (
         <>
