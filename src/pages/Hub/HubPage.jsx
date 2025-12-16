@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState, Suspense } from 'reac
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
-import { Music, Disc, ListMusic, Edit3, BarChart2, UploadCloud, Settings, Loader2, AlertTriangle, Film, ShieldAlert } from 'lucide-react';
+import { Music, Disc, ListMusic, Edit3, BarChart2, UploadCloud, Settings, Loader2, AlertTriangle, Film, ShieldAlert, Lock } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from "@/components/ui/use-toast";
@@ -331,14 +331,26 @@ const HubPage = () => {
         className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8"
       >
         {quickActions.map((action) => (
+          (() => {
+            const allowed = uploadGate?.permissions?.[action.key] ?? true;
+            const locked = !allowed;
+            return (
           <Button 
             key={action.label}
             onClick={() => uploadGate.guard(action.key, action.action)}
-            className={`flex flex-col items-center justify-center h-28 md:h-32 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 text-white font-semibold text-sm md:text-base ${action.gradientClass}`}
+            className={`relative flex flex-col items-center justify-center h-28 md:h-32 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 text-white font-semibold text-sm md:text-base ${action.gradientClass} ${locked ? 'opacity-75' : ''}`}
           >
+            {locked ? (
+              <span className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full bg-black/40 px-2 py-1 text-[10px] text-yellow-100 border border-white/10">
+                <Lock className="w-3 h-3" />
+                Locked
+              </span>
+            ) : null}
             <action.icon className="w-8 h-8 md:w-10 md:h-10 mb-2" />
             {action.label}
           </Button>
+            );
+          })()
         ))}
       </motion.div>
 

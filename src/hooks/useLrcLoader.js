@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
 export const parseLrcTimestamp = (timestamp) => {
+  if (typeof timestamp !== 'string') return 0;
   const parts = timestamp.match(/(\d+):(\d+)\.(\d+)/);
   if (!parts) return 0;
   const minutes = parseInt(parts[1], 10);

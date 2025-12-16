@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { toast } from '@/components/ui/use-toast';
     import { Button } from '@/components/ui/button';
     import { Input } from '@/components/ui/input';
-    import { PlusCircle, Film, Search, Loader2, List, LayoutGrid } from 'lucide-react';
+    import { PlusCircle, Film, Search, Loader2, List, LayoutGrid, Lock } from 'lucide-react';
     import { motion, AnimatePresence } from 'framer-motion';
     import HubMusicVideoCard from './HubMusicVideoCard';
     import HubItemRow from './HubItemRow';
@@ -108,6 +108,8 @@ import React, { useState, useEffect, useCallback } from 'react';
         setIsUploadModalOpen(true);
       };
 
+      const canUpload = uploadGate?.permissions?.video ?? true;
+
       const handleVideoUploaded = (newVideo) => {
         setVideos(prev => [newVideo, ...prev]); 
         fetchVideos(0, searchQuery); 
@@ -192,8 +194,14 @@ import React, { useState, useEffect, useCallback } from 'react';
             <div className="flex items-center gap-2">
               <Button variant={viewMode === 'grid' ? 'default' : 'outline'} onClick={() => setViewMode('grid')} className={`${viewMode === 'grid' ? 'golden-gradient text-black' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-yellow-300'}`} size="sm"><LayoutGrid className="w-4 h-4"/></Button>
               <Button variant={viewMode === 'list' ? 'default' : 'outline'} onClick={() => setViewMode('list')} className={`${viewMode === 'list' ? 'golden-gradient text-black' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-yellow-300'}`} size="sm"><List className="w-4 h-4"/></Button>
-	              <Button onClick={handleOpenUpload} className="golden-gradient text-black font-semibold hover:opacity-90 transition-opacity proximity-glow-button" size="sm">
-	                <PlusCircle className="w-4 h-4 mr-2" />Upload Video
+	              <Button
+                  onClick={handleOpenUpload}
+                  className={`${canUpload ? 'golden-gradient text-black' : 'bg-white/5 border-white/10 text-gray-200 hover:bg-white/10 hover:text-yellow-200'} font-semibold hover:opacity-90 transition-opacity proximity-glow-button`}
+                  size="sm"
+                  variant={canUpload ? 'default' : 'outline'}
+                >
+	                {canUpload ? <PlusCircle className="w-4 h-4 mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
+                  {canUpload ? 'Upload Video' : 'Upload Video (Locked)'}
 	              </Button>
             </div>
           </div>
@@ -206,8 +214,13 @@ import React, { useState, useEffect, useCallback } from 'react';
                  {searchQuery ? "Try adjusting your search query." : "You haven't uploaded any music videos yet."}
               </p>
 	              {!searchQuery &&
-	                <Button onClick={handleOpenUpload} className="golden-gradient text-black font-semibold hover:opacity-90 transition-opacity">
-	                  <PlusCircle className="w-5 h-5 mr-2" />Upload Your First Video
+	                <Button
+                    onClick={handleOpenUpload}
+                    className={`${canUpload ? 'golden-gradient text-black' : 'bg-white/5 border-white/10 text-gray-200 hover:bg-white/10 hover:text-yellow-200'} font-semibold hover:opacity-90 transition-opacity`}
+                    variant={canUpload ? 'default' : 'outline'}
+                  >
+	                  {canUpload ? <PlusCircle className="w-5 h-5 mr-2" /> : <Lock className="w-5 h-5 mr-2" />}
+                    {canUpload ? 'Upload Your First Video' : 'Upload Video (Locked)'}
 	                </Button>
 	              }
             </div>

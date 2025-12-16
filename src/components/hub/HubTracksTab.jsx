@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { useAuth } from '@/contexts/AuthContext';
     import { toast } from '@/components/ui/use-toast';
     import { Button } from '@/components/ui/button';
-    import { PlusCircle, Music, List, LayoutGrid, Search } from 'lucide-react';
+    import { PlusCircle, Music, List, LayoutGrid, Search, Lock } from 'lucide-react';
     import HubItemCard from './HubItemCard';
     import HubItemRow from './HubItemRow';
     import EditTrackModal from './EditTrackModal';
@@ -147,6 +147,8 @@ import React, { useState, useEffect, useCallback } from 'react';
         return <div className="flex justify-center items-center min-h-[40vh]"><div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div></div>;
       }
 
+      const canUpload = uploadGate?.permissions?.track ?? true;
+
       return (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -163,8 +165,14 @@ import React, { useState, useEffect, useCallback } from 'react';
             <div className="flex items-center gap-2">
               <Button variant={viewMode === 'grid' ? 'default' : 'outline'} onClick={() => setViewMode('grid')} className={`${viewMode === 'grid' ? 'golden-gradient text-black' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-yellow-300'}`} size="sm"><LayoutGrid className="w-4 h-4"/></Button>
               <Button variant={viewMode === 'list' ? 'default' : 'outline'} onClick={() => setViewMode('list')} className={`${viewMode === 'list' ? 'golden-gradient text-black' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-yellow-300'}`} size="sm"><List className="w-4 h-4"/></Button>
-              <Button onClick={handleUploadTrack} className="golden-gradient text-black font-semibold hover:opacity-90 transition-opacity proximity-glow-button" size="sm">
-                <PlusCircle className="w-4 h-4 mr-2" />Upload Track
+              <Button
+                onClick={handleUploadTrack}
+                className={`${canUpload ? 'golden-gradient text-black' : 'bg-white/5 border-white/10 text-gray-200 hover:bg-white/10 hover:text-yellow-200'} font-semibold hover:opacity-90 transition-opacity proximity-glow-button`}
+                size="sm"
+                variant={canUpload ? 'default' : 'outline'}
+              >
+                {canUpload ? <PlusCircle className="w-4 h-4 mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
+                {canUpload ? 'Upload Track' : 'Upload Track (Locked)'}
               </Button>
             </div>
           </div>
