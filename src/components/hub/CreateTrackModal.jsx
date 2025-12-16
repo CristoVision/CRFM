@@ -29,6 +29,8 @@ import React, { useState, useEffect, useCallback } from 'react';
             languages: draft.languages || [],
             acknowledgement: draft.acknowledgement || false,
             is_instrumental: draft.is_instrumental || false,
+            audioFile: null,
+            coverArtFile: null,
           };
         }
         return {...formUtilsInitialTrackData, acknowledgement: false, is_instrumental: false };
@@ -54,7 +56,17 @@ import React, { useState, useEffect, useCallback } from 'react';
 
       useEffect(() => {
         if (isOpen) {
-          localStorage.setItem(LOCAL_STORAGE_KEY_CREATE_TRACK, JSON.stringify(formData));
+          const draft = {
+            ...formData,
+            audioFile: null,
+            coverArtFile: null,
+            audioUploadProgress: 0,
+            coverArtUploadProgress: 0,
+            audioUploadComplete: false,
+            coverArtUploadComplete: false,
+            release_date: formData.release_date ? new Date(formData.release_date).toISOString() : null,
+          };
+          localStorage.setItem(LOCAL_STORAGE_KEY_CREATE_TRACK, JSON.stringify(draft));
         }
       }, [formData, isOpen]);
 

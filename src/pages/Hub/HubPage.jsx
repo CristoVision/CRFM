@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from "@/components/ui/use-toast";
 import HubItemCard from '@/components/hub/HubItemCard';
 import MyActions from '@/components/hub/MyActions';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { logContentView } from '@/lib/analyticsClient';
 
 const CreateTrackModal = React.lazy(() => import('@/components/hub/CreateTrackModal'));
@@ -77,8 +77,10 @@ function ContentSubTabs() {
 }
 
 const HubPage = () => {
-  const { user } = useAuth();
+  const { user, refreshUserProfile } = useAuth();
   const { toast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [isCreateTrackModalOpen, setIsCreateTrackModalOpen] = useState(false);
   const [isCreateAlbumModalOpen, setIsCreateAlbumModalOpen] = useState(false);
   const [isCreatePlaylistModalOpen, setIsCreatePlaylistModalOpen] = useState(false);
@@ -115,6 +117,48 @@ const HubPage = () => {
     { value: "analytics", label: "Analytics", icon: <BarChart2/>, component: user ? <Suspense fallback={<LoadingSpinner />}><AnalyticsTab /></Suspense> : <PlaceholderContent title="Content Analytics" icon={<BarChart2 />} message={"Log in to view your Analytics."} showLoginButton={true}/> },
     { value: "monetization", label: "Monetization", icon: <Settings/>, component: user ? <Suspense fallback={<LoadingSpinner />}><CreatorMonetizationTab /></Suspense> : <PlaceholderContent title="Monetization" icon={<Settings />} message={"Log in to manage tiers and upload preferences."} showLoginButton={true}/> },
   ];
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search || '');
+    const stripeReturn = params.get('stripe_return');
+    if (stripeReturn !== '1') return;
+
+    try {
+      const snapshot = {
+        kind: params.get('kind') || null,
+        fee_type: params.get('fee_type') || null,
+        plan: params.get('plan') || null,
+        session_id: params.get('session_id') || null,
+        at: new Date().toISOString(),
+      };
+      window.sessionStorage.setItem('crfm:stripe_return', JSON.stringify(snapshot));
+    } catch {
+      // ignore storage failures
+    }
+
+    toast({
+      title: 'Stripe checkout complete',
+      description: 'We are applying your payment. This may take a few seconds.',
+    });
+
+    // Remove transient params so refreshes don’t re-toast.
+    params.delete('stripe_return');
+    params.delete('session_id');
+    params.delete('kind');
+    params.delete('fee_type');
+    params.delete('plan');
+
+    navigate(
+      {
+        pathname: location.pathname,
+        search: params.toString() ? `?${params.toString()}` : '',
+      },
+      { replace: true }
+    );
+
+    // Best-effort refresh profile (webhook might take a moment, billing panel also polls).
+    refreshUserProfile?.();
+  }, [location.pathname, location.search, navigate, refreshUserProfile, toast]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white p-4 md:p-8">

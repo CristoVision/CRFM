@@ -5,6 +5,8 @@ import { corsHeaders, handleCors } from '../_shared/cors.ts';
 type FeeType = 'track' | 'album';
 type Body = {
   fee_type: FeeType;
+  ui_mode?: 'embedded' | 'redirect';
+  return_url?: string;
   success_url?: string;
   cancel_url?: string;
 };
@@ -61,8 +63,11 @@ Deno.serve(async (req) => {
   if (!priceId) return json({ error: 'Missing price configuration for fee_type' }, { status: 500 });
 
   const origin = req.headers.get('origin') || 'https://crfministry.com';
-  const successUrl = body.success_url || `${origin}/hub?uploadfee=success`;
-  const cancelUrl = body.cancel_url || `${origin}/hub?uploadfee=cancel`;
+  const uiMode = body.ui_mode || 'embedded';
+  const defaultReturnUrl = `${origin}/hub?tab=monetization&stripe_return=1&kind=upload_fee&fee_type=${feeType}&session_id={CHECKOUT_SESSION_ID}`;
+  const returnUrl = body.return_url || defaultReturnUrl;
+  const successUrl = body.success_url || `${origin}/hub?tab=monetization&uploadfee=success`;
+  const cancelUrl = body.cancel_url || `${origin}/hub?tab=monetization&uploadfee=cancel`;
 
   const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     global: { headers: { Authorization: `Bearer ${token}` } }
@@ -76,10 +81,8 @@ Deno.serve(async (req) => {
 
   const stripe = new Stripe(stripeSecretKey, { apiVersion: '2024-06-20' });
 
-  const session = await stripe.checkout.sessions.create({
+  const sessionBase: Stripe.Checkout.SessionCreateParams = {
     mode: 'payment',
-    success_url: successUrl,
-    cancel_url: cancelUrl,
     client_reference_id: user.id,
     metadata: {
       kind: 'upload_fee',
@@ -88,7 +91,25 @@ Deno.serve(async (req) => {
       price_id: priceId
     },
     line_items: [{ price: priceId, quantity: 1 }]
-  });
+  };
 
-  return json({ url: session.url, id: session.id });
+  const session =
+    uiMode === 'embedded'
+      ? await stripe.checkout.sessions.create({
+          ...sessionBase,
+          ui_mode: 'embedded',
+          return_url: returnUrl,
+        })
+      : await stripe.checkout.sessions.create({
+          ...sessionBase,
+          success_url: successUrl,
+          cancel_url: cancelUrl,
+        });
+
+  return json({
+    id: session.id,
+    url: session.url,
+    clientSecret: session.client_secret,
+    uiMode,
+  });
 });

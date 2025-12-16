@@ -5,6 +5,8 @@ import { corsHeaders, handleCors } from '../_shared/cors.ts';
 type Plan = 'monthly' | 'six_months' | 'yearly';
 type Body = {
   plan: Plan;
+  ui_mode?: 'embedded' | 'redirect';
+  return_url?: string;
   success_url?: string;
   cancel_url?: string;
 };
@@ -62,8 +64,11 @@ Deno.serve(async (req) => {
   if (!priceId) return json({ error: 'Missing price configuration for plan' }, { status: 500 });
 
   const origin = req.headers.get('origin') || 'https://crfministry.com';
-  const successUrl = body.success_url || `${origin}/hub?billing=success`;
-  const cancelUrl = body.cancel_url || `${origin}/hub?billing=cancel`;
+  const uiMode = body.ui_mode || 'embedded';
+  const defaultReturnUrl = `${origin}/hub?tab=monetization&stripe_return=1&kind=creator_subscription&plan=${plan}&session_id={CHECKOUT_SESSION_ID}`;
+  const returnUrl = body.return_url || defaultReturnUrl;
+  const successUrl = body.success_url || `${origin}/hub?tab=monetization&billing=success`;
+  const cancelUrl = body.cancel_url || `${origin}/hub?tab=monetization&billing=cancel`;
 
   const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     global: { headers: { Authorization: `Bearer ${token}` } }
@@ -77,10 +82,8 @@ Deno.serve(async (req) => {
 
   const stripe = new Stripe(stripeSecretKey, { apiVersion: '2024-06-20' });
 
-  const session = await stripe.checkout.sessions.create({
+  const sessionBase: Stripe.Checkout.SessionCreateParams = {
     mode: 'subscription',
-    success_url: successUrl,
-    cancel_url: cancelUrl,
     client_reference_id: user.id,
     metadata: {
       kind: 'creator_subscription',
@@ -89,7 +92,25 @@ Deno.serve(async (req) => {
       price_id: priceId
     },
     line_items: [{ price: priceId, quantity: 1 }]
-  });
+  };
 
-  return json({ url: session.url, id: session.id });
+  const session =
+    uiMode === 'embedded'
+      ? await stripe.checkout.sessions.create({
+          ...sessionBase,
+          ui_mode: 'embedded',
+          return_url: returnUrl,
+        })
+      : await stripe.checkout.sessions.create({
+          ...sessionBase,
+          success_url: successUrl,
+          cancel_url: cancelUrl,
+        });
+
+  return json({
+    id: session.id,
+    url: session.url,
+    clientSecret: session.client_secret,
+    uiMode,
+  });
 });
