@@ -22,6 +22,7 @@ GitHub → `Settings → Secrets and variables → Actions`:
 **Supabase (para build)**
 - `VITE_SUPABASE_URL` (ej. `https://<project>.supabase.co`)
 - `VITE_SUPABASE_ANON_KEY` (si Supabase te da “publishable key”, úsala aquí)
+- `VITE_STRIPE_PUBLISHABLE_KEY` (Stripe publishable key `pk_...`, requerido para abrir checkout embebido)
 
 ## Pagos (Stripe) — Edge Functions
 Este repo incluye Edge Functions de Supabase para iniciar Checkout y procesar el webhook de Stripe.
