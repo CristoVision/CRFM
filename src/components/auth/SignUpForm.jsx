@@ -16,15 +16,18 @@ import React, { useState, useRef } from 'react';
     );
       
 
-    const SignUpForm = ({ onSwitchToLogin }) => {
-      const [email, setEmail] = useState('');
-      const [password, setPassword] = useState('');
-      const [showPassword, setShowPassword] = useState(false);
-      const [confirmPassword, setConfirmPassword] = useState('');
-      const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-      const [fullName, setFullName] = useState('');
-      const [avatarFile, setAvatarFile] = useState(null);
-      const [avatarPreview, setAvatarPreview] = useState(null);
+	    const SignUpForm = ({ onSwitchToLogin }) => {
+	      const [email, setEmail] = useState('');
+	      const [password, setPassword] = useState('');
+	      const [showPassword, setShowPassword] = useState(false);
+	      const [confirmPassword, setConfirmPassword] = useState('');
+	      const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+	      const [firstName, setFirstName] = useState('');
+	      const [middleName, setMiddleName] = useState('');
+	      const [lastName, setLastName] = useState('');
+	      const [secondLastName, setSecondLastName] = useState('');
+	      const [avatarFile, setAvatarFile] = useState(null);
+	      const [avatarPreview, setAvatarPreview] = useState(null);
       const { register, loading } = useAuth();
       const avatarInputRef = useRef(null);
       const navigate = useNavigate();
@@ -82,13 +85,19 @@ import React, { useState, useRef } from 'react';
             return;
         }
 
-        const { success, error } = await register(email, password, fullName, avatarFile);
-        if (success) {
-          toast({ title: "Sign Up Successful!", description: "Please check your email to verify your account.", className: "bg-green-600 text-white" });
-        } else if (error) {
-          toast({ title: "Sign Up Failed", description: error, variant: "destructive" });
-        }
-      };
+	        const nameParts = {
+	          first_name: firstName,
+	          middle_name: middleName,
+	          last_name: lastName,
+	          second_last_name: secondLastName,
+	        };
+	        const { success, error } = await register(email, password, nameParts, avatarFile);
+	        if (success) {
+	          toast({ title: "Sign Up Successful!", description: "Please check your email to verify your account.", className: "bg-green-600 text-white" });
+	        } else if (error) {
+	          toast({ title: "Sign Up Failed", description: error, variant: "destructive" });
+	        }
+	      };
 
       return (
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -123,20 +132,62 @@ import React, { useState, useRef } from 'react';
             />
           </div>
 
-          <div className="space-y-1 relative">
-            <Label htmlFor="fullName-signup" className="text-gray-300 text-xs">Full Name</Label>
-            <User className="absolute left-3 top-8 transform -translate-y-1/2 w-4 h-4 text-yellow-400/70" />
-            <Input
-              id="fullName-signup"
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="bg-black/20 border-white/10 text-white placeholder-gray-500 pl-10 focus:border-yellow-400 h-11"
-              placeholder="Enter your full name"
-              required
-              disabled={loading}
-            />
-          </div>
+	          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+	            <div className="space-y-1 relative">
+	              <Label htmlFor="firstName-signup" className="text-gray-300 text-xs">First Name</Label>
+	              <User className="absolute left-3 top-8 transform -translate-y-1/2 w-4 h-4 text-yellow-400/70" />
+	              <Input
+	                id="firstName-signup"
+	                type="text"
+	                value={firstName}
+	                onChange={(e) => setFirstName(e.target.value)}
+	                className="bg-black/20 border-white/10 text-white placeholder-gray-500 pl-10 focus:border-yellow-400 h-11"
+	                placeholder="First name"
+	                required
+	                disabled={loading}
+	              />
+	            </div>
+	            <div className="space-y-1 relative">
+	              <Label htmlFor="middleName-signup" className="text-gray-300 text-xs">Middle Name (Optional)</Label>
+	              <User className="absolute left-3 top-8 transform -translate-y-1/2 w-4 h-4 text-yellow-400/70" />
+	              <Input
+	                id="middleName-signup"
+	                type="text"
+	                value={middleName}
+	                onChange={(e) => setMiddleName(e.target.value)}
+	                className="bg-black/20 border-white/10 text-white placeholder-gray-500 pl-10 focus:border-yellow-400 h-11"
+	                placeholder="Middle name"
+	                disabled={loading}
+	              />
+	            </div>
+	            <div className="space-y-1 relative">
+	              <Label htmlFor="lastName-signup" className="text-gray-300 text-xs">Last Name</Label>
+	              <User className="absolute left-3 top-8 transform -translate-y-1/2 w-4 h-4 text-yellow-400/70" />
+	              <Input
+	                id="lastName-signup"
+	                type="text"
+	                value={lastName}
+	                onChange={(e) => setLastName(e.target.value)}
+	                className="bg-black/20 border-white/10 text-white placeholder-gray-500 pl-10 focus:border-yellow-400 h-11"
+	                placeholder="Last name"
+	                required
+	                disabled={loading}
+	              />
+	            </div>
+	            <div className="space-y-1 relative">
+	              <Label htmlFor="secondLastName-signup" className="text-gray-300 text-xs">Second Last Name (Optional)</Label>
+	              <User className="absolute left-3 top-8 transform -translate-y-1/2 w-4 h-4 text-yellow-400/70" />
+	              <Input
+	                id="secondLastName-signup"
+	                type="text"
+	                value={secondLastName}
+	                onChange={(e) => setSecondLastName(e.target.value)}
+	                className="bg-black/20 border-white/10 text-white placeholder-gray-500 pl-10 focus:border-yellow-400 h-11"
+	                placeholder="Second last name"
+	                disabled={loading}
+	              />
+	            </div>
+	          </div>
           
           <div className="space-y-1 relative">
             <Label htmlFor="email-signup" className="text-gray-300 text-xs">Email</Label>

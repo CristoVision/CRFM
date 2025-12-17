@@ -38,17 +38,29 @@ export async function logoutUser() {
  *
  * @returns {Promise<{success: boolean, user?: any, avatarUrl?: string, error?: string}>}
  */
-export async function registerUser(email, password, fullName, avatarFile) {
+export async function registerUser(email, password, nameParts, avatarFile) {
   // Where Supabase should redirect after email confirmation / magic link handoff.
   // We'll land on /auth and exchange the code there.
   const emailRedirectTo = `${window.location.origin}/auth`;
+
+  const firstName = (nameParts?.first_name ?? '').toString().trim();
+  const middleName = (nameParts?.middle_name ?? '').toString().trim();
+  const lastName = (nameParts?.last_name ?? '').toString().trim();
+  const secondLastName = (nameParts?.second_last_name ?? '').toString().trim();
+  const fullName = [firstName, middleName, lastName, secondLastName].filter(Boolean).join(' ').trim();
 
   // 1) Sign up
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: { full_name: fullName ?? '' }, // store in auth.user_metadata too
+      data: {
+        full_name: fullName ?? '',
+        first_name: firstName,
+        middle_name: middleName,
+        last_name: lastName,
+        second_last_name: secondLastName,
+      }, // stored in auth.user_metadata too (used by profiles trigger)
       emailRedirectTo,
     },
   });

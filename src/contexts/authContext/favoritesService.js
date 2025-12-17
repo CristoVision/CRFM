@@ -10,12 +10,17 @@ export const fetchFavorites = async (userId) => {
       .select('content_id, content_type')
       .eq('user_id', userId);
 
-    if (error) throw error;
+    if (error) {
+      // If the table isn't deployed yet, don't break the app.
+      const status = error?.status ?? error?.statusCode;
+      if (status === 404) return [];
+      throw error;
+    }
     
     return data || [];
   } catch (error) {
     console.error("Error fetching favorites:", error);
-    throw error;
+    return [];
   }
 };
 

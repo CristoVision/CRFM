@@ -110,10 +110,10 @@ setLoading(false);
 return result;
   };
 
-  const performRegister = async (email, password, fullName, avatarFile) => {
+  const performRegister = async (email, password, nameParts, avatarFile) => {
     setLoading(true);
     try {
-      const { success, user: newUser, avatarUrl, error } = await registerUser(email, password, fullName, avatarFile);
+      const { success, user: newUser, avatarUrl, error } = await registerUser(email, password, nameParts, avatarFile);
 
       // If email confirmation is enabled, Supabase returns a user but no active session.
       // In that case, skip profile upsert (it will 401). A DB trigger should create the profile row.
@@ -124,7 +124,12 @@ return result;
           } = await supabase.auth.getSession();
 
           if (session?.user?.id) {
-            await upsertUserProfile(newUser, { full_name: fullName, avatar_url: avatarUrl });
+            const computedFullName = [nameParts?.first_name, nameParts?.middle_name, nameParts?.last_name, nameParts?.second_last_name]
+              .map((v) => (v == null ? '' : String(v).trim()))
+              .filter(Boolean)
+              .join(' ')
+              .trim();
+            await upsertUserProfile(newUser, { ...nameParts, full_name: computedFullName, avatar_url: avatarUrl });
           }
         } catch (profileErr) {
           const status = profileErr?.status ?? profileErr?.statusCode;

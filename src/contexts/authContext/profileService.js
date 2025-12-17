@@ -16,6 +16,10 @@ export const upsertUserProfile = async (user, additionalData = {}) => {
     const profileData = {
       id: user.id,
       username: additionalData.username || discordUsername || defaultUsername,
+      first_name: additionalData.first_name || user.user_metadata?.first_name || null,
+      middle_name: additionalData.middle_name || user.user_metadata?.middle_name || null,
+      last_name: additionalData.last_name || user.user_metadata?.last_name || null,
+      second_last_name: additionalData.second_last_name || user.user_metadata?.second_last_name || null,
       full_name: additionalData.full_name || user.user_metadata?.full_name || '',
       avatar_url: additionalData.avatar_url || discordAvatar || null,
       wallet_balance: additionalData.wallet_balance === undefined ? 0 : additionalData.wallet_balance,

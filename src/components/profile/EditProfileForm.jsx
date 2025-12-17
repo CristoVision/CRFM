@@ -14,7 +14,10 @@ import { Edit, UploadCloud, Save, Loader2, Coins, Bell } from 'lucide-react';
 function EditProfileForm() {
   const { user, profile, refreshUserProfile } = useAuth();
   const [formData, setFormData] = useState({
-    full_name: '',
+    first_name: '',
+    middle_name: '',
+    last_name: '',
+    second_last_name: '',
     bio: '',
     social_link_1: '',
     social_link_2: '',
@@ -29,7 +32,10 @@ function EditProfileForm() {
   useEffect(() => {
     if (profile) {
       setFormData({
-        full_name: profile.full_name || '',
+        first_name: profile.first_name || '',
+        middle_name: profile.middle_name || '',
+        last_name: profile.last_name || '',
+        second_last_name: profile.second_last_name || '',
         bio: profile.bio || '',
         social_link_1: profile.social_link_1 || '',
         social_link_2: profile.social_link_2 || '',
@@ -89,6 +95,15 @@ function EditProfileForm() {
     }
 
     try {
+      const computedFullName = [formData.first_name, formData.middle_name, formData.last_name, formData.second_last_name]
+        .map((v) => (v == null ? '' : String(v).trim()))
+        .filter(Boolean)
+        .join(' ')
+        .trim();
+      if (computedFullName && computedFullName !== profile?.full_name) {
+        updatedFields.full_name = computedFullName;
+      }
+
       if (avatarFile) {
         const newAvatarUrl = await uploadAvatar();
         if (newAvatarUrl) updatedFields.avatar_url = newAvatarUrl;
@@ -104,11 +119,15 @@ function EditProfileForm() {
         toast({ title: 'Profile Updated!', description: 'Your profile has been successfully updated.' });
         await refreshUserProfile();
         
-        if (updatedFields.avatar_url || updatedFields.full_name) {
+        if (updatedFields.avatar_url || updatedFields.full_name || updatedFields.first_name || updatedFields.middle_name || updatedFields.last_name || updatedFields.second_last_name) {
             await supabase.auth.updateUser({
               data: {
                 avatar_url: updatedFields.avatar_url || profile.avatar_url,
                 full_name: updatedFields.full_name || profile.full_name,
+                first_name: updatedFields.first_name || profile.first_name || '',
+                middle_name: updatedFields.middle_name || profile.middle_name || '',
+                last_name: updatedFields.last_name || profile.last_name || '',
+                second_last_name: updatedFields.second_last_name || profile.second_last_name || '',
               }
             });
         }
@@ -137,9 +156,9 @@ function EditProfileForm() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="flex flex-col items-center space-y-3">
           <Avatar className="w-24 h-24 sm:w-32 sm:h-32 border-4 border-yellow-400/50 shadow-lg">
-            <AvatarImage src={avatarPreview || `https://avatar.vercel.sh/${user.email}.png`} alt={formData.full_name || user.email} />
+            <AvatarImage src={avatarPreview || `https://avatar.vercel.sh/${user.email}.png`} alt={profile?.full_name || user.email} />
             <AvatarFallback className="text-3xl sm:text-4xl bg-gray-700 text-white">
-              {formData.full_name ? formData.full_name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+              {(profile?.full_name || user.email).charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="relative">
@@ -153,8 +172,20 @@ function EditProfileForm() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <Label htmlFor="full_name" className="text-gray-300">Full Name</Label>
-            <Input id="full_name" name="full_name" type="text" value={formData.full_name} onChange={handleInputChange} className="mt-1 bg-white/5 border-white/10 focus:border-yellow-400 text-white" />
+            <Label htmlFor="first_name" className="text-gray-300">First Name</Label>
+            <Input id="first_name" name="first_name" type="text" value={formData.first_name} onChange={handleInputChange} className="mt-1 bg-white/5 border-white/10 focus:border-yellow-400 text-white" />
+          </div>
+          <div>
+            <Label htmlFor="middle_name" className="text-gray-300">Middle Name (Optional)</Label>
+            <Input id="middle_name" name="middle_name" type="text" value={formData.middle_name} onChange={handleInputChange} className="mt-1 bg-white/5 border-white/10 focus:border-yellow-400 text-white" />
+          </div>
+          <div>
+            <Label htmlFor="last_name" className="text-gray-300">Last Name</Label>
+            <Input id="last_name" name="last_name" type="text" value={formData.last_name} onChange={handleInputChange} className="mt-1 bg-white/5 border-white/10 focus:border-yellow-400 text-white" />
+          </div>
+          <div>
+            <Label htmlFor="second_last_name" className="text-gray-300">Second Last Name (Optional)</Label>
+            <Input id="second_last_name" name="second_last_name" type="text" value={formData.second_last_name} onChange={handleInputChange} className="mt-1 bg-white/5 border-white/10 focus:border-yellow-400 text-white" />
           </div>
           <div>
             <Label htmlFor="username" className="text-gray-300">Username (Cannot be changed)</Label>
