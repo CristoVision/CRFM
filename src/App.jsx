@@ -31,15 +31,20 @@ import { QueueProvider } from '@/contexts/QueueContext';
 import { VideoPlayerProvider } from '@/contexts/VideoPlayerContext';
 import { Helmet } from 'react-helmet-async';
 import UnauthenticatedRadio from '@/components/player/UnauthenticatedRadio';
+import { BRAND_LOGO_GIF_URL } from '@/lib/brandAssets';
 
 function FullScreenSpinner() {
   return (
     <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
       <div className="text-center">
         <img
-          src="/favicon-32x32.png"
+          src={BRAND_LOGO_GIF_URL}
           alt="CRFM Logo Loading"
           className="h-32 w-auto mx-auto mb-8"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = '/favicon-32x32.png';
+          }}
         />
         <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
         <p className="text-white text-xl font-semibold">Loading CRFM...</p>

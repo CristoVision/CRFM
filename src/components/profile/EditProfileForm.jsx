@@ -72,7 +72,7 @@ function EditProfileForm() {
   const uploadAvatar = async () => {
     if (!avatarFile || !user) return null;
     const fileExt = avatarFile.name.split('.').pop();
-    const fileName = `public/${user.id}_${Date.now()}.${fileExt}`;
+    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
     const { data, error } = await supabase.storage.from('avatars').upload(fileName, avatarFile, { upsert: true });
     if (error) {
       toast({ title: 'Avatar Upload Failed', description: error.message, variant: 'destructive' });

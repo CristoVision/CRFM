@@ -143,7 +143,7 @@ export async function updateUserPasswordProvider(newPassword) {
 async function uploadAvatarForUser(userId, file) {
   try {
     const ext = getFileExtension(file?.name) || 'jpg';
-    const path = `users/${userId}/${Date.now()}.${ext}`;
+    const path = `${userId}/${Date.now()}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from('avatars')

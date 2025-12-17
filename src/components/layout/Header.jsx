@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from '@/components/ui/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BRAND_LOGO_GIF_URL, CROSSCOIN_ICON_URL } from '@/lib/brandAssets';
 
 const mainNavLinks = [
   { to: '/', text: 'Home', icon: <Home className="w-5 h-5" />, auth: null }, // Always show
@@ -99,7 +100,15 @@ function Header() {
         <div className="flex items-center justify-between h-20">
           <div className="flex items-center">
             <NavLink to="/" className="flex-shrink-0" onClick={closeMobileMenu}>
-              <img className="h-12 w-auto" src="/favicon-32x32.png" alt="CRFM Logo"/>
+              <img
+                className="h-12 w-auto"
+                src={BRAND_LOGO_GIF_URL}
+                alt="CRFM Logo"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = '/favicon-32x32.png';
+                }}
+              />
             </NavLink>
           </div>
           
@@ -119,7 +128,15 @@ function Header() {
                     }`
                     }
                   >
-                    <img src="/favicon-32x32.png" alt="CrossCoin" className="w-5 h-5" />
+                    <img
+                      src={CROSSCOIN_ICON_URL}
+                      alt="CrossCoin"
+                      className="w-5 h-5"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = '/favicon-32x32.png';
+                      }}
+                    />
                     <span>{displayBalance()}</span>
                   </NavLink>
                   <Button
@@ -219,7 +236,15 @@ function Header() {
                             onClick={closeMobileMenu}
                             className="flex items-center text-xs text-yellow-400 hover:text-yellow-300"
                           >
-                             <img src="/favicon-32x32.png" alt="CrossCoin" className="w-4 h-4 mr-1" />
+                             <img
+                               src={CROSSCOIN_ICON_URL}
+                               alt="CrossCoin"
+                               className="w-4 h-4 mr-1"
+                               onError={(e) => {
+                                 e.currentTarget.onerror = null;
+                                 e.currentTarget.src = '/favicon-32x32.png';
+                               }}
+                             />
                             <span>{displayBalance()}</span>
                           </NavLink>
                           <Button
