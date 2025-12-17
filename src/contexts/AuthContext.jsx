@@ -111,13 +111,33 @@ return result;
   };
 
   const performRegister = async (email, password, fullName, avatarFile) => {
-setLoading(true);
-const { success, user: newUser, avatarUrl, error } = await registerUser(email, password, fullName, avatarFile);
-if (success && newUser) {
-  await upsertUserProfile(newUser, { full_name: fullName, avatar_url: avatarUrl });
-}
-setLoading(false);
-return { success, error };
+    setLoading(true);
+    try {
+      const { success, user: newUser, avatarUrl, error } = await registerUser(email, password, fullName, avatarFile);
+
+      // If email confirmation is enabled, Supabase returns a user but no active session.
+      // In that case, skip profile upsert (it will 401). A DB trigger should create the profile row.
+      if (success && newUser) {
+        try {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+
+          if (session?.user?.id) {
+            await upsertUserProfile(newUser, { full_name: fullName, avatar_url: avatarUrl });
+          }
+        } catch (profileErr) {
+          const status = profileErr?.status ?? profileErr?.statusCode;
+          if (status !== 401) {
+            console.error('Profile upsert failed during signup:', profileErr);
+          }
+        }
+      }
+
+      return { success, error };
+    } finally {
+      setLoading(false);
+    }
   };
 
   const performLogout = async () => {
