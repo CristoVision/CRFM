@@ -9,7 +9,7 @@ import React, { useState, useEffect } from 'react';
     import { toast } from '@/components/ui/use-toast';
 
     const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXVkaW98ZW58MHx8MHx8fDA%3D&w=1000&q=80';
-    const CROSSCOIN_ICON_URL = 'https://bcrjrlafzqudmdzbcruz.supabase.co/storage/v1/object/public/logo//CrossCoin2025.png';
+    const CROSSCOIN_ICON_URL = '/favicon-32x32.png';
 
     const TrackRow = ({ item, onPlay, isPlaying, currentTrackId, onFlag, onShare }) => {
       const navigate = useNavigate();

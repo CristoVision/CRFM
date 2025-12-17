@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { usePlayer } from '@/contexts/PlayerContext';
 import CoverArtMedia from '@/components/common/CoverArtMedia';
 
-const FALLBACK_ART = 'https://bcrjrlafzqudmdzbcruz.supabase.co/storage/v1/object/public/logo/crfm-logo-gold.gif';
+const FALLBACK_ART = '/favicon-32x32.png';
 
 function CollapsedPlayerTrackInfo() {
   const { currentTrack, setPlayerState } = usePlayer();

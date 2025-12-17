@@ -266,7 +266,7 @@ function WalletPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
               <div className="glass-effect p-8 rounded-xl shadow-xl text-center space-y-3">
-                <img src="https://bcrjrlafzqudmdzbcruz.supabase.co/storage/v1/object/public/logo//CrossCoin2025.png" alt="CrossCoin" className="w-20 h-20 mx-auto mb-2" />
+                <img src="/favicon-32x32.png" alt="CrossCoin" className="w-20 h-20 mx-auto mb-2" />
                 <h2 className="text-2xl text-gray-400">Current Balance</h2>
                 <p className="text-5xl font-bold golden-text">{formatBalance()}</p>
                 <div className="flex items-center justify-center gap-2 text-xs text-gray-300">

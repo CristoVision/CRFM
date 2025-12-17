@@ -37,7 +37,7 @@ function FullScreenSpinner() {
     <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
       <div className="text-center">
         <img
-          src="https://bcrjrlafzqudmdzbcruz.supabase.co/storage/v1/object/public/logo//crfm-logo-gold.gif"
+          src="/favicon-32x32.png"
           alt="CRFM Logo Loading"
           className="h-32 w-auto mx-auto mb-8"
         />

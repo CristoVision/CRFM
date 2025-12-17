@@ -7,9 +7,9 @@ import React, { useState, useEffect } from 'react';
     import { ScrollArea } from '@/components/ui/scroll-area';
     import { Helmet } from 'react-helmet-async';
 
-    const DEFAULT_AVATAR = 'https://bcrjrlafzqudmdzbcruz.supabase.co/storage/v1/object/public/images/embed_fallback_creator.webp';
+    const DEFAULT_AVATAR = '/favicon-32x32.png';
     const MAX_ITEMS_DISPLAY = 5;
-    const CRFM_LOGO_URL = 'https://bcrjrlafzqudmdzbcruz.supabase.co/storage/v1/object/public/logo/crfm-logo-icon-white.png';
+    const CRFM_LOGO_URL = '/favicon-32x32.png';
 
     const EmbedPlayerSpinner = () => (
       <div className="w-full h-full flex flex-col items-center justify-center bg-black/70 text-white p-4">

@@ -9,7 +9,7 @@ import { Helmet } from 'react-helmet-async';
 import CoverArtMedia from '@/components/common/CoverArtMedia';
 
     const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8YWxidW18ZW58MHx8MHx8fDA%3D&w=1000&q=80';
-    const CRFM_LOGO_URL = 'https://bcrjrlafzqudmdzbcruz.supabase.co/storage/v1/object/public/logo/crfm-logo-icon-gold.png';
+    const CRFM_LOGO_URL = '/favicon-32x32.png';
 
     const EmbedAlbumPage = () => {
       const { id } = useParams();

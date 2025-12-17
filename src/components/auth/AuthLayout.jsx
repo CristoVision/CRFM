@@ -11,7 +11,7 @@ import React from 'react';
             className="mb-8 text-center"
           >
             <img 
-              src="https://bcrjrlafzqudmdzbcruz.supabase.co/storage/v1/object/public/logo//crfm-logo-gold.gif"
+              src="/favicon-32x32.png"
               alt="CRFM Animated Logo"
               className="h-[110px] md:h-[130px] w-auto mx-auto mb-3"
             />

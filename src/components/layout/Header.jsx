@@ -99,7 +99,7 @@ function Header() {
         <div className="flex items-center justify-between h-20">
           <div className="flex items-center">
             <NavLink to="/" className="flex-shrink-0" onClick={closeMobileMenu}>
-              <img className="h-12 w-auto" src="https://bcrjrlafzqudmdzbcruz.supabase.co/storage/v1/object/public/logo//crfm-logo-gold.gif" alt="CRFM Logo"/>
+              <img className="h-12 w-auto" src="/favicon-32x32.png" alt="CRFM Logo"/>
             </NavLink>
           </div>
           
@@ -119,7 +119,7 @@ function Header() {
                     }`
                     }
                   >
-                    <img src="https://bcrjrlafzqudmdzbcruz.supabase.co/storage/v1/object/public/logo//CrossCoin2025.png" alt="CrossCoin" className="w-5 h-5" />
+                    <img src="/favicon-32x32.png" alt="CrossCoin" className="w-5 h-5" />
                     <span>{displayBalance()}</span>
                   </NavLink>
                   <Button
@@ -219,7 +219,7 @@ function Header() {
                             onClick={closeMobileMenu}
                             className="flex items-center text-xs text-yellow-400 hover:text-yellow-300"
                           >
-                             <img src="https://bcrjrlafzqudmdzbcruz.supabase.co/storage/v1/object/public/logo//CrossCoin2025.png" alt="CrossCoin" className="w-4 h-4 mr-1" />
+                             <img src="/favicon-32x32.png" alt="CrossCoin" className="w-4 h-4 mr-1" />
                             <span>{displayBalance()}</span>
                           </NavLink>
                           <Button

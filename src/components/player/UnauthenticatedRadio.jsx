@@ -181,7 +181,7 @@ const RadioPlayerUI = () => {
 
         <div className="flex items-center space-x-4">
           <img
-            src={currentTrack?.cover_art_url || "https://bcrjrlafzqudmdzbcruz.supabase.co/storage/v1/object/public/logo//crfm-logo-gold.gif"}
+            src={currentTrack?.cover_art_url || "/favicon-32x32.png"}
             alt={currentTrack?.title || 'CRFM radio cover art'}
             className="w-16 h-16 rounded-md object-cover border border-white/10"
           />

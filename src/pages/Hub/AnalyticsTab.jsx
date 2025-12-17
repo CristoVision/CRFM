@@ -181,7 +181,7 @@ const AnalyticsTab = () => {
                 <Card className="glass-effect-light">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium text-gray-300">Estimated Earnings</CardTitle>
-                    <img src="https://bcrjrlafzqudmdzbcruz.supabase.co/storage/v1/object/public/logo//CrossCoin2025.png" alt="CrossCoin" className="w-5 h-5" />
+                    <img src="/favicon-32x32.png" alt="CrossCoin" className="w-5 h-5" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-3xl font-bold golden-text">{totalEarnings.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }).slice(1)} <span className="text-sm text-yellow-500">XCC</span></div>
