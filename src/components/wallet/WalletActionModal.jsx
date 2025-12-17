@@ -10,6 +10,7 @@ import { requestWalletAction } from '@/lib/walletActions';
 import { redeemCode } from '@/lib/billingActions';
 import { AlertCircle, CheckCircle, Loader2, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import { CROSSCOIN_ICON_URL } from '@/lib/brandAssets';
 
 // --- Stripe Imports ---
 import { loadStripe } from '@stripe/stripe-js';
@@ -45,6 +46,7 @@ const defaultState = {
 const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId, onSuccess, returnUrl }) => {
   const [formState, setFormState] = useState(defaultState);
   const [submitting, setSubmitting] = useState(false);
+  const [addFundsUnit, setAddFundsUnit] = useState('cc'); // 'cc' | 'usd'
   
   // --- New state for Stripe payment flow ---
   const [step, setStep] = useState('amount'); // 'amount' | 'payment'
@@ -56,12 +58,29 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
       setSubmitting(false);
       setStep('amount');
       setClientSecret('');
+      setAddFundsUnit('cc');
     }
   }, [open, actionType]);
 
   const copy = useMemo(() => ACTION_COPY[actionType] || {}, [actionType]);
 
   if (!actionType) return null;
+
+  const ccToUsd = 0.01; // must match Edge Function default CC_TO_USD
+  const parsedInput = Number(formState.amount);
+  const inputIsValid = Number.isFinite(parsedInput) && parsedInput > 0;
+  const amountCcDerived =
+    actionType === 'add_funds'
+      ? addFundsUnit === 'usd'
+        ? (inputIsValid ? parsedInput / ccToUsd : NaN)
+        : parsedInput
+      : parsedInput;
+  const amountUsdDerived =
+    actionType === 'add_funds'
+      ? addFundsUnit === 'usd'
+        ? parsedInput
+        : (Number.isFinite(amountCcDerived) ? amountCcDerived * ccToUsd : NaN)
+      : NaN;
 
   const handleContinueToAddFunds = async () => {
     if (!userId) {
@@ -76,7 +95,7 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
       });
       return;
     }
-    const amountCc = Number(formState.amount);
+    const amountCc = amountCcDerived;
     if (!Number.isFinite(amountCc) || amountCc <= 0) {
       toast({ title: 'Invalid amount', description: 'Enter a positive amount.', variant: 'destructive' });
       return;
@@ -84,7 +103,7 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
     setSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke('stripe-create-payment-intent', {
-        body: { amount_cc: amountCc },
+        body: { amount_cc: Number(amountCc.toFixed(2)) },
       });
       if (error) throw error;
       if (!data?.clientSecret) throw new Error('Missing client secret.');
@@ -195,18 +214,65 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
         </DialogHeader>
         <div className="space-y-5 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="wallet-amount" className="text-gray-200">Amount (CrossCoins)</Label>
+            <div className="flex items-end justify-between gap-3">
+              <Label htmlFor="wallet-amount" className="text-gray-200">
+                Amount ({addFundsUnit === 'usd' ? 'USD' : 'CrossCoins'})
+              </Label>
+              <div className="flex items-center gap-2 text-xs text-gray-300">
+                <button
+                  type="button"
+                  onClick={() => setAddFundsUnit('cc')}
+                  className={`px-2 py-1 rounded-md border ${addFundsUnit === 'cc' ? 'border-yellow-400/60 text-yellow-200 bg-yellow-400/10' : 'border-white/10 hover:border-white/20'}`}
+                >
+                  CC
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAddFundsUnit('usd')}
+                  className={`px-2 py-1 rounded-md border ${addFundsUnit === 'usd' ? 'border-yellow-400/60 text-yellow-200 bg-yellow-400/10' : 'border-white/10 hover:border-white/20'}`}
+                >
+                  USD
+                </button>
+              </div>
+            </div>
             <Input
               id="wallet-amount"
               type="number"
-              min="1"
-              step="any"
+              min={addFundsUnit === 'usd' ? '0.50' : '1'}
+              step={addFundsUnit === 'usd' ? '0.01' : 'any'}
               value={formState.amount}
               onChange={(e) => setFormState((prev) => ({ ...prev, amount: e.target.value }))}
-              placeholder="e.g., 500"
+              placeholder={addFundsUnit === 'usd' ? 'e.g., 10' : 'e.g., 500'}
               className="bg-black/20 border-white/10 text-white placeholder-gray-500 focus:border-yellow-400"
               required
             />
+            <div className="text-xs text-gray-400 space-y-1">
+              <p className="flex items-center gap-2">
+                <img
+                  src={CROSSCOIN_ICON_URL}
+                  alt="CrossCoin"
+                  className="w-4 h-4"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = '/favicon-32x32.png';
+                  }}
+                />
+                <span>Rate: 1 CC = ${ccToUsd.toFixed(2)} USD</span>
+              </p>
+              <p>Typical limits: $5–$100 per top-up (server-enforced).</p>
+              {Number.isFinite(amountCcDerived) && amountCcDerived > 0 && (
+                <p>
+                  You pay <span className="text-gray-200">${Number(amountUsdDerived).toFixed(2)}</span> and receive{' '}
+                  <span className="text-yellow-200">{Number(amountCcDerived).toFixed(2)} CC</span> (estimated).
+                </p>
+              )}
+              {Number.isFinite(amountCcDerived) && amountCcDerived > 0 && (
+                <p>
+                  After top-up: <span className="text-yellow-200">{Number((Number(balance) || 0) + amountCcDerived).toFixed(2)} CC</span>{' '}
+                  (~${Number(((Number(balance) || 0) + amountCcDerived) * ccToUsd).toFixed(2)} USD)
+                </p>
+              )}
+            </div>
           </div>
         </div>
         <DialogFooter className="pt-5">

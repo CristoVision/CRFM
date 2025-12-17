@@ -12,6 +12,7 @@ import PageViewsAnalyticsPanel from '@/components/analytics/PageViewsAnalyticsPa
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { subDays, format, startOfDay, endOfDay } from 'date-fns';
+import { CROSSCOIN_ICON_URL } from '@/lib/brandAssets';
 
 const AnalyticsTab = () => {
   const { user, profile } = useAuth();
@@ -181,7 +182,15 @@ const AnalyticsTab = () => {
                 <Card className="glass-effect-light">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium text-gray-300">Estimated Earnings</CardTitle>
-                    <img src="/favicon-32x32.png" alt="CrossCoin" className="w-5 h-5" />
+                    <img
+                      src={CROSSCOIN_ICON_URL}
+                      alt="CrossCoin"
+                      className="w-5 h-5"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = '/favicon-32x32.png';
+                      }}
+                    />
                   </CardHeader>
                   <CardContent>
                     <div className="text-3xl font-bold golden-text">{totalEarnings.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }).slice(1)} <span className="text-sm text-yellow-500">XCC</span></div>

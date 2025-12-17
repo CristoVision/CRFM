@@ -9,6 +9,7 @@ import TransactionRow from '@/components/wallet/TransactionRow';
 import TransactionFilters from '@/components/wallet/TransactionFilters';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LineChart as ReLineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
+import { CROSSCOIN_ICON_URL } from '@/lib/brandAssets';
 const ITEMS_PER_PAGE_RECENT = 10;
 const ITEMS_PER_PAGE_ALL = 25;
 function WalletPage() {
@@ -266,7 +267,15 @@ function WalletPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
               <div className="glass-effect p-8 rounded-xl shadow-xl text-center space-y-3">
-                <img src="/favicon-32x32.png" alt="CrossCoin" className="w-20 h-20 mx-auto mb-2" />
+                <img
+                  src={CROSSCOIN_ICON_URL}
+                  alt="CrossCoin"
+                  className="w-20 h-20 mx-auto mb-2"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = '/favicon-32x32.png';
+                  }}
+                />
                 <h2 className="text-2xl text-gray-400">Current Balance</h2>
                 <p className="text-5xl font-bold golden-text">{formatBalance()}</p>
                 <div className="flex items-center justify-center gap-2 text-xs text-gray-300">

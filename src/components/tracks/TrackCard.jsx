@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-    import { useNavigate } from 'react-router-dom';
-    import { Play, Pause, Loader2, Star, Share2, Flag, FileText } from 'lucide-react';
-    import { Button } from '@/components/ui/button';
-    import { Card, CardContent } from '@/components/ui/card';
-    import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-    import { useAuth } from '@/contexts/AuthContext';
-    import { usePlayer } from '@/contexts/PlayerContext';
-    import { toast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { Play, Pause, Loader2, Star, Share2, Flag, FileText } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAuth } from '@/contexts/AuthContext';
+import { usePlayer } from '@/contexts/PlayerContext';
+import { toast } from '@/components/ui/use-toast';
+import { CROSSCOIN_ICON_URL } from '@/lib/brandAssets';
 
-    const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXVkaW98ZW58MHx8MHx8fDA%3D&w=1000&q=80';
-    const CROSSCOIN_ICON_URL = '/favicon-32x32.png';
+const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXVkaW98ZW58MHx8MHx8fDA%3D&w=1000&q=80';
 
     const TrackCard = ({ item, onPlay, isPlaying, currentTrackId, onFlag, onShare }) => {
       const navigate = useNavigate();
@@ -154,7 +154,15 @@ import React, { useState, useEffect } from 'react';
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="flex items-center text-xs text-yellow-400 mt-1 cursor-default" onClick={(e) => e.stopPropagation()}>
-                          <img src={CROSSCOIN_ICON_URL} alt="CrossCoin" className="w-3.5 h-3.5 mr-1" />
+                          <img
+                            src={CROSSCOIN_ICON_URL}
+                            alt="CrossCoin"
+                            className="w-3.5 h-3.5 mr-1"
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = '/favicon-32x32.png';
+                            }}
+                          />
                           <span>{stream_cost} CC</span>
                         </div>
                       </TooltipTrigger>
