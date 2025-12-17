@@ -116,6 +116,17 @@ const HubPage = () => {
   })();
   const hasActiveSubscription = hasStripeUnlimited || hasPrepaidUnlimited;
   const creatorUploadPolicy = String(profile?.creator_upload_policy || 'free').toLowerCase();
+  const policyConfirmed = useMemo(() => {
+    if (!user?.id) return true;
+    // If user is on a non-free policy (or has unlimited active), treat as confirmed.
+    if (hasActiveSubscription || (creatorUploadPolicy && creatorUploadPolicy !== 'free')) return true;
+    try {
+      const key = `crfm:creator_upload_policy_confirmed:${user.id}`;
+      return window.localStorage.getItem(key) === '1';
+    } catch {
+      return false;
+    }
+  }, [creatorUploadPolicy, hasActiveSubscription, user?.id]);
 
   const loadCredits = useCallback(async () => {
     if (!user?.id) {
@@ -209,6 +220,18 @@ const HubPage = () => {
         return;
       }
 
+      // Force a plan selection/acknowledgement before first upload (even Free tier),
+      // so creators explicitly choose between 10% fee (Free) vs 100% royalties plans.
+      if (!policyConfirmed) {
+        toast({
+          title: 'Choose your upload plan',
+          description: 'Select Free (10% platform fee) or a plan for 100% royalties before uploading.',
+          variant: 'destructive',
+        });
+        openMonetization();
+        return;
+      }
+
       if (permissions[actionKey]) {
         onAllowed?.();
         return;
@@ -232,7 +255,7 @@ const HubPage = () => {
       });
       openMonetization();
     },
-    [creatorUploadPolicy, navigate, openMonetization, permissions, toast, user]
+    [creatorUploadPolicy, navigate, openMonetization, permissions, policyConfirmed, toast, user]
   );
 
   const uploadGate = useMemo(
@@ -244,8 +267,9 @@ const HubPage = () => {
       permissions,
       guard: guardUploadAction,
       refreshCredits: loadCredits,
+      policyConfirmed,
     }),
-    [credits, creatorUploadPolicy, guardUploadAction, hasActiveSubscription, loadingCredits, loadCredits, permissions]
+    [credits, creatorUploadPolicy, guardUploadAction, hasActiveSubscription, loadingCredits, loadCredits, permissions, policyConfirmed]
   );
 
   const quickActions = useMemo(

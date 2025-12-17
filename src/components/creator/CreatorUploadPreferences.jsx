@@ -14,6 +14,7 @@ import { Loader2, Settings2, Coins, AlertTriangle, Layers, CheckCircle2 } from '
 
 const STORAGE_PREFIX = 'crfm:creator_upload_policy:';
 const CONTENT_POLICY_PREFIX = 'crfm:creator_content_policy:';
+const POLICY_CONFIRM_PREFIX = 'crfm:creator_upload_policy_confirmed:';
 
 const POLICIES = [
   {
@@ -78,6 +79,7 @@ const CreatorUploadPreferences = () => {
 
   const storageKey = useMemo(() => (user?.id ? `${STORAGE_PREFIX}${user.id}` : null), [user?.id]);
   const contentPolicyKey = useMemo(() => (user?.id ? `${CONTENT_POLICY_PREFIX}${user.id}` : null), [user?.id]);
+  const policyConfirmKey = useMemo(() => (user?.id ? `${POLICY_CONFIRM_PREFIX}${user.id}` : null), [user?.id]);
 
   const contentPolicyMap = useMemo(() => {
     if (!contentPolicyKey) return { tracks: {}, albums: {}, videos: {} };
@@ -127,15 +129,22 @@ const CreatorUploadPreferences = () => {
     setSelectedPolicy(initial);
     setSaveMode(fromProfile ? 'server' : fromStorage ? 'local' : null);
 
+    // If the creator is already on a non-free policy (e.g., webhook set it),
+    // consider the "policy selected" step complete.
+    if (policyConfirmKey && fromProfile && fromProfile !== 'free') {
+      window.localStorage.setItem(policyConfirmKey, '1');
+    }
+
     setLoading(false);
     loadCounts();
-  }, [user?.id, storageKey, profile?.creator_upload_policy, loadCounts]);
+  }, [user?.id, storageKey, profile?.creator_upload_policy, loadCounts, policyConfirmKey]);
 
   const save = async () => {
     if (!user?.id || !storageKey) return;
     setSaving(true);
     try {
       window.localStorage.setItem(storageKey, selectedPolicy);
+      if (policyConfirmKey) window.localStorage.setItem(policyConfirmKey, '1');
 
       const { error } = await supabase
         .from('profiles')

@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import WalletActionModal from '@/components/wallet/WalletActionModal';
 import { Coins, CreditCard, DollarSign, ExternalLink } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 
 const formatNumber = (value) => {
   const n = Number(value);
@@ -14,6 +15,7 @@ const formatNumber = (value) => {
 const CreatorWalletPanel = () => {
   const { user, profile, refreshUserProfile } = useAuth();
   const [activeAction, setActiveAction] = useState(null); // 'add_funds' | 'withdraw' | null
+  const canUseStripe = !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
   const walletBalance = useMemo(() => Number(profile?.wallet_balance || 0), [profile?.wallet_balance]);
   const withdrawableBalance = useMemo(() => {
@@ -84,7 +86,22 @@ const CreatorWalletPanel = () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button type="button" className="golden-gradient text-black font-semibold" onClick={() => setActiveAction('add_funds')}>
+          <Button
+            type="button"
+            className="golden-gradient text-black font-semibold"
+            disabled={!canUseStripe}
+            onClick={() => {
+              if (!canUseStripe) {
+                toast({
+                  title: 'Stripe not configured',
+                  description: 'Missing VITE_STRIPE_PUBLISHABLE_KEY on this deployment (top-ups disabled).',
+                  variant: 'destructive',
+                });
+                return;
+              }
+              setActiveAction('add_funds');
+            }}
+          >
             <DollarSign className="w-4 h-4 mr-2" />
             Top Up
           </Button>
