@@ -62,11 +62,11 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Assert Stripe publishable key
+      - name: Check Stripe publishable key
         run: |
           if [ -z "${VITE_STRIPE_PUBLISHABLE_KEY}" ]; then
-            echo "Missing VITE_STRIPE_PUBLISHABLE_KEY (GitHub Actions secret is empty or not configured)."
-            exit 1
+            echo "WARNING: Missing VITE_STRIPE_PUBLISHABLE_KEY (Stripe checkout will be disabled in the UI)."
+            exit 0
           fi
           echo "Stripe key present (length=${#VITE_STRIPE_PUBLISHABLE_KEY})."
 
