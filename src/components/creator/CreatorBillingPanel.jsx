@@ -32,6 +32,10 @@ const CreatorBillingPanel = () => {
   const [checkoutClientSecret, setCheckoutClientSecret] = useState('');
   const [checkoutLabel, setCheckoutLabel] = useState('');
 
+  const [purchasePromptOpen, setPurchasePromptOpen] = useState(false);
+  const [purchasePromptBusy, setPurchasePromptBusy] = useState(false);
+  const [pendingPurchase, setPendingPurchase] = useState(null); // { billingAction: 'upload_fee', feeType: 'track'|'album' }
+
   const subscriptionStatus = safeString(profile?.stripe_subscription_status || '').toLowerCase();
   const hasStripeUnlimited = useMemo(() => ACTIVE_SUB_STATUSES.has(subscriptionStatus), [subscriptionStatus]);
   const hasPrepaidUnlimited = useMemo(() => {
@@ -208,6 +212,7 @@ const CreatorBillingPanel = () => {
     const params = new URLSearchParams(location.search || '');
     const billingAction = params.get('billing_action');
     const feeType = params.get('fee_type');
+    const paymentMethod = params.get('payment_method');
 
     if (billingAction !== 'upload_fee') return;
     if (feeType !== 'track' && feeType !== 'album') return;
@@ -216,6 +221,7 @@ const CreatorBillingPanel = () => {
 
     params.delete('billing_action');
     params.delete('fee_type');
+    params.delete('payment_method');
 
     navigate(
       {
@@ -225,12 +231,23 @@ const CreatorBillingPanel = () => {
       { replace: true }
     );
 
-    startEmbeddedCheckout({
-      kind: 'upload_fee',
-      payload: { fee_type: feeType },
-      label: feeType === 'track' ? 'Track Upload Fee' : 'Album Upload Fee',
-    });
-  }, [location.pathname, location.search, navigate, startEmbeddedCheckout, user?.id]);
+    if (paymentMethod === 'cc') {
+      purchaseUploadCreditWithCc(feeType);
+      return;
+    }
+
+    if (paymentMethod === 'stripe') {
+      startEmbeddedCheckout({
+        kind: 'upload_fee',
+        payload: { fee_type: feeType },
+        label: feeType === 'track' ? 'Track Upload Fee' : 'Album Upload Fee',
+      });
+      return;
+    }
+
+    setPendingPurchase({ billingAction: 'upload_fee', feeType });
+    setPurchasePromptOpen(true);
+  }, [location.pathname, location.search, navigate, purchaseUploadCreditWithCc, startEmbeddedCheckout, user?.id]);
 
   const handleCloseCheckout = () => {
     if (checkoutLoading) return;
@@ -238,6 +255,41 @@ const CreatorBillingPanel = () => {
     setCheckoutClientSecret('');
     setCheckoutLabel('');
   };
+
+  const pendingCcPrice = useMemo(() => {
+    if (!pendingPurchase?.feeType) return null;
+    const key = pendingPurchase.feeType === 'track' ? 'upload_track_credit' : 'upload_album_credit';
+    const row = ccPrices?.[key];
+    return row?.is_active ? Number(row.price_cc || 0) : null;
+  }, [ccPrices, pendingPurchase?.feeType]);
+
+  const pendingCcEnabled = useMemo(() => {
+    if (!pendingPurchase?.feeType) return false;
+    if (!ccPricesSupported || ccPricesLoading) return false;
+    const key = pendingPurchase.feeType === 'track' ? 'upload_track_credit' : 'upload_album_credit';
+    return !!ccPrices?.[key]?.is_active;
+  }, [ccPrices, ccPricesLoading, ccPricesSupported, pendingPurchase?.feeType]);
+
+  const handlePurchasePromptStripe = useCallback(() => {
+    if (!pendingPurchase?.feeType) return;
+    setPurchasePromptOpen(false);
+    startEmbeddedCheckout({
+      kind: 'upload_fee',
+      payload: { fee_type: pendingPurchase.feeType },
+      label: pendingPurchase.feeType === 'track' ? 'Track Upload Fee' : 'Album Upload Fee',
+    });
+  }, [pendingPurchase?.feeType, startEmbeddedCheckout]);
+
+  const handlePurchasePromptCc = useCallback(async () => {
+    if (!pendingPurchase?.feeType) return;
+    setPurchasePromptBusy(true);
+    try {
+      await purchaseUploadCreditWithCc(pendingPurchase.feeType);
+      setPurchasePromptOpen(false);
+    } finally {
+      setPurchasePromptBusy(false);
+    }
+  }, [pendingPurchase?.feeType, purchaseUploadCreditWithCc]);
 
   // When coming back from Stripe (return_url), the webhook may take a moment to apply credits/status.
   // Do a short refresh/poll so the user sees the update without manual reload.
@@ -508,6 +560,69 @@ const CreatorBillingPanel = () => {
           <div className="pt-3 flex justify-end gap-2">
             <Button type="button" variant="outline" className="bg-white/5 border-white/15 text-gray-200 hover:bg-white/10" onClick={handleCloseCheckout}>
               Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={purchasePromptOpen}
+        onOpenChange={(open) => {
+          if (purchasePromptBusy) return;
+          setPurchasePromptOpen(open);
+          if (!open) setPendingPurchase(null);
+        }}
+      >
+        <DialogContent className="max-w-lg w-[95vw] glass-effect-light text-white p-4">
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="golden-text text-xl">Purchase upload credit</DialogTitle>
+            <DialogDescription className="text-gray-300">
+              Choose a payment method for a {pendingPurchase?.feeType === 'album' ? 'Album' : 'Track'} upload credit.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-sm text-gray-300 space-y-2">
+            <div className="flex items-center justify-between">
+              <span>CrossCoins balance</span>
+              <span className="text-yellow-200 font-semibold">{Number.isFinite(walletBalance) ? walletBalance.toLocaleString() : '0'} CC</span>
+            </div>
+            {pendingCcEnabled ? (
+              <div className="text-xs text-gray-400">
+                CC price: {Number(pendingCcPrice || 0).toLocaleString()} CC
+              </div>
+            ) : (
+              <div className="text-xs text-gray-500">CC purchase not available for this item on this deployment.</div>
+            )}
+          </div>
+
+          <div className="pt-2 flex flex-wrap justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="bg-white/5 border-white/15 text-gray-200 hover:bg-white/10"
+              disabled={purchasePromptBusy}
+              onClick={() => setPurchasePromptOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="border-yellow-400/40 text-yellow-200 hover:bg-yellow-400/10"
+              disabled={purchasePromptBusy || checkoutLoading || !canUseStripe}
+              onClick={handlePurchasePromptStripe}
+            >
+              {checkoutLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Pay with Stripe
+            </Button>
+            <Button
+              type="button"
+              className="golden-gradient text-black font-semibold"
+              disabled={purchasePromptBusy || checkoutLoading || !pendingCcEnabled}
+              onClick={handlePurchasePromptCc}
+            >
+              {purchasePromptBusy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Pay with CrossCoins
             </Button>
           </div>
         </DialogContent>
