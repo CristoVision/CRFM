@@ -16,5 +16,4 @@ export const BRAND_LOGO_GIF_URL =
   storagePublicUrl('logo', 'crfm-logo-gold.gif') || '/favicon-32x32.png';
 
 export const CROSSCOIN_ICON_URL =
-  storagePublicUrl('logo', 'CrossCoins2025.png') || '/favicon-32x32.png';
-
+  storagePublicUrl('logo', 'CrossCoin2025.png') || '/favicon-32x32.png';
