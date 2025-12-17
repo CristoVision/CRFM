@@ -13,6 +13,12 @@
 -- - Contributor splits use content_contributions.royalty_share_percent (sum to 100%).
 --   If invitees exist without contributor_id, their share is temporarily assigned to the uploader until claimed.
 
+-- Optional columns used for fee logic (safe no-ops if already present).
+alter table public.profiles
+  add column if not exists withdrawable_balance numeric not null default 0;
+alter table public.profiles
+  add column if not exists creator_unlimited_expires_at timestamptz;
+
 create table if not exists public.platform_fee_events (
   id uuid primary key default gen_random_uuid(),
   listener_id uuid not null references auth.users(id) on delete cascade,
@@ -41,6 +47,9 @@ declare
   v_listener_balance numeric;
   v_track record;
   v_policy text;
+  v_creator_sub_status text;
+  v_creator_unlimited_expires_at timestamptz;
+  v_creator_has_unlimited boolean := false;
   v_fee_pct numeric;
   v_cost numeric;
   v_creator_pool numeric;
@@ -126,11 +135,31 @@ begin
   -- Determine upload policy (track override or creator default).
   v_policy := v_track.upload_policy;
   if v_policy is null then
-    select p.creator_upload_policy into v_policy
+    select
+      p.creator_upload_policy,
+      p.stripe_subscription_status,
+      p.creator_unlimited_expires_at
+      into v_policy, v_creator_sub_status, v_creator_unlimited_expires_at
+    from public.profiles p
+    where p.id = v_uploader_id;
+  else
+    select
+      p.stripe_subscription_status,
+      p.creator_unlimited_expires_at
+      into v_creator_sub_status, v_creator_unlimited_expires_at
     from public.profiles p
     where p.id = v_uploader_id;
   end if;
   v_policy := coalesce(v_policy, 'free');
+
+  v_creator_has_unlimited :=
+    lower(coalesce(v_creator_sub_status, '')) in ('active', 'trialing')
+    or (v_creator_unlimited_expires_at is not null and v_creator_unlimited_expires_at > v_now);
+
+  -- If content is marked as subscription but creator is not currently covered, treat it as Free for platform fee.
+  if v_policy = 'subscription' and not v_creator_has_unlimited then
+    v_policy := 'free';
+  end if;
 
   -- Platform fee: only on free policy (10%).
   v_fee_pct := case when v_policy = 'free' then 0.10 else 0 end;

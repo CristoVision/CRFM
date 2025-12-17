@@ -41,8 +41,8 @@ const POLICIES = [
     subtitle: 'Monthly / 6-month / yearly (with discounts).',
     bullets: [
       'Unlimited uploads while membership is active.',
-      'Royalties: 100% to creator until membership expires (then paused).',
-      'Content remains listed, but royalties earned while expired are forfeited.',
+      'Royalties: 100% to creator while membership is active.',
+      'If membership is not active, uploads may be locked and Free-tier fees apply to new streams.',
     ],
   },
 ];

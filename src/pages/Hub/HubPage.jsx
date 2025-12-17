@@ -107,7 +107,14 @@ const HubPage = () => {
   };
 
   const subscriptionStatus = String(profile?.stripe_subscription_status || '').toLowerCase();
-  const hasActiveSubscription = subscriptionStatus === 'active' || subscriptionStatus === 'trialing';
+  const hasStripeUnlimited = subscriptionStatus === 'active' || subscriptionStatus === 'trialing';
+  const hasPrepaidUnlimited = (() => {
+    const expiresAt = profile?.creator_unlimited_expires_at;
+    if (!expiresAt) return false;
+    const ts = new Date(expiresAt).getTime();
+    return Number.isFinite(ts) && ts > Date.now();
+  })();
+  const hasActiveSubscription = hasStripeUnlimited || hasPrepaidUnlimited;
   const creatorUploadPolicy = String(profile?.creator_upload_policy || 'free').toLowerCase();
 
   const loadCredits = useCallback(async () => {
@@ -311,6 +318,28 @@ const HubPage = () => {
     refreshUserProfile?.();
     loadCredits();
   }, [location.pathname, location.search, navigate, refreshUserProfile, toast, loadCredits]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search || '');
+    const walletCheckout = params.get('wallet_checkout');
+    if (!walletCheckout) return;
+
+    toast({
+      title: 'Top up complete',
+      description: 'We are applying your wallet balance. This may take a few seconds.',
+    });
+
+    params.delete('wallet_checkout');
+    navigate(
+      {
+        pathname: location.pathname,
+        search: params.toString() ? `?${params.toString()}` : '',
+      },
+      { replace: true }
+    );
+
+    refreshUserProfile?.();
+  }, [location.pathname, location.search, navigate, refreshUserProfile, toast]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white p-4 md:p-8">

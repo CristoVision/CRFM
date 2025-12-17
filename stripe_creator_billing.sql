@@ -114,6 +114,12 @@ begin
     credits = public.creator_upload_fee_credits.credits + 1,
     updated_at = now();
 
+  -- Helpful default: if the creator was on Free, switch them to Pay Per Upload
+  -- so royalties run at 100% for new uploads that follow creator defaults.
+  update public.profiles
+  set creator_upload_policy = case when creator_upload_policy = 'free' then 'pay_per_upload' else creator_upload_policy end
+  where id = p_user_id;
+
   return jsonb_build_object('ok', true);
 end;
 $$;

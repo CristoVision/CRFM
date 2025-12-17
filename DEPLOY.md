@@ -35,6 +35,7 @@ Este repo incluye Edge Functions de Supabase para iniciar Checkout y procesar el
 - SQL: `stripe_wallet.sql` (tablas + RPC idempotente)
 - SQL: `stripe_creator_billing.sql` (suscripciones + fees + créditos)
 - SQL: `stripe_upload_enforcement.sql` (enforcement server-side + consumo de créditos)
+- SQL: `creator_billing_cc.sql` (compras de Unlimited + créditos usando CrossCoins)
 
 ### Secrets (Supabase Edge Functions)
 Configura en tu proyecto Supabase (CLI: `supabase secrets set ...`):
@@ -53,6 +54,12 @@ Configura en tu proyecto Supabase (CLI: `supabase secrets set ...`):
 - `STRIPE_PRICE_UNLIMITED_YEARLY`
 - `STRIPE_PRICE_UPLOAD_TRACK`
 - `STRIPE_PRICE_UPLOAD_ALBUM`
+
+### Precios (CrossCoins)
+Si quieres permitir pagar planes/fees usando CrossCoins (balance interno), primero ejecuta `creator_billing_cc.sql` y luego configura la tabla:
+- `public.crfm_creator_billing_prices` (`price_cc` + `is_active=true`)
+  - Claves: `unlimited_monthly`, `unlimited_6mo`, `unlimited_yearly`, `upload_track_credit`, `upload_album_credit`
+  - Recomendación: si `1 CC = $0.01`, entonces `price_cc = price_usd * 100`.
 
 ### URLs
 - Webhook endpoint: `https://<project-ref>.supabase.co/functions/v1/stripe-webhook`

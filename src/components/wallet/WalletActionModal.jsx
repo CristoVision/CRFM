@@ -42,7 +42,7 @@ const defaultState = {
   code: '',
 };
 
-const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId, onSuccess }) => {
+const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId, onSuccess, returnUrl }) => {
   const [formState, setFormState] = useState(defaultState);
   const [submitting, setSubmitting] = useState(false);
   
@@ -174,7 +174,7 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
           </DialogHeader>
           <div className="px-1 py-4">
             <Elements options={options} stripe={stripePromise}>
-              <CheckoutForm onSuccess={() => onOpenChange(false)} onCancel={() => setStep('amount')} />
+              <CheckoutForm onSuccess={() => onOpenChange(false)} onCancel={() => setStep('amount')} returnUrl={returnUrl} />
             </Elements>
           </div>
         </>

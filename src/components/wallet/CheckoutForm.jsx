@@ -3,7 +3,7 @@ import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
-export default function CheckoutForm({ onSuccess, onCancel }) {
+export default function CheckoutForm({ onSuccess, onCancel, returnUrl }) {
   const stripe = useStripe();
   const elements = useElements();
 
@@ -23,8 +23,7 @@ export default function CheckoutForm({ onSuccess, onCancel }) {
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        // Make sure to change this to your payment completion page
-        return_url: `${window.location.origin}/wallet?checkout=success`,
+        return_url: returnUrl || `${window.location.origin}/wallet?checkout=success`,
       },
     });
 

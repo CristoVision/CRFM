@@ -11,6 +11,10 @@
 -- - Tracks inserted with a non-null `album_id` do NOT consume track credits (album creation consumes an album credit).
 -- - Playlists + music videos are gated but do not consume credits (no Stripe prices defined yet).
 
+-- Optional: prepaid unlimited window (CrossCoins). Safe to add even if unused.
+alter table public.profiles
+  add column if not exists creator_unlimited_expires_at timestamptz;
+
 create or replace function public._crfm_is_active_subscription(p_status text)
 returns boolean
 language sql
@@ -30,6 +34,7 @@ as $$
 declare
   v_policy text;
   v_sub_status text;
+  v_unlimited_expires_at timestamptz;
   v_has_any_credit boolean;
 begin
   -- Allow service role / background jobs.
@@ -45,15 +50,18 @@ begin
     raise exception 'CRFM_UPLOAD_LOCKED: user mismatch' using errcode = '42501';
   end if;
 
-  select lower(coalesce(creator_upload_policy, 'free')), stripe_subscription_status
-    into v_policy, v_sub_status
+  select
+    lower(coalesce(creator_upload_policy, 'free')),
+    stripe_subscription_status,
+    creator_unlimited_expires_at
+    into v_policy, v_sub_status, v_unlimited_expires_at
   from public.profiles
   where id = p_user_id;
 
   v_policy := coalesce(v_policy, 'free');
 
   -- Active subscriptions always allow uploads (regardless of selected policy).
-  if public._crfm_is_active_subscription(v_sub_status) then
+  if public._crfm_is_active_subscription(v_sub_status) or (v_unlimited_expires_at is not null and v_unlimited_expires_at > now()) then
     return;
   end if;
 
@@ -129,6 +137,7 @@ as $$
 declare
   v_policy text;
   v_sub_status text;
+  v_unlimited_expires_at timestamptz;
 begin
   -- Allow service role / background jobs.
   if auth.role() = 'service_role' then
@@ -139,14 +148,17 @@ begin
     raise exception 'CRFM_UPLOAD_LOCKED: user mismatch' using errcode = '42501';
   end if;
 
-  select lower(coalesce(creator_upload_policy, 'free')), stripe_subscription_status
-    into v_policy, v_sub_status
+  select
+    lower(coalesce(creator_upload_policy, 'free')),
+    stripe_subscription_status,
+    creator_unlimited_expires_at
+    into v_policy, v_sub_status, v_unlimited_expires_at
   from public.profiles
   where id = new.uploader_id;
 
   v_policy := coalesce(v_policy, 'free');
 
-  if public._crfm_is_active_subscription(v_sub_status) then
+  if public._crfm_is_active_subscription(v_sub_status) or (v_unlimited_expires_at is not null and v_unlimited_expires_at > now()) then
     return new;
   end if;
 
@@ -181,6 +193,7 @@ as $$
 declare
   v_policy text;
   v_sub_status text;
+  v_unlimited_expires_at timestamptz;
 begin
   if auth.role() = 'service_role' then
     return new;
@@ -190,14 +203,17 @@ begin
     raise exception 'CRFM_UPLOAD_LOCKED: user mismatch' using errcode = '42501';
   end if;
 
-  select lower(coalesce(creator_upload_policy, 'free')), stripe_subscription_status
-    into v_policy, v_sub_status
+  select
+    lower(coalesce(creator_upload_policy, 'free')),
+    stripe_subscription_status,
+    creator_unlimited_expires_at
+    into v_policy, v_sub_status, v_unlimited_expires_at
   from public.profiles
   where id = new.uploader_id;
 
   v_policy := coalesce(v_policy, 'free');
 
-  if public._crfm_is_active_subscription(v_sub_status) then
+  if public._crfm_is_active_subscription(v_sub_status) or (v_unlimited_expires_at is not null and v_unlimited_expires_at > now()) then
     return new;
   end if;
 

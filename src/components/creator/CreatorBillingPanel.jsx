@@ -5,7 +5,7 @@ import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Loader2, CreditCard, Sparkles, Receipt, AlertTriangle } from 'lucide-react';
+import { Loader2, CreditCard, Sparkles, Receipt, AlertTriangle, Coins } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { loadStripe } from '@stripe/stripe-js';
@@ -33,9 +33,45 @@ const CreatorBillingPanel = () => {
   const [checkoutLabel, setCheckoutLabel] = useState('');
 
   const subscriptionStatus = safeString(profile?.stripe_subscription_status || '').toLowerCase();
-  const hasActiveSubscription = useMemo(() => ACTIVE_SUB_STATUSES.has(subscriptionStatus), [subscriptionStatus]);
+  const hasStripeUnlimited = useMemo(() => ACTIVE_SUB_STATUSES.has(subscriptionStatus), [subscriptionStatus]);
+  const hasPrepaidUnlimited = useMemo(() => {
+    const expiresAt = profile?.creator_unlimited_expires_at;
+    if (!expiresAt) return false;
+    const ts = new Date(expiresAt).getTime();
+    return Number.isFinite(ts) && ts > Date.now();
+  }, [profile?.creator_unlimited_expires_at]);
+  const hasActiveSubscription = hasStripeUnlimited || hasPrepaidUnlimited;
 
   const canUseStripe = !!STRIPE_PUBLISHABLE_KEY;
+  const walletBalance = useMemo(() => Number(profile?.wallet_balance || 0), [profile?.wallet_balance]);
+
+  const [ccPricesLoading, setCcPricesLoading] = useState(false);
+  const [ccPrices, setCcPrices] = useState({});
+  const [ccPricesSupported, setCcPricesSupported] = useState(true);
+
+  const loadCcPrices = useCallback(async () => {
+    if (!user?.id) return;
+    setCcPricesLoading(true);
+    try {
+      const { data, error } = await supabase.from('crfm_creator_billing_prices').select('key, price_cc, is_active');
+      if (error) throw error;
+      const next = {};
+      (data || []).forEach((row) => {
+        next[row.key] = { price_cc: Number(row.price_cc || 0), is_active: !!row.is_active };
+      });
+      setCcPrices(next);
+      setCcPricesSupported(true);
+    } catch {
+      setCcPrices({});
+      setCcPricesSupported(false);
+    } finally {
+      setCcPricesLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    loadCcPrices();
+  }, [loadCcPrices]);
 
   const loadCredits = useCallback(async () => {
     if (!user?.id) return;
@@ -116,6 +152,53 @@ const CreatorBillingPanel = () => {
       }
     },
     [user?.id, canUseStripe]
+  );
+
+  const purchaseUnlimitedWithCc = useCallback(
+    async (plan) => {
+      if (!user?.id) return;
+      try {
+        const { data, error } = await supabase.rpc('rpc_creator_purchase_unlimited_cc', { p_plan: plan });
+        if (error) throw error;
+        toast({
+          title: 'Unlimited activated',
+          description: `Charged ${Number(data?.price_cc || 0).toLocaleString()} CC.`,
+          className: 'bg-green-600 text-white',
+        });
+        await refreshUserProfile?.();
+      } catch (err) {
+        toast({
+          title: 'CC purchase failed',
+          description: err?.message || 'Please try again.',
+          variant: 'destructive',
+        });
+      }
+    },
+    [refreshUserProfile, user?.id]
+  );
+
+  const purchaseUploadCreditWithCc = useCallback(
+    async (feeType) => {
+      if (!user?.id) return;
+      try {
+        const { data, error } = await supabase.rpc('rpc_creator_purchase_upload_credit_cc', { p_fee_type: feeType, p_quantity: 1 });
+        if (error) throw error;
+        toast({
+          title: 'Credit added',
+          description: `Charged ${Number(data?.total_cc || 0).toLocaleString()} CC.`,
+          className: 'bg-green-600 text-white',
+        });
+        await refreshUserProfile?.();
+        await loadCredits();
+      } catch (err) {
+        toast({
+          title: 'CC purchase failed',
+          description: err?.message || 'Please try again.',
+          variant: 'destructive',
+        });
+      }
+    },
+    [loadCredits, refreshUserProfile, user?.id]
   );
 
   useEffect(() => {
@@ -214,14 +297,16 @@ const CreatorBillingPanel = () => {
         <div className="space-y-1">
           <h3 className="text-lg font-semibold text-yellow-300 flex items-center gap-2">
             <CreditCard className="w-5 h-5" />
-            Billing (Stripe)
+            Billing (Stripe / CrossCoins)
           </h3>
           <p className="text-sm text-gray-300">
-            Payments are processed securely by Stripe. Upload credits and subscriptions are applied via webhook.
+            Pay with Stripe for instant processing, or use your CrossCoins balance (if configured) for prepaid purchases.
           </p>
         </div>
-        {hasActiveSubscription ? (
+        {hasStripeUnlimited ? (
           <Badge className="bg-green-600 text-white border-green-700">Subscription: {subscriptionStatus}</Badge>
+        ) : hasPrepaidUnlimited ? (
+          <Badge className="bg-green-600 text-white border-green-700">Unlimited: prepaid</Badge>
         ) : subscriptionStatus ? (
           <Badge variant="outline" className="border-yellow-400/40 text-yellow-200">
             Subscription: {subscriptionStatus}
@@ -252,7 +337,7 @@ const CreatorBillingPanel = () => {
               onClick={() => startEmbeddedCheckout({ kind: 'creator_subscription', payload: { plan: 'monthly' }, label: 'Unlimited Uploads — Monthly' })}
             >
               {checkoutLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-              Monthly
+              Stripe: Monthly
             </Button>
             <Button
               type="button"
@@ -261,7 +346,7 @@ const CreatorBillingPanel = () => {
               disabled={checkoutLoading || hasActiveSubscription}
               onClick={() => startEmbeddedCheckout({ kind: 'creator_subscription', payload: { plan: 'six_months' }, label: 'Unlimited Uploads — 6 Months' })}
             >
-              6 Months
+              Stripe: 6 Months
             </Button>
             <Button
               type="button"
@@ -270,11 +355,54 @@ const CreatorBillingPanel = () => {
               disabled={checkoutLoading || hasActiveSubscription}
               onClick={() => startEmbeddedCheckout({ kind: 'creator_subscription', payload: { plan: 'yearly' }, label: 'Unlimited Uploads — Yearly' })}
             >
-              Yearly
+              Stripe: Yearly
             </Button>
           </div>
+          <div className="rounded-lg border border-white/10 bg-black/10 p-3 space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-xs text-gray-300 flex items-center gap-2">
+                <Coins className="w-4 h-4 text-yellow-300" />
+                Pay with CrossCoins
+              </div>
+              <div className="text-[11px] text-gray-400">Balance: {Number.isFinite(walletBalance) ? walletBalance.toLocaleString() : '0'} CC</div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="border-yellow-400/40 text-yellow-200 hover:bg-yellow-400/10"
+                disabled={checkoutLoading || hasActiveSubscription || !ccPricesSupported || ccPricesLoading || !ccPrices?.unlimited_monthly?.is_active}
+                onClick={() => purchaseUnlimitedWithCc('monthly')}
+              >
+                CC: Monthly {ccPrices?.unlimited_monthly?.is_active ? `(${Number(ccPrices.unlimited_monthly.price_cc || 0).toLocaleString()} CC)` : '(setup)'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="border-yellow-400/40 text-yellow-200 hover:bg-yellow-400/10"
+                disabled={checkoutLoading || hasActiveSubscription || !ccPricesSupported || ccPricesLoading || !ccPrices?.unlimited_6mo?.is_active}
+                onClick={() => purchaseUnlimitedWithCc('six_months')}
+              >
+                CC: 6 Months {ccPrices?.unlimited_6mo?.is_active ? `(${Number(ccPrices.unlimited_6mo.price_cc || 0).toLocaleString()} CC)` : '(setup)'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="border-yellow-400/40 text-yellow-200 hover:bg-yellow-400/10"
+                disabled={checkoutLoading || hasActiveSubscription || !ccPricesSupported || ccPricesLoading || !ccPrices?.unlimited_yearly?.is_active}
+                onClick={() => purchaseUnlimitedWithCc('yearly')}
+              >
+                CC: Yearly {ccPrices?.unlimited_yearly?.is_active ? `(${Number(ccPrices.unlimited_yearly.price_cc || 0).toLocaleString()} CC)` : '(setup)'}
+              </Button>
+            </div>
+            {!ccPricesSupported ? (
+              <div className="text-[11px] text-gray-500">CC billing not enabled on this deployment yet (run `creator_billing_cc.sql`).</div>
+            ) : null}
+          </div>
           {hasActiveSubscription ? (
-            <p className="text-xs text-green-300">Active subscription detected. If you need changes, manage it in Stripe customer portal (coming soon).</p>
+            <p className="text-xs text-green-300">
+              Unlimited access detected {hasPrepaidUnlimited && !hasStripeUnlimited ? `(prepaid via CC${profile?.creator_unlimited_expires_at ? ` until ${new Date(profile.creator_unlimited_expires_at).toLocaleDateString()}` : ''})` : ''}. If you need changes, manage it in Stripe customer portal (coming soon).
+            </p>
           ) : (
             <p className="text-xs text-gray-400">Tip: If checkout fails, try again—your content form stays intact in this tab.</p>
           )}
@@ -302,7 +430,7 @@ const CreatorBillingPanel = () => {
               disabled={checkoutLoading}
               onClick={() => startEmbeddedCheckout({ kind: 'upload_fee', payload: { fee_type: 'track' }, label: 'Track Upload Fee' })}
             >
-              Buy Track Credit
+              Stripe: Track Credit
             </Button>
             <Button
               type="button"
@@ -311,7 +439,25 @@ const CreatorBillingPanel = () => {
               disabled={checkoutLoading}
               onClick={() => startEmbeddedCheckout({ kind: 'upload_fee', payload: { fee_type: 'album' }, label: 'Album Upload Fee' })}
             >
-              Buy Album Credit
+              Stripe: Album Credit
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="border-yellow-400/40 text-yellow-200 hover:bg-yellow-400/10"
+              disabled={checkoutLoading || !ccPricesSupported || ccPricesLoading || !ccPrices?.upload_track_credit?.is_active}
+              onClick={() => purchaseUploadCreditWithCc('track')}
+            >
+              CC: Track {ccPrices?.upload_track_credit?.is_active ? `(${Number(ccPrices.upload_track_credit.price_cc || 0).toLocaleString()} CC)` : '(setup)'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="border-yellow-400/40 text-yellow-200 hover:bg-yellow-400/10"
+              disabled={checkoutLoading || !ccPricesSupported || ccPricesLoading || !ccPrices?.upload_album_credit?.is_active}
+              onClick={() => purchaseUploadCreditWithCc('album')}
+            >
+              CC: Album {ccPrices?.upload_album_credit?.is_active ? `(${Number(ccPrices.upload_album_credit.price_cc || 0).toLocaleString()} CC)` : '(setup)'}
             </Button>
             <Button type="button" variant="ghost" className="text-gray-300 hover:text-yellow-200" disabled={loadingCredits || checkoutLoading} onClick={loadCredits}>
               Refresh
