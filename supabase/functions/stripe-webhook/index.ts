@@ -79,6 +79,40 @@ Deno.serve(async (req) => {
     return json({ received: true, applied: true, kind: 'subscription_status', data });
   }
 
+  // Wallet top-ups via PaymentIntent (WalletActionModal uses `stripe-create-payment-intent` + PaymentElement).
+  // Handle these so balances update without requiring Checkout Sessions.
+  if (event.type === 'payment_intent.succeeded') {
+    const paymentIntent = event.data.object as Stripe.PaymentIntent;
+    const kind = paymentIntent.metadata?.kind || null;
+    const userId = paymentIntent.metadata?.user_id || null;
+    const amountCcRaw = paymentIntent.metadata?.amount_cc || null;
+
+    if (kind !== 'topup') return json({ received: true, ignored: true, kind });
+    if (!userId) return json({ error: 'Missing user_id metadata' }, { status: 400 });
+
+    const amountCc = Number(amountCcRaw);
+    if (!Number.isFinite(amountCc) || amountCc <= 0) {
+      return json({ error: 'Missing metadata for top-up' }, { status: 400 });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const { data, error } = await supabase.rpc('rpc_apply_stripe_topup', {
+      p_user_id: userId,
+      p_amount_cc: Number(amountCc.toFixed(2)),
+      p_stripe_event_id: event.id,
+      p_payment_intent_id: paymentIntent.id,
+      // The table expects a non-null checkout_session_id; for PaymentIntents we store the PI id.
+      p_checkout_session_id: paymentIntent.id,
+    });
+
+    if (error) {
+      if (error.code === '23505') return json({ received: true, deduped: true });
+      return json({ error: error.message }, { status: 500 });
+    }
+
+    return json({ received: true, applied: true, kind: 'topup_payment_intent', data });
+  }
+
   if (event.type !== 'checkout.session.completed') {
     return json({ received: true, ignored: true });
   }

@@ -67,6 +67,13 @@ Si quieres permitir pagar planes/fees usando CrossCoins (balance interno), prime
   - Suscripción: `supabase.functions.invoke('stripe-create-subscription-checkout-session', { body: { plan: 'monthly'|'six_months'|'yearly' } })`
   - Upload fee: `supabase.functions.invoke('stripe-create-upload-fee-checkout-session', { body: { fee_type: 'track'|'album' } })`
 
+### Stripe Webhook events requeridos
+En Stripe → Developers → Webhooks, habilita estos eventos hacia `.../stripe-webhook`:
+- `payment_intent.succeeded` (top-ups via Wallet PaymentElement)
+- `checkout.session.completed` (top-ups via Checkout + creator upload fees)
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+
 ## Versiones visibles (Web)
 La web muestra la versión en la página `About` (parte inferior):
 - Archivo: `src/lib/buildInfo.js`
