@@ -42,9 +42,9 @@ Este repo incluye Edge Functions de Supabase para iniciar Checkout y procesar el
 Configura en tu proyecto Supabase (CLI: `supabase secrets set ...`):
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_PROJECT_URL`
+- `SUPABASE_PROJECT_ANON_KEY`
+- `SUPABASE_PROJECT_SERVICE_ROLE_KEY`
 - `CC_TO_USD` (default recomendado: `0.01`)
 - `MIN_TOPUP_USD` (default recomendado: `5`)
 - `MAX_TOPUP_USD` (default recomendado: `100`)

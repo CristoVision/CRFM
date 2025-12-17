@@ -29,15 +29,15 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, { status: 405 });
 
   const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
-  const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+  const supabaseUrl = Deno.env.get('SUPABASE_PROJECT_URL') || Deno.env.get('SUPABASE_URL');
+  const supabaseAnonKey = Deno.env.get('SUPABASE_PROJECT_ANON_KEY') || Deno.env.get('SUPABASE_ANON_KEY');
   const ccToUsd = Number(Deno.env.get('CC_TO_USD') || '0.01');
   const minTopupUsd = Number(Deno.env.get('MIN_TOPUP_USD') || '5');
   const maxTopupUsd = Number(Deno.env.get('MAX_TOPUP_USD') || '100');
 
   if (!stripeSecretKey) return json({ error: 'Missing STRIPE_SECRET_KEY' }, { status: 500 });
   if (!supabaseUrl || !supabaseAnonKey) {
-    return json({ error: 'Missing SUPABASE_URL/SUPABASE_ANON_KEY' }, { status: 500 });
+    return json({ error: 'Missing SUPABASE_PROJECT_URL/SUPABASE_PROJECT_ANON_KEY' }, { status: 500 });
   }
 
   const token = getBearerToken(req);

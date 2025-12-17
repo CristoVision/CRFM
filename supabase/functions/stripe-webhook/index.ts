@@ -20,14 +20,15 @@ Deno.serve(async (req) => {
 
   const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
   const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
-  const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const supabaseUrl = Deno.env.get('SUPABASE_PROJECT_URL') || Deno.env.get('SUPABASE_URL');
+  const supabaseServiceKey =
+    Deno.env.get('SUPABASE_PROJECT_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
   if (!stripeSecretKey || !webhookSecret) {
     return json({ error: 'Missing STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET' }, { status: 500 });
   }
   if (!supabaseUrl || !supabaseServiceKey) {
-    return json({ error: 'Missing SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY' }, { status: 500 });
+    return json({ error: 'Missing SUPABASE_PROJECT_URL/SUPABASE_PROJECT_SERVICE_ROLE_KEY' }, { status: 500 });
   }
 
   const signature = req.headers.get('stripe-signature');
