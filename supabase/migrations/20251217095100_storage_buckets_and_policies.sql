@@ -47,7 +47,7 @@ do $$
 declare
   b text;
 begin
-  foreach b in array[
+  foreach b in array ARRAY[
     'avatars',
     'track-audio',
     'track-cover',
@@ -108,4 +108,3 @@ create policy app_assets_admin_all on storage.objects
   for all
   using (bucket_id = 'app-assets' and public.is_admin_uid(auth.uid()))
   with check (bucket_id = 'app-assets' and public.is_admin_uid(auth.uid()));
-
