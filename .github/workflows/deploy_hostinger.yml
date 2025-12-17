@@ -21,6 +21,7 @@ jobs:
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
       VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
       VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
+      HOSTINGER_FTP_PROTOCOL: ${{ secrets.HOSTINGER_FTP_PROTOCOL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -70,6 +71,12 @@ jobs:
           fi
           echo "Stripe key present (length=${#VITE_STRIPE_PUBLISHABLE_KEY})."
 
+      - name: Resolve deploy protocol
+        run: |
+          protocol="${HOSTINGER_FTP_PROTOCOL:-ftp}"
+          echo "HOSTINGER_DEPLOY_PROTOCOL=$protocol" >> "$GITHUB_ENV"
+          echo "Using deploy protocol: $protocol"
+
       - name: Build
         run: npm run build
 
@@ -80,7 +87,7 @@ jobs:
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
           port: ${{ secrets.HOSTINGER_FTP_PORT }}
-          protocol: ftp
+          protocol: ${{ env.HOSTINGER_DEPLOY_PROTOCOL }}
           local-dir: dist/
           server-dir: ${{ secrets.HOSTINGER_FTP_SERVER_DIR }}
           dangerous-clean-slate: true

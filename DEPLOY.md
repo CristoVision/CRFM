@@ -18,6 +18,7 @@ GitHub → `Settings → Secrets and variables → Actions`:
 - `HOSTINGER_FTP_PASSWORD`
 - `HOSTINGER_FTP_PORT` (ej. `21`)
 - `HOSTINGER_FTP_SERVER_DIR` (ej. `/public_html/`)
+- `HOSTINGER_FTP_PROTOCOL` (`ftp` o `ftps`; si falla con timeout, prueba `ftps`)
 
 **Supabase (para build)**
 - `VITE_SUPABASE_URL` (ej. `https://<project>.supabase.co`)
@@ -28,7 +29,7 @@ GitHub → `Settings → Secrets and variables → Actions`:
 Este repo incluye Edge Functions de Supabase para iniciar Checkout y procesar el webhook de Stripe.
 
 ### Archivos
-- `supabase/functions/stripe-create-checkout-session/index.ts`
+- `supabase/functions/stripe-create-payment-intent/index.ts` (top-ups con PaymentElement)
 - `supabase/functions/stripe-create-subscription-checkout-session/index.ts`
 - `supabase/functions/stripe-create-upload-fee-checkout-session/index.ts`
 - `supabase/functions/stripe-webhook/index.ts`
@@ -73,6 +74,24 @@ En Stripe → Developers → Webhooks, habilita estos eventos hacia `.../stripe-
 - `checkout.session.completed` (top-ups via Checkout + creator upload fees)
 - `customer.subscription.updated`
 - `customer.subscription.deleted`
+
+## Checklist rápido (Top Up / Stripe)
+1) En Supabase SQL editor, correr: `stripe_wallet.sql` (crea `rpc_apply_stripe_topup` + tablas idempotentes).
+2) En Supabase Edge Functions, desplegar: `stripe-create-payment-intent` y `stripe-webhook`.
+3) En Supabase Edge secrets, setear: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+4) En Stripe Webhooks, agregar el endpoint `https://<project-ref>.supabase.co/functions/v1/stripe-webhook` con los eventos listados arriba.
+5) En GitHub Actions, setear `VITE_STRIPE_PUBLISHABLE_KEY` y redeploy para que el frontend tenga Stripe habilitado.
+
+## Si falla el deploy a Hostinger (Timeout control socket)
+Ese error normalmente significa:
+- El server/puerto/protocolo no coincide, o
+- El hosting solo acepta `FTPS` (TLS) o `SFTP`, o
+- Firewall bloquea conexiones desde GitHub Actions.
+
+Qué probar, en orden:
+1) Verifica en Hostinger (hPanel → Files → FTP Accounts) el `Host`, `Port` y si requiere `FTPS (Explicit)` o `FTP`.
+2) Si Hostinger dice FTPS, crea/edita el secret `HOSTINGER_FTP_PROTOCOL` = `ftps` (y usa el puerto que te indique Hostinger, a veces `21` o `990`).
+3) Si Hostinger es solo SFTP (SSH), este workflow no va a funcionar con `FTP-Deploy-Action`: necesitas credenciales SSH/SFTP y cambiar el deploy step a un action de SFTP.
 
 ## Versiones visibles (Web)
 La web muestra la versión en la página `About` (parte inferior):
