@@ -97,7 +97,21 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Deploy to Hostinger via SFTP (SSH)
+        if: env.HOSTINGER_DEPLOY_PROTOCOL == 'sftp'
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOSTINGER_SSH_HOST || secrets.HOSTINGER_FTP_SERVER }}
+          username: ${{ secrets.HOSTINGER_SSH_USERNAME || secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          key: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT || 22 }}
+          source: "dist/*"
+          target: ${{ secrets.HOSTINGER_FTP_SERVER_DIR }}
+          strip_components: 1
+
       - name: Deploy to Hostinger via FTP
+        if: env.HOSTINGER_DEPLOY_PROTOCOL != 'sftp'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.HOSTINGER_FTP_SERVER }}
