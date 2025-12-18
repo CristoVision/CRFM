@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState, Suspense } from 'reac
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
-import { Music, Disc, ListMusic, Edit3, BarChart2, UploadCloud, Settings, Loader2, AlertTriangle, Film, ShieldAlert, Lock } from 'lucide-react';
+import { Music, Disc, ListMusic, Edit3, BarChart2, UploadCloud, Settings, Loader2, AlertTriangle, Film, ShieldAlert, Lock, FolderUp } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from "@/components/ui/use-toast";
@@ -182,11 +182,12 @@ const HubPage = () => {
       album: canCreateAlbum,
       playlist: canCreatePlaylist,
       video: canUploadVideo,
+      bulk: canUploadTrack || canCreateAlbum,
     };
   }, [creatorUploadPolicy, credits.album, credits.track, hasActiveSubscription]);
 
   const openMonetization = useCallback(
-    ({ billingAction, feeType } = {}) => {
+    ({ billingAction, feeType, bulkUpload } = {}) => {
       setActiveTab('monetization');
 
       const params = new URLSearchParams(location.search || '');
@@ -195,6 +196,10 @@ const HubPage = () => {
       if (billingAction === 'upload_fee' && (feeType === 'track' || feeType === 'album')) {
         params.set('billing_action', 'upload_fee');
         params.set('fee_type', feeType);
+      }
+
+      if (bulkUpload) {
+        params.set('bulk_upload', '1');
       }
 
       navigate(
@@ -217,6 +222,20 @@ const HubPage = () => {
           variant: 'destructive',
         });
         navigate('/auth');
+        return;
+      }
+
+      if (actionKey === 'bulk') {
+        if (!policyConfirmed) {
+          toast({
+            title: 'Choose your upload plan',
+            description: 'Select Free (10% platform fee) or a plan for 100% royalties before uploading.',
+            variant: 'destructive',
+          });
+          openMonetization({ bulkUpload: true });
+          return;
+        }
+        onAllowed?.();
         return;
       }
 
@@ -278,8 +297,9 @@ const HubPage = () => {
       { key: 'album', label: 'Create Album', icon: Disc, action: () => setIsCreateAlbumModalOpen(true), gradientClass: 'gold-to-blue-gradient' },
       { key: 'playlist', label: 'New Playlist', icon: ListMusic, action: () => setIsCreatePlaylistModalOpen(true), gradientClass: 'gold-to-purple-gradient' },
       { key: 'video', label: 'Upload Video', icon: Film, action: () => setIsUploadVideoModalOpen(true), gradientClass: 'gold-to-red-gradient' },
+      { key: 'bulk', label: 'Bulk Upload', icon: FolderUp, action: () => openMonetization({ bulkUpload: true }), gradientClass: 'gold-to-yellow-gradient' },
     ],
-    []
+    [openMonetization]
   );
 
   const hubTabs = [
@@ -377,15 +397,15 @@ const HubPage = () => {
         <p className="text-slate-400 mt-1">Manage your music, lyrics, videos, and see your impact.</p>
       </motion.div>
 
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8"
-      >
-        {quickActions.map((action) => (
-          (() => {
-            const allowed = uploadGate?.permissions?.[action.key] ?? true;
+	      <motion.div 
+	        initial={{ opacity: 0, scale: 0.95 }}
+	        animate={{ opacity: 1, scale: 1 }}
+	        transition={{ duration: 0.5, delay: 0.2 }}
+	        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8"
+	      >
+	        {quickActions.map((action) => (
+	          (() => {
+	            const allowed = uploadGate?.permissions?.[action.key] ?? true;
             const locked = !allowed;
             return (
           <Button 

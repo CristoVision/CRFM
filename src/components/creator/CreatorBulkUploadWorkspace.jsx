@@ -142,6 +142,12 @@ const uploadToBucket = async ({ bucket, objectPath, file }) => {
   return data?.publicUrl || null;
 };
 
+const publicUrlFor = ({ bucket, storageKey }) => {
+  if (!bucket || !storageKey) return null;
+  const { data } = supabase.storage.from(bucket).getPublicUrl(storageKey);
+  return data?.publicUrl || null;
+};
+
 const hasActiveUnlimited = (profile) => {
   const status = safeLower(profile?.stripe_subscription_status);
   if (status === 'active' || status === 'trialing') return true;
@@ -487,11 +493,22 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
     if (tracks.length === 0) return { ok: false, error: 'No tracks detected. Select audio files (mp3/m4a/wav/flac).' };
     if (supportedAudioCount === 0) return { ok: false, error: 'No supported audio files selected.' };
     if (!dbReady) return { ok: false, error: 'Database migrations missing for bulk upload. Run `supabase db push` and refresh the page.' };
-    const missingAttachedAudio = tracks.some((t) => {
+    const missingAudioTracks = tracks.filter((t) => {
       const f = files.find((x) => x.id === t.audioFileId);
-      return !f?.file && !f?.publicUrl;
+      const hasPersistedUpload = !!(f?.bucket && f?.storageKey);
+      return !f?.file && !f?.publicUrl && !hasPersistedUpload;
     });
-    if (missingAttachedAudio) return { ok: false, error: 'Some tracks are missing attached audio files. Re-select the missing audio files.' };
+    if (missingAudioTracks.length > 0) {
+      const preview = missingAudioTracks
+        .slice(0, 5)
+        .map((t) => t.title || 'Untitled')
+        .join(', ');
+      const suffix = missingAudioTracks.length > 5 ? '…' : '';
+      return {
+        ok: false,
+        error: `Some tracks are missing attached audio files. Re-select the missing audio files. Missing: ${preview}${suffix}`,
+      };
+    }
     if (!canProceedWithPolicy.ok) {
       if (canProceedWithPolicy.reason === 'subscription_required') {
         return { ok: false, error: 'Your upload policy requires an active subscription (Unlimited). Activate it in Monetization first.' };
@@ -558,12 +575,28 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
         }
       }
 
+      // Best-effort restore public URLs from persisted storage keys (draft restore / older drafts).
+      for (const f of nextFiles) {
+        if (f.publicUrl) continue;
+        if (!f.storageKey) continue;
+        const inferredBucket =
+          f.bucket ||
+          (f.kind === 'audio'
+            ? 'track-audio'
+            : mode === 'album' && f.id === albumCoverFileId
+              ? 'album-covers'
+              : 'track-cover');
+        const restored = publicUrlFor({ bucket: inferredBucket, storageKey: f.storageKey });
+        if (restored) setFileState(f.id, { publicUrl: restored, bucket: inferredBucket });
+      }
+
       // Create album if needed.
       let albumId = null;
       let albumCoverUrl = null;
       if (mode === 'album') {
         const coverMeta = getFileById(albumCoverFileId);
-        albumCoverUrl = coverMeta?.publicUrl || null;
+        const coverBucket = coverMeta?.bucket || (coverMeta ? 'album-covers' : null);
+        albumCoverUrl = coverMeta?.publicUrl || publicUrlFor({ bucket: coverBucket, storageKey: coverMeta?.storageKey }) || null;
         const importKey = resolvedBatchId;
 
         const albumPayload = {
@@ -589,16 +622,20 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
       // Create tracks.
       for (const t of tracks) {
         const audioMeta = getFileById(t.audioFileId);
-        if (!audioMeta?.publicUrl || !audioMeta?.storageKey) throw new Error(`Missing uploaded audio for track "${t.title}".`);
+        const audioBucket = audioMeta?.bucket || 'track-audio';
+        const audioUrl = audioMeta?.publicUrl || publicUrlFor({ bucket: audioBucket, storageKey: audioMeta?.storageKey });
+        if (!audioUrl || !audioMeta?.storageKey) throw new Error(`Missing uploaded audio for track "${t.title}".`);
         const coverMeta = t.coverFileId ? getFileById(t.coverFileId) : null;
-        const coverUrl = (usePerTrackCovers ? coverMeta?.publicUrl : null) || (mode === 'album' ? albumCoverUrl : coverMeta?.publicUrl) || null;
+        const coverBucket = coverMeta?.bucket || (coverMeta ? (mode === 'album' && coverMeta.id === albumCoverFileId ? 'album-covers' : 'track-cover') : null);
+        const coverPublic = coverMeta?.publicUrl || publicUrlFor({ bucket: coverBucket, storageKey: coverMeta?.storageKey });
+        const coverUrl = (usePerTrackCovers ? coverPublic : null) || (mode === 'album' ? albumCoverUrl : coverPublic) || null;
         const importKey = `${resolvedBatchId}:${t.trackNumber || 0}:${slugify(t.title)}`;
 
         const trackPayload = {
           uploader_id: user.id,
           title: t.title?.trim() || 'Untitled',
           creator_display_name: creatorDisplayName,
-          audio_file_url: audioMeta.publicUrl,
+          audio_file_url: audioUrl,
           audio_storage_key: audioMeta.storageKey,
           cover_art_url: coverUrl,
           is_public: DEFAULTS.is_public,
@@ -837,11 +874,11 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
         <div className="space-y-2 max-h-[22vh] overflow-y-auto pr-1">
           {files.length === 0 ? (
             <div className="text-sm text-gray-500">No files selected yet.</div>
-          ) : (
-            files.map((f) => {
-              const missingAttachment = f.kind !== 'other' && !f.file && !f.publicUrl;
-              return (
-                <div key={f.id} className="p-3 rounded-lg border border-white/10 bg-white/5 flex items-center justify-between gap-3">
+	          ) : (
+	            files.map((f) => {
+	              const missingAttachment = f.kind !== 'other' && !f.file && !f.publicUrl && !(f.bucket && f.storageKey);
+	              return (
+	                <div key={f.id} className="p-3 rounded-lg border border-white/10 bg-white/5 flex items-center justify-between gap-3">
                   <div className="min-w-[220px]">
                     <div className="text-sm text-white font-semibold">{f.name || f.file?.name}</div>
                     <div className="text-xs text-gray-500">
@@ -890,13 +927,21 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
             </Button>
           </div>
 
-          <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
-            {tracks.map((t) => (
-              <div key={t.id} className="p-3 rounded-lg border border-white/10 bg-white/5 grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
-                <div className="md:col-span-2">
-                  <Label className="text-xs text-gray-400">#</Label>
-                  <Input
-                    type="number"
+	          <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
+	            {tracks.map((t) => {
+	              const audioMeta = files.find((f) => f.id === t.audioFileId);
+	              const audioName = audioMeta?.name || audioMeta?.file?.name || '(unknown audio)';
+	              const audioMissing = !audioMeta?.file && !audioMeta?.publicUrl && !(audioMeta?.bucket && audioMeta?.storageKey);
+	              return (
+	              <div key={t.id} className="p-3 rounded-lg border border-white/10 bg-white/5 grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
+	                <div className="md:col-span-12 text-xs text-gray-400 flex items-center justify-between gap-2">
+	                  <span className="truncate">Audio: {audioName}</span>
+	                  {audioMissing ? <span className="text-red-300">missing attachment</span> : <span className="text-green-300">attached</span>}
+	                </div>
+	                <div className="md:col-span-2">
+	                  <Label className="text-xs text-gray-400">#</Label>
+	                  <Input
+	                    type="number"
                     min="1"
                     value={t.trackNumber || ''}
                     onChange={(e) =>
@@ -932,13 +977,14 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
                           {f.name || f.file?.name}
                         </option>
                       ))}
-                  </select>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
+	                  </select>
+	                </div>
+	              </div>
+	              );
+	            })}
+	          </div>
+	        </div>
+	      ) : null}
 
       <div className="flex items-center justify-end gap-2">
         <Button type="button" variant="outline" className="border-white/10 text-gray-200" onClick={() => onOpenChange(false)}>

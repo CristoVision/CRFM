@@ -6,9 +6,26 @@ import CreatorWalletPanel from '@/components/creator/CreatorWalletPanel';
 import CreatorBulkUploadWorkspace from '@/components/creator/CreatorBulkUploadWorkspace';
 import { Button } from '@/components/ui/button';
 import { FolderUp } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const CreatorMonetizationTab = () => {
   const [bulkOpen, setBulkOpen] = React.useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search || '');
+    if (params.get('bulk_upload') !== '1') return;
+    setBulkOpen(true);
+    params.delete('bulk_upload');
+    navigate(
+      {
+        pathname: location.pathname,
+        search: params.toString() ? `?${params.toString()}` : '',
+      },
+      { replace: true }
+    );
+  }, [location.pathname, location.search, navigate]);
 
   return (
     <div className="space-y-6">
