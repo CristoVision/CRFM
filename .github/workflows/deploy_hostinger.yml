@@ -97,6 +97,16 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Verify dist includes .htaccess
+        run: |
+          if [ ! -f "dist/.htaccess" ]; then
+            echo "ERROR: dist/.htaccess missing (CSP/rewrite rules won't apply)."
+            echo "dist contents:"
+            ls -la dist || true
+            exit 1
+          fi
+          echo "dist/.htaccess present."
+
       - name: Deploy to Hostinger via SFTP (SSH)
         if: env.HOSTINGER_DEPLOY_PROTOCOL == 'sftp'
         uses: appleboy/scp-action@v0.1.7
@@ -106,7 +116,8 @@ jobs:
           password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
           key: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
           port: ${{ secrets.HOSTINGER_SSH_PORT || 22 }}
-          source: "dist/*"
+          # Include dotfiles like `.htaccess` (Vite copies from `public/` to `dist/`).
+          source: "dist/**"
           target: ${{ secrets.HOSTINGER_FTP_SERVER_DIR }}
           strip_components: 1
 
