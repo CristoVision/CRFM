@@ -18,6 +18,26 @@ const ACTIVE_SUB_STATUSES = new Set(['active', 'trialing']);
 
 const safeString = (value) => (value == null ? '' : String(value));
 
+const describeEdgeFunctionError = (err) => {
+  if (!err) return 'Please try again.';
+  if (typeof err === 'string') return err;
+  if (err?.error_description) return String(err.error_description);
+  if (err?.message) {
+    const ctxBody = err?.context?.body;
+    if (ctxBody) {
+      try {
+        const parsed = typeof ctxBody === 'string' ? JSON.parse(ctxBody) : ctxBody;
+        if (parsed?.error) return String(parsed.error);
+        if (parsed?.message) return String(parsed.message);
+      } catch {
+        // ignore
+      }
+    }
+    return String(err.message);
+  }
+  return 'Please try again.';
+};
+
 const CreatorBillingPanel = () => {
   const { user, profile, refreshUserProfile } = useAuth();
   const location = useLocation();
@@ -148,7 +168,7 @@ const CreatorBillingPanel = () => {
         setCheckoutOpen(false);
         toast({
           title: 'Could not start checkout',
-          description: err?.message || 'Please try again.',
+          description: describeEdgeFunctionError(err),
           variant: 'destructive',
         });
       } finally {

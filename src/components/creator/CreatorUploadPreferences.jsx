@@ -16,6 +16,8 @@ const STORAGE_PREFIX = 'crfm:creator_upload_policy:';
 const CONTENT_POLICY_PREFIX = 'crfm:creator_content_policy:';
 const POLICY_CONFIRM_PREFIX = 'crfm:creator_upload_policy_confirmed:';
 
+const safeString = (value) => (value == null ? '' : String(value));
+
 const POLICIES = [
   {
     value: 'free',
@@ -176,6 +178,14 @@ const CreatorUploadPreferences = () => {
       setSaving(false);
     }
   };
+
+  const subscriptionStatus = safeString(profile?.stripe_subscription_status || '').toLowerCase();
+  const hasUnlimited = subscriptionStatus === 'active' || subscriptionStatus === 'trialing' || (() => {
+    const expiresAt = profile?.creator_unlimited_expires_at;
+    if (!expiresAt) return false;
+    const ts = new Date(expiresAt).getTime();
+    return Number.isFinite(ts) && ts > Date.now();
+  })();
 
   const getRowPolicy = (type, row) => {
     const fromDb = row?.upload_policy;
@@ -345,10 +355,10 @@ const CreatorUploadPreferences = () => {
   }
 
   const hasExistingContent = counts.tracks + counts.albums + counts.videos > 0;
-  const activePolicy = POLICIES.find((p) => p.value === selectedPolicy) || POLICIES[0];
+	  const activePolicy = POLICIES.find((p) => p.value === selectedPolicy) || POLICIES[0];
 
-  return (
-    <div className="glass-effect p-4 sm:p-6 rounded-xl border border-white/10 space-y-4">
+	  return (
+	    <div className="glass-effect p-4 sm:p-6 rounded-xl border border-white/10 space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <Settings2 className="w-5 h-5 text-yellow-400" />
@@ -367,20 +377,28 @@ const CreatorUploadPreferences = () => {
         </div>
       </div>
 
-      <div className="text-sm text-gray-300 flex items-start gap-2">
-        <Coins className="w-4 h-4 text-yellow-400 mt-0.5" />
-        <div>
-          <div className="text-white font-semibold">{activePolicy.title}</div>
-          {activePolicy.royalty_fee_note ? (
-            <div className="text-gray-300">{activePolicy.royalty_fee_note}</div>
-          ) : (
-            <div className="text-gray-300">No platform royalty fee applies under this policy.</div>
-          )}
-          <div className="text-xs text-gray-400">
-            This policy does not remove your content; it controls upload eligibility and (for subscriptions) when royalties accrue.
-          </div>
-        </div>
-      </div>
+	      <div className="text-sm text-gray-300 flex items-start gap-2">
+	        <Coins className="w-4 h-4 text-yellow-400 mt-0.5" />
+	        <div>
+	          <div className="text-white font-semibold">{activePolicy.title}</div>
+	          {activePolicy.royalty_fee_note ? (
+	            <div className="text-gray-300">{activePolicy.royalty_fee_note}</div>
+	          ) : (
+	            <div className="text-gray-300">No platform royalty fee applies under this policy.</div>
+	          )}
+	          <div className="text-xs text-gray-400">
+	            Changing this setting does not charge you or activate a membership; it only controls upload eligibility and how royalties are treated for future streams.
+	          </div>
+	          {selectedPolicy === 'subscription' && !hasUnlimited ? (
+	            <div className="mt-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2 text-xs text-red-200 flex items-start gap-2">
+	              <AlertTriangle className="w-4 h-4 mt-0.5" />
+	              <div>
+	                Unlimited is not active on this account yet. Go to <span className="text-red-100 font-semibold">Billing (Stripe / CrossCoins)</span> above to purchase/activate it.
+	              </div>
+	            </div>
+	          ) : null}
+	        </div>
+	      </div>
 
       {hasExistingContent ? (
         <div className="rounded-lg border border-yellow-400/20 bg-yellow-500/10 p-3 text-sm text-yellow-200 flex items-start gap-2">
