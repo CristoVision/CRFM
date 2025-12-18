@@ -362,10 +362,16 @@ const initialAlbumFormData = {
             }
             onOpenChange(openState);
         }}>
-          <DialogContent className="sm:max-w-4xl glass-effect-light text-white overflow-y-auto max-h-[95vh]">
-            <DialogHeader>
-              <DialogTitle className="flex items-center"><Disc className="w-7 h-7 mr-3 text-yellow-400" />Create New Album</DialogTitle>
-              <DialogDescription className="text-gray-400 pt-2">Fill in album details and add tracks.</DialogDescription>
+          <DialogContent className="relative sm:max-w-4xl glass-effect-light text-white overflow-y-auto max-h-[95vh] border border-white/10">
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-yellow-400 via-sky-400 to-blue-500" />
+            <DialogHeader className="pb-3 border-b border-white/10">
+              <DialogTitle className="flex items-center text-2xl golden-text">
+                <span className="w-11 h-11 rounded-xl bg-black/30 border border-white/10 flex items-center justify-center mr-3">
+                  <Disc className="w-6 h-6 text-yellow-300" />
+                </span>
+                Create Album
+              </DialogTitle>
+              <DialogDescription className="text-gray-300 pt-1">Album details first, then add tracks. Advanced options stay out of the way until you need them.</DialogDescription>
             </DialogHeader>
             
             {isSubmitting && (

@@ -134,36 +134,43 @@ const TrackFormFields = ({
         </div>
       </div>
 
+      <details className="rounded-xl border border-white/10 bg-black/10 p-4">
+        <summary className="cursor-pointer select-none text-sm font-semibold text-yellow-300 flex items-center justify-between">
+          Advanced (lyrics & declarations)
+          <span className="text-xs text-gray-500">optional</span>
+        </summary>
+        <div className="space-y-4 pt-4">
+          <div className="space-y-2">
+            <Label htmlFor={`${idPrefix}lyrics_text`} className="text-gray-300">Lyrics (Optional)</Label>
+            <Textarea id={`${idPrefix}lyrics_text`} name="lyrics_text" value={formData.lyrics_text} onChange={onInputChange} rows={5} className="bg-white/5 border-white/10 focus:border-yellow-400 text-white" disabled={isSubmitting} />
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}lyrics_text`} className="text-gray-300">Lyrics (Optional)</Label>
-        <Textarea id={`${idPrefix}lyrics_text`} name="lyrics_text" value={formData.lyrics_text} onChange={onInputChange} rows={5} className="bg-white/5 border-white/10 focus:border-yellow-400 text-white" disabled={isSubmitting} />
-      </div>
-
-      <div className="space-y-4 pt-4 border-t border-white/10">
-        <h4 className="text-md font-semibold text-yellow-400">Content Declarations</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
-          {[
-            { id: 'is_christian_nature', label: 'Christian Nature', defaultChecked: true },
-            { id: 'is_instrumental', label: 'Instrumental', defaultChecked: false },
-            { id: 'ai_in_production', label: 'AI in Production', defaultChecked: false },
-            { id: 'ai_in_artwork', label: 'AI in Artwork', defaultChecked: false },
-            { id: 'ai_in_lyrics', label: 'AI in Lyrics', defaultChecked: false },
-          ].map(cb => (
-            <div key={cb.id} className="flex items-center space-x-2">
-              <Checkbox
-                id={`${idPrefix}${cb.id}`}
-                name={cb.id}
-                checked={formData[cb.id]}
-                onCheckedChange={(checked) => onInputChange({ target: { name: cb.id, checked, type: 'checkbox' } })}
-                className="border-gray-500 data-[state=checked]:bg-yellow-400 data-[state=checked]:text-black data-[state=checked]:border-yellow-500"
-                disabled={isSubmitting}
-              />
-              <Label htmlFor={`${idPrefix}${cb.id}`} className="text-gray-300 cursor-pointer text-sm">{cb.label}</Label>
+          <div className="space-y-4 pt-2 border-t border-white/10">
+            <h4 className="text-md font-semibold text-yellow-400">Content Declarations</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
+              {[
+                { id: 'is_christian_nature', label: 'Christian Nature', defaultChecked: true },
+                { id: 'is_instrumental', label: 'Instrumental', defaultChecked: false },
+                { id: 'ai_in_production', label: 'AI in Production', defaultChecked: false },
+                { id: 'ai_in_artwork', label: 'AI in Artwork', defaultChecked: false },
+                { id: 'ai_in_lyrics', label: 'AI in Lyrics', defaultChecked: false },
+              ].map(cb => (
+                <div key={cb.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`${idPrefix}${cb.id}`}
+                    name={cb.id}
+                    checked={formData[cb.id]}
+                    onCheckedChange={(checked) => onInputChange({ target: { name: cb.id, checked, type: 'checkbox' } })}
+                    className="border-gray-500 data-[state=checked]:bg-yellow-400 data-[state=checked]:text-black data-[state=checked]:border-yellow-500"
+                    disabled={isSubmitting}
+                  />
+                  <Label htmlFor={`${idPrefix}${cb.id}`} className="text-gray-300 cursor-pointer text-sm">{cb.label}</Label>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
-      </div>
+      </details>
     </>
   );
 };

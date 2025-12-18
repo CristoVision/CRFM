@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-    import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+    import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
     import { Button } from '@/components/ui/button';
     import { Input } from '@/components/ui/input';
     import { Textarea } from '@/components/ui/textarea';
@@ -191,12 +191,17 @@ import React, { useState, useEffect, useRef } from 'react';
 
       return (
         <Dialog open={isOpen} onOpenChange={(open) => { if (!isUploading) onOpenChange(open); }}>
-          <DialogContent className="sm:max-w-2xl glass-effect text-white border-yellow-500/30">
+          <DialogContent className="relative sm:max-w-2xl glass-effect-light text-white border border-white/10 max-h-[90vh] overflow-y-auto">
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-yellow-400 via-rose-400 to-red-500" />
             <ConfettiCelebration isActive={showConfetti} />
-            <DialogHeader>
+            <DialogHeader className="pb-3 border-b border-white/10">
               <DialogTitle className="flex items-center text-2xl golden-text">
-                <UploadCloud className="w-7 h-7 mr-3" /> Upload Music Video
+                <span className="w-11 h-11 rounded-xl bg-black/30 border border-white/10 flex items-center justify-center mr-3">
+                  <UploadCloud className="w-6 h-6 text-yellow-300" />
+                </span>
+                Upload Music Video
               </DialogTitle>
+              <DialogDescription className="text-gray-300 pt-1">Upload a video + cover image. Keep the file smaller for the free tier.</DialogDescription>
             </DialogHeader>
 
             {isUploading && (
@@ -206,7 +211,7 @@ import React, { useState, useEffect, useRef } from 'react';
                 </div>
             )}
 
-            <form ref={scrollRef} onSubmit={handleSubmit} className="space-y-6 py-4 max-h-[60vh] overflow-y-auto pr-4 -mr-2 custom-scrollbar">
+            <form ref={scrollRef} onSubmit={handleSubmit} className="space-y-6 py-4 pr-4 -mr-2 custom-scrollbar">
               <div className={isUploading ? 'opacity-50 pointer-events-none' : ''}>
                 <div>
                   <Label htmlFor="video-title" className="text-gray-300">Title</Label>

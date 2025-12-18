@@ -1245,12 +1245,13 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
 
 	  return (
 	    <Dialog open={open} onOpenChange={onOpenChange}>
-	      <DialogContent className="sm:max-w-4xl glass-effect-light text-white font-montserrat max-h-[90vh] overflow-y-auto border-yellow-500/30">
-	        <DialogHeader className="space-y-2">
+	      <DialogContent className="relative sm:max-w-4xl glass-effect-light text-white font-montserrat max-h-[90vh] overflow-y-auto border border-white/10">
+	        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-yellow-400 via-amber-300 to-orange-400" />
+	        <DialogHeader className="space-y-2 pb-3 border-b border-white/10">
 	          <DialogTitle className="golden-text text-2xl flex items-center gap-2">
 	            <FolderUp className="w-6 h-6 text-yellow-300" />
 	            Bulk Upload Workspace
-          </DialogTitle>
+	          </DialogTitle>
           <DialogDescription className="text-gray-300">
             Upload albums or singles in batches, with review before saving to your library. Works best when files are already downloaded locally.
           </DialogDescription>

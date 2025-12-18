@@ -261,10 +261,18 @@ import React, { useState, useEffect, useCallback } from 'react';
               }
               onOpenChange(openState);
           }}>
-            <DialogContent className="sm:max-w-3xl glass-effect-light text-white overflow-y-auto max-h-[90vh]">
-              <DialogHeader>
-                <DialogTitle className="flex items-center"><UploadCloud className="w-7 h-7 mr-3 text-yellow-400" />Create New Track</DialogTitle>
-                <DialogDescription className="text-gray-400 pt-2">Fill in the details to upload your new track to CRFM.</DialogDescription>
+            <DialogContent className="relative sm:max-w-3xl glass-effect-light text-white overflow-y-auto max-h-[90vh] border border-white/10">
+              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-yellow-400 via-emerald-400 to-green-500" />
+              <DialogHeader className="pb-3 border-b border-white/10">
+                <DialogTitle className="flex items-center text-2xl golden-text">
+                  <span className="w-11 h-11 rounded-xl bg-black/30 border border-white/10 flex items-center justify-center mr-3">
+                    <UploadCloud className="w-6 h-6 text-yellow-300" />
+                  </span>
+                  Upload Track
+                </DialogTitle>
+                <DialogDescription className="text-gray-300 pt-1">
+                  Upload audio + artwork, then tune metadata. Optional fields are tucked under Advanced to keep this fast.
+                </DialogDescription>
               </DialogHeader>
 
               {isSubmitting && (
@@ -277,26 +285,30 @@ import React, { useState, useEffect, useCallback } from 'react';
               )}
 
               <form onSubmit={handleSubmit} className="space-y-6 py-4 px-2">
-                <TrackFormFields
-                  formData={formData}
-                  formErrors={formErrors}
-                  genres={genres}
-                  onInputChange={handleInputChange}
-                  onDateChange={handleDateChange}
-                  onGenreChange={handleGenreChange}
-                  onLanguagesChange={handleLanguagesChange}
-                  onFileChange={handleFileChange}
-                  onVideoCoverArtChange={handleVideoCoverArtChange}
-                  userId={user?.id}
-                  isSubmitting={isSubmitting}
-                  parentVideoCoverArtUrl={null}
-                />
-                <AcknowledgementField
-                  checked={formData.acknowledgement}
-                  onChange={handleInputChange}
-                  error={formErrors.acknowledgement}
-                  disabled={isSubmitting}
-                />
+                <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+                  <TrackFormFields
+                    formData={formData}
+                    formErrors={formErrors}
+                    genres={genres}
+                    onInputChange={handleInputChange}
+                    onDateChange={handleDateChange}
+                    onGenreChange={handleGenreChange}
+                    onLanguagesChange={handleLanguagesChange}
+                    onFileChange={handleFileChange}
+                    onVideoCoverArtChange={handleVideoCoverArtChange}
+                    userId={user?.id}
+                    isSubmitting={isSubmitting}
+                    parentVideoCoverArtUrl={null}
+                  />
+                </div>
+                <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+                  <AcknowledgementField
+                    checked={formData.acknowledgement}
+                    onChange={handleInputChange}
+                    error={formErrors.acknowledgement}
+                    disabled={isSubmitting}
+                  />
+                </div>
                 <DialogFooter className="sm:justify-end pt-6">
                   <DialogClose asChild>
                     <Button type="button" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20" disabled={isSubmitting}>Cancel</Button>
