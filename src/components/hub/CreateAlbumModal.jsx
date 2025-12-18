@@ -362,16 +362,13 @@ const initialAlbumFormData = {
             }
             onOpenChange(openState);
         }}>
-          <DialogContent className="relative sm:max-w-4xl glass-effect-light text-white overflow-y-auto max-h-[95vh] border border-white/10">
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-yellow-400 via-sky-400 to-blue-500" />
+          <DialogContent className="sm:max-w-4xl text-white overflow-y-auto max-h-[95vh]">
             <DialogHeader className="pb-3 border-b border-white/10">
-              <DialogTitle className="flex items-center text-2xl golden-text">
-                <span className="w-11 h-11 rounded-xl bg-black/30 border border-white/10 flex items-center justify-center mr-3">
-                  <Disc className="w-6 h-6 text-yellow-300" />
-                </span>
+              <DialogTitle className="flex items-center gap-2 text-xl golden-text">
+                <Disc className="w-5 h-5 text-sky-300" />
                 Create Album
               </DialogTitle>
-              <DialogDescription className="text-gray-300 pt-1">Album details first, then add tracks. Advanced options stay out of the way until you need them.</DialogDescription>
+              <DialogDescription className="text-gray-400 pt-1">Album details first, then add tracks.</DialogDescription>
             </DialogHeader>
             
             {isSubmitting && (
@@ -413,15 +410,15 @@ const initialAlbumFormData = {
               userId={user?.id}
             />
               
-              <DialogFooter className="sm:justify-end pt-6 border-t border-white/10">
-                <DialogClose asChild>
-                  <Button type="button" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20" disabled={isSubmitting}>Cancel</Button>
-                </DialogClose>
-                <Button type="submit" disabled={isSaveDisabled} className="golden-gradient text-black font-semibold hover:opacity-90 transition-opacity proximity-glow-button disabled:opacity-60 disabled:cursor-not-allowed">
-                  {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                  {overallProgress > 0 && overallProgress < 100 ? 'Creating Album...' : (overallProgress === 100 ? 'Finalizing...' : 'Create Album')}
-                </Button>
-              </DialogFooter>
+	              <DialogFooter className="sm:justify-end pt-6 border-t border-white/10">
+	                <DialogClose asChild>
+	                  <Button type="button" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20" disabled={isSubmitting}>Cancel</Button>
+	                </DialogClose>
+	                <Button type="submit" disabled={isSaveDisabled} className="gold-to-blue-gradient text-black font-semibold hover:opacity-90 transition-opacity proximity-glow-button disabled:opacity-60 disabled:cursor-not-allowed">
+	                  {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+	                  {overallProgress > 0 && overallProgress < 100 ? 'Creating Album...' : (overallProgress === 100 ? 'Finalizing...' : 'Create Album')}
+	                </Button>
+	              </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>

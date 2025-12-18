@@ -989,7 +989,7 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
 	            className="hidden"
 	            onChange={handlePickTrackAudio}
 	          />
-	          <Button type="button" className="golden-gradient text-black font-semibold" onClick={() => inputRef.current?.click()}>
+	          <Button type="button" className="gold-to-yellow-gradient text-black font-semibold" onClick={() => inputRef.current?.click()}>
 	            <Upload className="w-4 h-4 mr-2" />
 	            Select Files
 	          </Button>
@@ -1163,10 +1163,10 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
         <Button type="button" variant="outline" className="border-white/10 text-gray-200" onClick={() => onOpenChange(false)}>
           Close
         </Button>
-        <Button type="button" className="golden-gradient text-black font-semibold" onClick={uploadAll} disabled={busy}>
-          {busy ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Cloud className="w-4 h-4 mr-2" />}
-          Upload & Create
-        </Button>
+	        <Button type="button" className="gold-to-yellow-gradient text-black font-semibold" onClick={uploadAll} disabled={busy}>
+	          {busy ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Cloud className="w-4 h-4 mr-2" />}
+	          Upload & Create
+	        </Button>
       </div>
     </div>
   );
@@ -1245,17 +1245,16 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
 
 	  return (
 	    <Dialog open={open} onOpenChange={onOpenChange}>
-	      <DialogContent className="relative sm:max-w-4xl glass-effect-light text-white font-montserrat max-h-[90vh] overflow-y-auto border border-white/10">
-	        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-yellow-400 via-amber-300 to-orange-400" />
+	      <DialogContent className="sm:max-w-4xl text-white font-montserrat max-h-[90vh] overflow-y-auto">
 	        <DialogHeader className="space-y-2 pb-3 border-b border-white/10">
-	          <DialogTitle className="golden-text text-2xl flex items-center gap-2">
-	            <FolderUp className="w-6 h-6 text-yellow-300" />
-	            Bulk Upload Workspace
+	          <DialogTitle className="golden-text text-xl flex items-center gap-2">
+	            <FolderUp className="w-5 h-5 text-amber-300" />
+	            Bulk Upload
 	          </DialogTitle>
-          <DialogDescription className="text-gray-300">
-            Upload albums or singles in batches, with review before saving to your library. Works best when files are already downloaded locally.
-          </DialogDescription>
-        </DialogHeader>
+	          <DialogDescription className="text-gray-300">
+	            Upload albums or singles in batches, with review before saving to your library. Works best when files are already downloaded locally.
+	          </DialogDescription>
+	        </DialogHeader>
 
         {step === 'staging' ? renderStaging() : null}
         {step === 'uploading' ? renderUploading() : null}

@@ -261,17 +261,14 @@ import React, { useState, useEffect, useCallback } from 'react';
               }
               onOpenChange(openState);
           }}>
-            <DialogContent className="relative sm:max-w-3xl glass-effect-light text-white overflow-y-auto max-h-[90vh] border border-white/10">
-              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-yellow-400 via-emerald-400 to-green-500" />
+            <DialogContent className="sm:max-w-3xl text-white overflow-y-auto max-h-[90vh]">
               <DialogHeader className="pb-3 border-b border-white/10">
-                <DialogTitle className="flex items-center text-2xl golden-text">
-                  <span className="w-11 h-11 rounded-xl bg-black/30 border border-white/10 flex items-center justify-center mr-3">
-                    <UploadCloud className="w-6 h-6 text-yellow-300" />
-                  </span>
+                <DialogTitle className="flex items-center gap-2 text-xl golden-text">
+                  <UploadCloud className="w-5 h-5 text-emerald-300" />
                   Upload Track
                 </DialogTitle>
-                <DialogDescription className="text-gray-300 pt-1">
-                  Upload audio + artwork, then tune metadata. Optional fields are tucked under Advanced to keep this fast.
+                <DialogDescription className="text-gray-400 pt-1">
+                  Audio + artwork first. Advanced fields stay out of the way until you need them.
                 </DialogDescription>
               </DialogHeader>
 
@@ -285,7 +282,7 @@ import React, { useState, useEffect, useCallback } from 'react';
               )}
 
               <form onSubmit={handleSubmit} className="space-y-6 py-4 px-2">
-                <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+                <div className="rounded-xl border border-white/10 bg-black/10 p-4">
                   <TrackFormFields
                     formData={formData}
                     formErrors={formErrors}
@@ -301,7 +298,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                     parentVideoCoverArtUrl={null}
                   />
                 </div>
-                <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+                <div className="rounded-xl border border-white/10 bg-black/10 p-4">
                   <AcknowledgementField
                     checked={formData.acknowledgement}
                     onChange={handleInputChange}
@@ -313,7 +310,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                   <DialogClose asChild>
                     <Button type="button" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20" disabled={isSubmitting}>Cancel</Button>
                   </DialogClose>
-                  <Button type="submit" disabled={isSaveDisabled} className="golden-gradient text-black font-semibold hover:opacity-90 transition-opacity proximity-glow-button disabled:opacity-60 disabled:cursor-not-allowed">
+                  <Button type="submit" disabled={isSaveDisabled} className="gold-to-green-gradient text-black font-semibold hover:opacity-90 transition-opacity proximity-glow-button disabled:opacity-60 disabled:cursor-not-allowed">
                     {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                     {overallProgress > 0 && overallProgress < 100 ? 'Uploading...' : (overallProgress === 100 ? 'Finalizing...' : 'Save Track')}
                   </Button>

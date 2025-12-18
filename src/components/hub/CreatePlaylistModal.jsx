@@ -136,16 +136,13 @@ import { ListMusic, PlusCircle, Loader2, Image as ImageIcon } from 'lucide-react
 
       return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-          <DialogContent className="relative sm:max-w-2xl glass-effect-light text-white overflow-y-auto max-h-[90vh] border border-white/10">
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-yellow-400 via-violet-400 to-fuchsia-500" />
+          <DialogContent className="sm:max-w-2xl text-white overflow-y-auto max-h-[90vh]">
             <DialogHeader className="pb-3 border-b border-white/10">
-              <DialogTitle className="flex items-center text-2xl golden-text">
-                <span className="w-11 h-11 rounded-xl bg-black/30 border border-white/10 flex items-center justify-center mr-3">
-                  <ListMusic className="w-6 h-6 text-yellow-300" />
-                </span>
+              <DialogTitle className="flex items-center gap-2 text-xl golden-text">
+                <ListMusic className="w-5 h-5 text-violet-300" />
                 Create Playlist
               </DialogTitle>
-              <DialogDescription className="text-gray-300 pt-1">Bundle tracks into a playlist, add a cover, and (optional) a short video loop.</DialogDescription>
+              <DialogDescription className="text-gray-400 pt-1">Bundle tracks into a playlist, add a cover, and (optional) a short video loop.</DialogDescription>
             </DialogHeader>
             
             {isSubmitting && <Progress value={uploadProgress} className="w-full h-2 bg-gray-700 [&>div]:bg-yellow-400 mb-4" />}
@@ -205,7 +202,7 @@ import { ListMusic, PlusCircle, Loader2, Image as ImageIcon } from 'lucide-react
                 <DialogClose asChild>
                   <Button type="button" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">Cancel</Button>
                 </DialogClose>
-                <Button type="submit" disabled={isSubmitDisabled} className="golden-gradient text-black font-semibold hover:opacity-90 transition-opacity proximity-glow-button">
+                <Button type="submit" disabled={isSubmitDisabled} className="gold-to-purple-gradient text-black font-semibold hover:opacity-90 transition-opacity proximity-glow-button">
                   {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <PlusCircle className="w-4 h-4 mr-2" />}
                   Create Playlist
                 </Button>

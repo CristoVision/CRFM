@@ -29,12 +29,7 @@ import React from 'react';
           ref={ref}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none data-[state=open]:[&>div]:animate-in data-[state=closed]:[&>div]:animate-out data-[state=closed]:[&>div]:fade-out-0 data-[state=open]:[&>div]:fade-in-0 data-[state=closed]:[&>div]:zoom-out-95 data-[state=open]:[&>div]:zoom-in-95"
           {...props}>
-          <div
-            className={cn(
-              'pointer-events-auto relative grid w-full max-w-lg gap-4 rounded-xl border border-white/10 glass-effect p-6 shadow-2xl ring-1 ring-white/5',
-              className
-            )}
-          >
+          <div className={cn('pointer-events-auto relative grid w-full max-w-lg gap-4 rounded-xl modal-surface p-6', className)}>
             {children}
             {showClose ? (
               <DialogPrimitive.Close

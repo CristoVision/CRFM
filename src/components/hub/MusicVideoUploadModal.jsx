@@ -191,14 +191,11 @@ import React, { useState, useEffect, useRef } from 'react';
 
       return (
         <Dialog open={isOpen} onOpenChange={(open) => { if (!isUploading) onOpenChange(open); }}>
-          <DialogContent className="relative sm:max-w-2xl glass-effect-light text-white border border-white/10 max-h-[90vh] overflow-y-auto">
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-yellow-400 via-rose-400 to-red-500" />
+          <DialogContent className="sm:max-w-2xl text-white max-h-[90vh] overflow-y-auto">
             <ConfettiCelebration isActive={showConfetti} />
             <DialogHeader className="pb-3 border-b border-white/10">
-              <DialogTitle className="flex items-center text-2xl golden-text">
-                <span className="w-11 h-11 rounded-xl bg-black/30 border border-white/10 flex items-center justify-center mr-3">
-                  <UploadCloud className="w-6 h-6 text-yellow-300" />
-                </span>
+              <DialogTitle className="flex items-center gap-2 text-xl golden-text">
+                <UploadCloud className="w-5 h-5 text-rose-300" />
                 Upload Music Video
               </DialogTitle>
               <DialogDescription className="text-gray-300 pt-1">Upload a video + cover image. Keep the file smaller for the free tier.</DialogDescription>
@@ -268,7 +265,7 @@ import React, { useState, useEffect, useRef } from 'react';
                 <DialogClose asChild>
                   <Button type="button" variant="outline" className="bg-white/10 border-white/20 text-gray-300 hover:bg-white/20" disabled={isUploading}>Cancel</Button>
                 </DialogClose>
-                <Button type="submit" className="golden-gradient text-black font-semibold hover:opacity-90" disabled={isUploading}>
+                <Button type="submit" className="gold-to-red-gradient text-black font-semibold hover:opacity-90" disabled={isUploading}>
                   {isUploading ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <UploadCloud className="w-5 h-5 mr-2" />}
                   {isUploading ? 'Uploading...' : 'Upload Video'}
                 </Button>
