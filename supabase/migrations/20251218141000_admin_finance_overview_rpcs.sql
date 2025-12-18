@@ -36,6 +36,9 @@ declare
   v_active_subscriptions bigint;
   v_upload_fee_track_count bigint;
   v_upload_fee_album_count bigint;
+  v_upload_fees_net_cents bigint;
+
+  v_subscription_payments_net_cents bigint;
 
   v_topups_by_country jsonb;
   v_topups_by_city jsonb;
@@ -62,22 +65,36 @@ begin
     v_withdraw_approved_cc := 0;
   end;
 
-  select
-    count(*)::bigint,
-    coalesce(sum(st.amount_usd_cents), 0)::bigint,
-    coalesce(sum(st.fee_usd_cents), 0)::bigint,
-    coalesce(sum(st.net_usd_cents), 0)::bigint
-  into v_topups_count, v_topups_gross_cents, v_topups_fee_cents, v_topups_net_cents
-  from public.stripe_topups st
-  where st.created_at >= v_since;
+  begin
+    select
+      count(*)::bigint,
+      coalesce(sum(st.amount_usd_cents), 0)::bigint,
+      coalesce(sum(st.fee_usd_cents), 0)::bigint,
+      coalesce(sum(st.net_usd_cents), 0)::bigint
+    into v_topups_count, v_topups_gross_cents, v_topups_fee_cents, v_topups_net_cents
+    from public.stripe_topups st
+    where st.created_at >= v_since;
+  exception when undefined_table or undefined_column then
+    v_topups_count := 0;
+    v_topups_gross_cents := 0;
+    v_topups_fee_cents := 0;
+    v_topups_net_cents := 0;
+  end;
 
-  select
-    count(*)::bigint,
-    coalesce(sum(st.amount_usd_cents), 0)::bigint,
-    coalesce(sum(st.fee_usd_cents), 0)::bigint,
-    coalesce(sum(st.net_usd_cents), 0)::bigint
-  into v_topups_count_all, v_topups_gross_cents_all, v_topups_fee_cents_all, v_topups_net_cents_all
-  from public.stripe_topups st;
+  begin
+    select
+      count(*)::bigint,
+      coalesce(sum(st.amount_usd_cents), 0)::bigint,
+      coalesce(sum(st.fee_usd_cents), 0)::bigint,
+      coalesce(sum(st.net_usd_cents), 0)::bigint
+    into v_topups_count_all, v_topups_gross_cents_all, v_topups_fee_cents_all, v_topups_net_cents_all
+    from public.stripe_topups st;
+  exception when undefined_table or undefined_column then
+    v_topups_count_all := 0;
+    v_topups_gross_cents_all := 0;
+    v_topups_fee_cents_all := 0;
+    v_topups_net_cents_all := 0;
+  end;
 
   begin
     select
@@ -114,46 +131,81 @@ begin
     v_membership_purchases_net_cc := 0;
   end;
 
-  select count(*)::bigint
-  into v_active_subscriptions
-  from public.stripe_creator_subscriptions scs
-  where lower(coalesce(scs.status, '')) in ('active', 'trialing');
+  begin
+    select count(*)::bigint
+    into v_active_subscriptions
+    from public.stripe_creator_subscriptions scs
+    where lower(coalesce(scs.status, '')) in ('active', 'trialing');
+  exception when undefined_table or undefined_column then
+    v_active_subscriptions := 0;
+  end;
 
-  select
-    coalesce(sum(case when suf.fee_type = 'track' then 1 else 0 end), 0)::bigint,
-    coalesce(sum(case when suf.fee_type = 'album' then 1 else 0 end), 0)::bigint
-  into v_upload_fee_track_count, v_upload_fee_album_count
-  from public.stripe_upload_fees suf
-  where suf.created_at >= v_since;
-
-  select coalesce(
-    jsonb_agg(jsonb_build_object('country', x.country, 'count', x.cnt) order by x.cnt desc),
-    '[]'::jsonb
-  )
-  into v_topups_by_country
-  from (
+  begin
     select
-      coalesce(nullif(st.fee_details->'billing_details'->'address'->>'country', ''), 'unknown') as country,
-      count(*)::bigint as cnt
-    from public.stripe_topups st
-    where st.created_at >= v_since
-    group by 1
-  ) x;
+      coalesce(sum(case when suf.fee_type = 'track' then 1 else 0 end), 0)::bigint,
+      coalesce(sum(case when suf.fee_type = 'album' then 1 else 0 end), 0)::bigint
+    into v_upload_fee_track_count, v_upload_fee_album_count
+    from public.stripe_upload_fees suf
+    where suf.created_at >= v_since;
+  exception when undefined_table or undefined_column then
+    v_upload_fee_track_count := 0;
+    v_upload_fee_album_count := 0;
+  end;
 
-  select coalesce(
-    jsonb_agg(jsonb_build_object('city', x.city, 'country', x.country, 'count', x.cnt) order by x.cnt desc),
-    '[]'::jsonb
-  )
-  into v_topups_by_city
-  from (
-    select
-      coalesce(nullif(st.fee_details->'billing_details'->'address'->>'city', ''), 'unknown') as city,
-      coalesce(nullif(st.fee_details->'billing_details'->'address'->>'country', ''), 'unknown') as country,
-      count(*)::bigint as cnt
-    from public.stripe_topups st
-    where st.created_at >= v_since
-    group by 1, 2
-  ) x;
+  begin
+    select coalesce(sum(suf.net_usd_cents), 0)::bigint
+    into v_upload_fees_net_cents
+    from public.stripe_upload_fees suf
+    where suf.created_at >= v_since;
+  exception when undefined_table or undefined_column then
+    v_upload_fees_net_cents := 0;
+  end;
+
+  begin
+    select coalesce(sum(ssp.net_usd_cents), 0)::bigint
+    into v_subscription_payments_net_cents
+    from public.stripe_subscription_payments ssp
+    where ssp.created_at >= v_since;
+  exception when undefined_table or undefined_column then
+    v_subscription_payments_net_cents := 0;
+  end;
+
+  begin
+    select coalesce(
+      jsonb_agg(jsonb_build_object('country', x.country, 'count', x.cnt) order by x.cnt desc),
+      '[]'::jsonb
+    )
+    into v_topups_by_country
+    from (
+      select
+        coalesce(nullif(st.fee_details->'billing_details'->'address'->>'country', ''), 'unknown') as country,
+        count(*)::bigint as cnt
+      from public.stripe_topups st
+      where st.created_at >= v_since
+      group by 1
+    ) x;
+  exception when undefined_table or undefined_column then
+    v_topups_by_country := '[]'::jsonb;
+  end;
+
+  begin
+    select coalesce(
+      jsonb_agg(jsonb_build_object('city', x.city, 'country', x.country, 'count', x.cnt) order by x.cnt desc),
+      '[]'::jsonb
+    )
+    into v_topups_by_city
+    from (
+      select
+        coalesce(nullif(st.fee_details->'billing_details'->'address'->>'city', ''), 'unknown') as city,
+        coalesce(nullif(st.fee_details->'billing_details'->'address'->>'country', ''), 'unknown') as country,
+        count(*)::bigint as cnt
+      from public.stripe_topups st
+      where st.created_at >= v_since
+      group by 1, 2
+    ) x;
+  exception when undefined_table or undefined_column then
+    v_topups_by_city := '[]'::jsonb;
+  end;
 
   return jsonb_build_object(
     'window_days', v_days,
@@ -187,7 +239,9 @@ begin
     'creator_billing', jsonb_build_object(
       'active_subscriptions', v_active_subscriptions,
       'upload_fee_track_count_window', v_upload_fee_track_count,
-      'upload_fee_album_count_window', v_upload_fee_album_count
+      'upload_fee_album_count_window', v_upload_fee_album_count,
+      'upload_fees_net_usd_cents_window', v_upload_fees_net_cents,
+      'subscription_net_usd_cents_window', v_subscription_payments_net_cents
     )
   );
 end;

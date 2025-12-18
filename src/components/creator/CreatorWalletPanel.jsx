@@ -1,10 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import WalletActionModal from '@/components/wallet/WalletActionModal';
 import { Coins, CreditCard, DollarSign, ExternalLink } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/lib/supabaseClient';
 
 const formatNumber = (value) => {
   const n = Number(value);
@@ -16,6 +17,7 @@ const CreatorWalletPanel = () => {
   const { user, profile, refreshUserProfile } = useAuth();
   const [activeAction, setActiveAction] = useState(null); // 'add_funds' | 'withdraw' | null
   const canUseStripe = !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+  const [financeOverview, setFinanceOverview] = useState(null);
 
   const walletBalance = useMemo(() => Number(profile?.wallet_balance || 0), [profile?.wallet_balance]);
   const withdrawableBalance = useMemo(() => {
@@ -25,12 +27,35 @@ const CreatorWalletPanel = () => {
     return Number.isFinite(n) ? n : null;
   }, [profile?.withdrawable_balance]);
 
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase.rpc('rpc_creator_finance_overview', { p_days: 30 });
+        if (error) throw error;
+        if (!cancelled) setFinanceOverview(data || null);
+      } catch (err) {
+        // If RPC isn't deployed yet, avoid noisy errors.
+        if (err?.code === 'PGRST202') return;
+        console.warn('creator_finance_overview failed', err?.message || String(err));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, walletBalance, withdrawableBalance]);
+
   if (!user) return null;
 
   const returnUrl =
     typeof window !== 'undefined'
       ? `${window.location.origin}/hub?tab=monetization&wallet_checkout=success`
       : undefined;
+
+  const overviewBalances = financeOverview?.balances || {};
+  const overviewStreams = financeOverview?.streams || {};
+  const overviewUploads = financeOverview?.uploads || {};
 
   return (
     <>
@@ -84,6 +109,26 @@ const CreatorWalletPanel = () => {
             ) : null}
           </div>
         </div>
+
+        {financeOverview ? (
+          <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+            <div className="text-sm text-white font-semibold mb-1">Earnings & Requests (last {financeOverview.window_days || 30} days)</div>
+            <div className="text-sm text-gray-300">
+              Stream earnings: <span className="text-white font-semibold">{formatNumber(overviewStreams.earnings_cc_window)} CC</span>
+            </div>
+            <div className="text-sm text-gray-300">
+              Platform fee on your streams: <span className="text-white font-semibold">{formatNumber(overviewStreams.platform_fee_cc_on_your_streams_window)} CC</span>
+            </div>
+            <div className="text-sm text-gray-300">
+              Withdraw pending: <span className="text-white font-semibold">{formatNumber(overviewBalances.withdraw_pending_cc)} CC</span>
+              {' · '}
+              Approved: <span className="text-white font-semibold">{formatNumber(overviewBalances.withdraw_approved_cc)} CC</span>
+            </div>
+            <div className="text-xs text-gray-500 mt-2">
+              Upload credits — Track: {overviewUploads.track_credits || 0}, Album: {overviewUploads.album_credits || 0}
+            </div>
+          </div>
+        ) : null}
 
         <div className="flex flex-wrap gap-2">
           <Button

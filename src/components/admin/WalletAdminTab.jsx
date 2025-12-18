@@ -117,16 +117,16 @@ const WalletAdminTab = () => {
         if (promoError && promoError.code !== 'PGRST116') throw promoError;
         if (creatorError && creatorError.code !== 'PGRST116') throw creatorError;
         if (tierError && tierError.code !== 'PGRST116') throw tierError;
-        if (overviewError && overviewError.code !== 'PGRST116') throw overviewError;
-        if (holdersError && holdersError.code !== 'PGRST116') throw holdersError;
+        if (overviewError && overviewError.code !== 'PGRST116' && overviewError.code !== 'PGRST202') throw overviewError;
+        if (holdersError && holdersError.code !== 'PGRST116' && holdersError.code !== 'PGRST202') throw holdersError;
 
         setMethods(methodRows || []);
         setCodes(codeRows || []);
         setPromoCodes(promoRows || []);
         setCreators(creatorRows || []);
         setCreatorTiers(tierRows || []);
-        setFinanceOverview(overviewData || null);
-        setWalletHolders(holdersData || []);
+        setFinanceOverview(overviewError?.code === 'PGRST202' ? null : (overviewData || null));
+        setWalletHolders(holdersError?.code === 'PGRST202' ? [] : (holdersData || []));
       } catch (err) {
         toast({
           title: 'Error loading wallet admin data',
@@ -312,6 +312,15 @@ const WalletAdminTab = () => {
 
   return (
     <div className="space-y-6">
+      {!financeOverview ? (
+        <div className="p-4 rounded-xl border border-yellow-500/40 bg-yellow-500/10 text-yellow-100 text-sm flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 mt-0.5" />
+          <div>
+            <p className="font-semibold">Finance overview not available yet.</p>
+            <p>Apply the latest Supabase migrations and reload to enable admin finance analytics.</p>
+          </div>
+        </div>
+      ) : null}
       <div className="glass-effect rounded-xl border border-white/10 p-5">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>
@@ -394,6 +403,16 @@ const WalletAdminTab = () => {
             <div className="text-[11px] text-gray-500">
               Track: {creatorBilling.upload_fee_track_count_window || 0} · Album: {creatorBilling.upload_fee_album_count_window || 0}
             </div>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+            <div className="text-xs text-gray-400">Creator Billing (Net)</div>
+            <div className="text-sm text-gray-200 mt-1">
+              Subs net: <span className="text-white font-semibold">{formatUsdCents(creatorBilling.subscription_net_usd_cents_window)}</span>
+            </div>
+            <div className="text-sm text-gray-200">
+              Upload fees net: <span className="text-white font-semibold">{formatUsdCents(creatorBilling.upload_fees_net_usd_cents_window)}</span>
+            </div>
+            <div className="text-[11px] text-gray-500">Requires Stripe invoice/upload logging to be enabled.</div>
           </div>
           <div className="rounded-lg border border-white/10 bg-black/20 p-4">
             <div className="text-xs text-gray-400">Top-Ups by Country (window)</div>

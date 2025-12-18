@@ -88,6 +88,86 @@ Deno.serve(async (req) => {
     return json({ received: true, applied: true, kind: 'subscription_status', data });
   }
 
+  // Subscription revenue: capture invoice payments for admin reporting.
+  if (event.type === 'invoice.payment_succeeded') {
+    const invoice = event.data.object as Stripe.Invoice;
+    const subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : null;
+    const customerId = typeof invoice.customer === 'string' ? invoice.customer : null;
+    const invoiceId = invoice.id;
+
+    if (!subscriptionId) return receivedIgnored({ type: event.type, reason: 'missing_subscription' });
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const { data: subRow, error: subLookupError } = await supabase
+      .from('stripe_creator_subscriptions')
+      .select('user_id, customer_id')
+      .eq('subscription_id', subscriptionId)
+      .single();
+
+    if (subLookupError || !subRow?.user_id) {
+      return receivedIgnored({ type: event.type, reason: 'unknown_subscription', subscription_id: subscriptionId });
+    }
+
+    const userId = subRow.user_id;
+    const customer = customerId || subRow.customer_id || null;
+    const paymentIntentId = typeof invoice.payment_intent === 'string' ? invoice.payment_intent : null;
+    const chargeId = typeof invoice.charge === 'string' ? invoice.charge : null;
+
+    let currency: string | null = invoice.currency || null;
+    const amountUsdCents = typeof invoice.amount_paid === 'number' ? invoice.amount_paid : null;
+    let feeUsdCents: number | null = null;
+    let netUsdCents: number | null = null;
+    let balanceTransactionId: string | null = null;
+    let feeDetails: unknown = null;
+    let billingDetails: unknown = null;
+
+    try {
+      const charge = chargeId ? await stripe.charges.retrieve(chargeId, { expand: ['balance_transaction'] }) : null;
+      if (charge) {
+        currency = charge.currency || currency;
+        billingDetails = (charge as any).billing_details ?? null;
+        const btAny = (charge as any).balance_transaction;
+        if (btAny && typeof btAny === 'object') {
+          const bt = btAny as Stripe.BalanceTransaction;
+          balanceTransactionId = bt.id || null;
+          feeUsdCents = typeof bt.fee === 'number' ? bt.fee : null;
+          netUsdCents = typeof bt.net === 'number' ? bt.net : null;
+          feeDetails = (bt as any).fee_details ?? null;
+        }
+      }
+    } catch (err) {
+      console.warn('stripe-webhook: failed to retrieve invoice charge/balance_transaction', err?.message || String(err));
+    }
+
+    const feeDetailsPayload = { fee_details: feeDetails, billing_details: billingDetails };
+
+    const { data, error } = await supabase.rpc('rpc_apply_stripe_subscription_payment', {
+      p_user_id: userId,
+      p_subscription_id: subscriptionId,
+      p_customer_id: customer,
+      p_invoice_id: invoiceId,
+      p_stripe_event_id: event.id,
+      p_payment_intent_id: paymentIntentId,
+      p_charge_id: chargeId,
+      p_balance_transaction_id: balanceTransactionId,
+      p_currency: currency,
+      p_amount_usd_cents: amountUsdCents,
+      p_fee_usd_cents: feeUsdCents,
+      p_net_usd_cents: netUsdCents,
+      p_status: invoice.status || null,
+      p_period_start: invoice.period_start ? new Date(invoice.period_start * 1000).toISOString() : null,
+      p_period_end: invoice.period_end ? new Date(invoice.period_end * 1000).toISOString() : null,
+      p_fee_details: feeDetailsPayload,
+    });
+
+    if (error) {
+      if (error.code === '23505') return json({ received: true, deduped: true });
+      return json({ error: error.message }, { status: 500 });
+    }
+
+    return json({ received: true, applied: true, kind: 'subscription_invoice_payment', data });
+  }
+
   // Wallet top-ups via PaymentIntent (WalletActionModal uses `stripe-create-payment-intent` + PaymentElement).
   // Handle these so balances update without requiring Checkout Sessions.
   if (event.type === 'payment_intent.succeeded') {
@@ -305,12 +385,55 @@ Deno.serve(async (req) => {
       return json({ error: 'Missing fee metadata' }, { status: 400 });
     }
 
+    // For transparency, fetch balance transaction to log gross/fee/net.
+    let currency: string | null = session.currency || null;
+    let amountUsdCents: number | null = null;
+    let feeUsdCents: number | null = null;
+    let netUsdCents: number | null = null;
+    let chargeId: string | null = null;
+    let balanceTransactionId: string | null = null;
+    let feeDetails: unknown = null;
+    let billingDetails: unknown = null;
+    try {
+      const expanded = await stripe.paymentIntents.retrieve(paymentIntentId, {
+        expand: ['latest_charge.balance_transaction']
+      });
+      const latestCharge = expanded.latest_charge as unknown;
+      if (latestCharge && typeof latestCharge === 'object') {
+        const charge = latestCharge as Stripe.Charge;
+        chargeId = charge.id || null;
+        currency = charge.currency || currency;
+        billingDetails = (charge as any).billing_details ?? null;
+        const btAny = (charge as any).balance_transaction;
+        if (btAny && typeof btAny === 'object') {
+          const bt = btAny as Stripe.BalanceTransaction;
+          balanceTransactionId = bt.id || null;
+          amountUsdCents = typeof bt.amount === 'number' ? bt.amount : null;
+          feeUsdCents = typeof bt.fee === 'number' ? bt.fee : null;
+          netUsdCents = typeof bt.net === 'number' ? bt.net : null;
+          feeDetails = (bt as any).fee_details ?? null;
+        }
+      }
+    } catch (err) {
+      console.warn('stripe-webhook: failed to expand balance_transaction (upload fee)', err?.message || String(err));
+    }
+
+    const feeDetailsPayload = { fee_details: feeDetails, billing_details: billingDetails };
+
     const { data, error } = await supabase.rpc('rpc_apply_stripe_upload_fee', {
       p_user_id: userId,
       p_fee_type: feeType,
       p_stripe_event_id: event.id,
       p_payment_intent_id: paymentIntentId,
-      p_checkout_session_id: session.id
+      p_checkout_session_id: session.id,
+      p_event_type: event.type,
+      p_currency: currency,
+      p_amount_usd_cents: amountUsdCents,
+      p_fee_usd_cents: feeUsdCents,
+      p_net_usd_cents: netUsdCents,
+      p_charge_id: chargeId,
+      p_balance_transaction_id: balanceTransactionId,
+      p_fee_details: feeDetailsPayload,
     });
 
     if (error) {
