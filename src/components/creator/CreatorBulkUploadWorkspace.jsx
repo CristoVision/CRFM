@@ -164,6 +164,8 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
 
   const [step, setStep] = useState('staging'); // staging | uploading | done
   const [busy, setBusy] = useState(false);
+  const [lastError, setLastError] = useState(null);
+  const [dbReady, setDbReady] = useState(true);
 
   const [mode, setMode] = useState('album'); // album | singles
   const [albumTitle, setAlbumTitle] = useState('');
@@ -171,7 +173,7 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
   const [selectedPolicyMode, setSelectedPolicyMode] = useState('inherit'); // inherit | fixed
   const [fixedPolicy, setFixedPolicy] = useState('free'); // free | pay_per_upload | subscription
 
-  const [files, setFiles] = useState([]); // { id, file, kind, status, error, publicUrl, bucket, storageKey }
+  const [files, setFiles] = useState([]); // { id, file?, name, kind, status, error?, publicUrl?, bucket?, storageKey?, size?, lastModified? }
   const [tracks, setTracks] = useState([]); // { id, title, audioFileId, coverFileId, trackNumber }
   const [albumCoverFileId, setAlbumCoverFileId] = useState(null);
 
@@ -206,6 +208,8 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
     if (!open) return;
     setStep('staging');
     setBusy(false);
+    setLastError(null);
+    setDbReady(true);
     setMode('album');
     setAlbumTitle('');
     setUsePerTrackCovers(false);
@@ -239,6 +243,26 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
         setCreditsLoading(false);
       }
     })();
+  }, [open, user?.id]);
+
+  useEffect(() => {
+    if (!open) return;
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      // Detect if DB has the columns required for idempotent bulk upserts.
+      // If missing, inserts will fail after uploads, so warn early.
+      try {
+        const { error } = await supabase.from('tracks').select('import_key').limit(1);
+        if (error) throw error;
+        if (!cancelled) setDbReady(true);
+      } catch {
+        if (!cancelled) setDbReady(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [open, user?.id]);
 
   useEffect(() => {
@@ -280,24 +304,45 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
         publicUrl: f.publicUrl || null,
         bucket: f.bucket || null,
         storageKey: f.storageKey || null,
+        size: f.file?.size ?? f.size ?? null,
+        lastModified: f.file?.lastModified ?? f.lastModified ?? null,
         // file is NOT persisted
       })),
     });
   }, [albumCoverFileId, albumTitle, files, fixedPolicy, mode, open, selectedPolicyMode, tracks, usePerTrackCovers, user?.id]);
 
-  const setSelectionFromFileList = (fileList) => {
-    const incomingFiles = [];
-    const incomingTracks = [];
-
+  const reconcileFiles = (prevFiles, incomingFileList) => {
+    const prev = Array.isArray(prevFiles) ? [...prevFiles] : [];
     const nowId = () => `${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
-    const audioFiles = [];
-    const imageFiles = [];
 
-    Array.from(fileList || []).forEach((file) => {
+    const fingerprint = (f) => {
+      const name = (f?.name || f?.file?.name || '').trim();
+      const size = f?.size ?? f?.file?.size ?? 0;
+      const lastModified = f?.lastModified ?? f?.file?.lastModified ?? 0;
+      return `${name}::${size}::${lastModified}`;
+    };
+
+    const indexByFingerprint = new Map();
+    prev.forEach((p, idx) => {
+      const key = fingerprint(p);
+      if (!key || key.startsWith('::')) return;
+      if (!indexByFingerprint.has(key)) indexByFingerprint.set(key, idx);
+    });
+
+    const indexByNameKind = new Map();
+    prev.forEach((p, idx) => {
+      const name = (p?.name || p?.file?.name || '').trim();
+      const kind = p?.kind || 'other';
+      const key = `${kind}::${name}`;
+      if (!name) return;
+      if (!indexByNameKind.has(key)) indexByNameKind.set(key, idx);
+    });
+
+    const incomingFiles = [];
+    Array.from(incomingFileList || []).forEach((file) => {
       const kind = fileKind(file);
-      const id = nowId();
-      incomingFiles.push({
-        id,
+      const meta = {
+        id: nowId(),
         file,
         name: file.name,
         kind,
@@ -306,22 +351,72 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
         publicUrl: null,
         bucket: null,
         storageKey: null,
-      });
-      if (kind === 'audio') audioFiles.push({ id, file });
-      if (kind === 'image') imageFiles.push({ id, file });
+        size: file.size ?? null,
+        lastModified: file.lastModified ?? null,
+      };
+
+      const fp = fingerprint(meta);
+      const existingIdxByFp = indexByFingerprint.get(fp);
+      if (existingIdxByFp != null) {
+        // Re-attach File handle to existing entry (keeps IDs stable for tracks).
+        prev[existingIdxByFp] = {
+          ...prev[existingIdxByFp],
+          file,
+          name: file.name,
+          kind,
+          size: file.size ?? prev[existingIdxByFp].size ?? null,
+          lastModified: file.lastModified ?? prev[existingIdxByFp].lastModified ?? null,
+          status: prev[existingIdxByFp].publicUrl ? 'uploaded' : prev[existingIdxByFp].status || 'pending',
+        };
+        return;
+      }
+
+      const nameKindKey = `${kind}::${file.name}`;
+      const existingIdxByName = indexByNameKind.get(nameKindKey);
+      if (existingIdxByName != null && !(prev[existingIdxByName]?.file)) {
+        prev[existingIdxByName] = {
+          ...prev[existingIdxByName],
+          file,
+          name: file.name,
+          kind,
+          size: file.size ?? prev[existingIdxByName].size ?? null,
+          lastModified: file.lastModified ?? prev[existingIdxByName].lastModified ?? null,
+          status: prev[existingIdxByName].publicUrl ? 'uploaded' : prev[existingIdxByName].status || 'pending',
+        };
+        return;
+      }
+
+      incomingFiles.push(meta);
     });
 
-    audioFiles.forEach((a, index) => {
+    return mergeNewFilesIntoDraft(prev, incomingFiles);
+  };
+
+  const setSelectionFromFileList = (fileList) => {
+    const nextFiles = reconcileFiles(files, fileList);
+    setFiles(nextFiles);
+
+    const nowId = () => `${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
+    const incomingTracks = [];
+    const fingerprintOfFile = (file) => `${file.name}::${file.size ?? 0}::${file.lastModified ?? 0}`;
+    const fingerprintOfMeta = (x) =>
+      `${(x.name || x.file?.name || '')}::${x.size ?? x.file?.size ?? 0}::${x.lastModified ?? x.file?.lastModified ?? 0}`;
+
+    const audioSelected = Array.from(fileList || []).filter((f) => fileKind(f) === 'audio');
+    audioSelected.forEach((file) => {
+      const fp = fingerprintOfFile(file);
+      const match = nextFiles.find((x) => x.kind === 'audio' && fingerprintOfMeta(x) === fp);
+      const audioId = match?.id || null;
+      if (!audioId) return;
       incomingTracks.push({
         id: nowId(),
-        title: guessTrackTitleFromFilename(a.file.name),
-        audioFileId: a.id,
+        title: guessTrackTitleFromFilename(file.name),
+        audioFileId: audioId,
         coverFileId: null,
-        trackNumber: index + 1,
+        trackNumber: 0,
       });
     });
 
-    setFiles((prev) => mergeNewFilesIntoDraft(prev, incomingFiles));
     setTracks((prev) => {
       const existingAudioIds = new Set((prev || []).map((t) => t.audioFileId));
       const dedupedIncoming = incomingTracks.filter((t) => !existingAudioIds.has(t.audioFileId));
@@ -331,10 +426,14 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
 
     // If no album cover chosen yet, choose the largest image in the incoming selection.
     if (!albumCoverFileId) {
-      const coverCandidate = imageFiles
-        .map((img) => ({ id: img.id, size: img.file.size || 0 }))
-        .sort((a, b) => b.size - a.size)[0];
-      if (coverCandidate?.id) setAlbumCoverFileId(coverCandidate.id);
+      const coverCandidate = Array.from(fileList || [])
+        .filter((f) => fileKind(f) === 'image')
+        .sort((a, b) => (b.size || 0) - (a.size || 0))[0];
+      if (coverCandidate) {
+        const fp = fingerprintOfFile(coverCandidate);
+        const match = nextFiles.find((x) => x.kind === 'image' && fingerprintOfMeta(x) === fp);
+        if (match?.id) setAlbumCoverFileId(match.id);
+      }
     }
   };
 
@@ -387,6 +486,7 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
     if (mode === 'album' && !albumTitle.trim()) return { ok: false, error: 'Album title is required.' };
     if (tracks.length === 0) return { ok: false, error: 'No tracks detected. Select audio files (mp3/m4a/wav/flac).' };
     if (supportedAudioCount === 0) return { ok: false, error: 'No supported audio files selected.' };
+    if (!dbReady) return { ok: false, error: 'Database migrations missing for bulk upload. Run `supabase db push` and refresh the page.' };
     const missingAttachedAudio = tracks.some((t) => {
       const f = files.find((x) => x.id === t.audioFileId);
       return !f?.file && !f?.publicUrl;
@@ -405,6 +505,7 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
 
   const uploadAll = async () => {
     if (!ensureAuth()) return;
+    setLastError(null);
     const staging = validateStaging();
     if (!staging.ok) {
       toast({ title: 'Cannot upload yet', description: staging.error, variant: 'destructive' });
@@ -520,9 +621,11 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
       setStep('done');
       toast({ title: 'Upload complete', description: `${tracks.length} track(s) imported successfully.`, className: 'bg-green-600 text-white' });
     } catch (err) {
+      const message = err?.message || String(err);
+      setLastError(message);
       toast({
         title: 'Bulk upload failed',
-        description: err?.message || String(err),
+        description: message,
         variant: 'destructive',
       });
       setStep('staging');
@@ -563,6 +666,26 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
         <div className="p-3 rounded-lg border border-yellow-500/40 bg-yellow-500/10 text-yellow-100 text-sm flex items-start gap-2">
           <AlertTriangle className="w-5 h-5 mt-0.5" />
           <div>{missingFilesWarning}</div>
+        </div>
+      ) : null}
+
+      {!dbReady ? (
+        <div className="p-3 rounded-lg border border-red-500/40 bg-red-500/10 text-red-100 text-sm flex items-start gap-2">
+          <XCircle className="w-5 h-5 mt-0.5" />
+          <div>
+            <p className="font-semibold">Database not ready for bulk upload.</p>
+            <p className="text-sm">Run `supabase db push` to apply the latest migrations, then refresh this page.</p>
+          </div>
+        </div>
+      ) : null}
+
+      {lastError ? (
+        <div className="p-3 rounded-lg border border-red-500/40 bg-red-500/10 text-red-100 text-sm flex items-start gap-2">
+          <XCircle className="w-5 h-5 mt-0.5" />
+          <div>
+            <p className="font-semibold">Last error</p>
+            <p className="text-sm break-words">{lastError}</p>
+          </div>
         </div>
       ) : null}
 
@@ -706,6 +829,44 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
         <div className="rounded-lg border border-white/10 bg-black/20 p-4">
           <div className="text-xs text-gray-400">Unsupported</div>
           <div className="text-xl font-semibold text-white">{unsupportedCount}</div>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-white/10 bg-black/20 p-4 space-y-2">
+        <div className="text-sm text-white font-semibold">Files</div>
+        <div className="space-y-2 max-h-[22vh] overflow-y-auto pr-1">
+          {files.length === 0 ? (
+            <div className="text-sm text-gray-500">No files selected yet.</div>
+          ) : (
+            files.map((f) => {
+              const missingAttachment = f.kind !== 'other' && !f.file && !f.publicUrl;
+              return (
+                <div key={f.id} className="p-3 rounded-lg border border-white/10 bg-white/5 flex items-center justify-between gap-3">
+                  <div className="min-w-[220px]">
+                    <div className="text-sm text-white font-semibold">{f.name || f.file?.name}</div>
+                    <div className="text-xs text-gray-500">
+                      {f.kind}
+                      {missingAttachment ? ' · missing attachment' : null}
+                      {f.publicUrl ? ' · uploaded' : null}
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-300">
+                    {f.status === 'uploaded' ? (
+                      <span className="text-green-300 flex items-center gap-1">
+                        <CheckCircle className="w-4 h-4" /> Uploaded
+                      </span>
+                    ) : f.status === 'error' ? (
+                      <span className="text-red-300 flex items-center gap-1">
+                        <XCircle className="w-4 h-4" /> {f.error || 'Error'}
+                      </span>
+                    ) : (
+                      <span className="text-gray-300">{f.status}</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 
