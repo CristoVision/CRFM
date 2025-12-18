@@ -11,6 +11,18 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import { Loader2, Shield, Check, AlertTriangle, RefreshCw } from 'lucide-react';
 
+const formatUsdCents = (cents) => {
+  const n = Number(cents);
+  if (!Number.isFinite(n)) return '—';
+  return `$${(n / 100).toFixed(2)}`;
+};
+
+const formatNumber = (value) => {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '0';
+  return n.toLocaleString();
+};
+
 const defaultMethod = {
   method_type: 'add_funds',
   name: '',
@@ -51,6 +63,9 @@ const WalletAdminTab = () => {
   const [loading, setLoading] = useState(false);
   const [missingTables, setMissingTables] = useState(false);
   const [missingPromoTables, setMissingPromoTables] = useState(false);
+  const [financeOverview, setFinanceOverview] = useState(null);
+  const [walletHolders, setWalletHolders] = useState([]);
+  const [overviewDays, setOverviewDays] = useState('30');
   const [methodForm, setMethodForm] = useState(defaultMethod);
   const [codeForm, setCodeForm] = useState(defaultCode);
   const [promoForm, setPromoForm] = useState(defaultPromo);
@@ -64,12 +79,15 @@ const WalletAdminTab = () => {
       setMissingTables(false);
       setMissingPromoTables(false);
       try {
+        const daysNum = Math.max(1, Number(overviewDays) || 30);
         const [
           { data: methodRows, error: methodError },
           { data: codeRows, error: codeError },
           { data: promoRows, error: promoError },
           { data: creatorRows, error: creatorError },
           { data: tierRows, error: tierError },
+          { data: overviewData, error: overviewError },
+          { data: holdersData, error: holdersError },
         ] =
           await Promise.all([
             supabase.from('wallet_methods').select('*').order('created_at', { ascending: false }),
@@ -77,6 +95,8 @@ const WalletAdminTab = () => {
             supabase.from('promo_codes').select('*').order('created_at', { ascending: false }),
             supabase.from('profiles').select('id, username, full_name, is_verified_creator').eq('is_verified_creator', true).order('username'),
             supabase.from('creator_membership_tiers').select('id, creator_id, name, price_cc, duration_days, is_active').order('created_at', { ascending: false }),
+            supabase.rpc('rpc_admin_finance_overview', { p_days: daysNum }),
+            supabase.rpc('rpc_admin_wallet_holders', { p_limit: 50 }),
           ]);
 
         if (methodError?.code === 'PGRST116' || codeError?.code === 'PGRST116') {
@@ -97,12 +117,16 @@ const WalletAdminTab = () => {
         if (promoError && promoError.code !== 'PGRST116') throw promoError;
         if (creatorError && creatorError.code !== 'PGRST116') throw creatorError;
         if (tierError && tierError.code !== 'PGRST116') throw tierError;
+        if (overviewError && overviewError.code !== 'PGRST116') throw overviewError;
+        if (holdersError && holdersError.code !== 'PGRST116') throw holdersError;
 
         setMethods(methodRows || []);
         setCodes(codeRows || []);
         setPromoCodes(promoRows || []);
         setCreators(creatorRows || []);
         setCreatorTiers(tierRows || []);
+        setFinanceOverview(overviewData || null);
+        setWalletHolders(holdersData || []);
       } catch (err) {
         toast({
           title: 'Error loading wallet admin data',
@@ -113,7 +137,7 @@ const WalletAdminTab = () => {
         setLoading(false);
       }
     },
-    [isAdmin]
+    [isAdmin, overviewDays]
   );
 
   useEffect(() => {
@@ -278,8 +302,162 @@ const WalletAdminTab = () => {
     ? creatorTiers.filter((t) => t.creator_id === promoForm.creator_id && t.is_active)
     : [];
 
+  const liabilities = financeOverview?.liabilities || {};
+  const topups = financeOverview?.topups || {};
+  const streams = financeOverview?.streams || {};
+  const memberships = financeOverview?.memberships || {};
+  const creatorBilling = financeOverview?.creator_billing || {};
+  const topupsByCountry = Array.isArray(topups?.by_country_window) ? topups.by_country_window : [];
+  const topupsByCity = Array.isArray(topups?.by_city_window) ? topups.by_city_window : [];
+
   return (
     <div className="space-y-6">
+      <div className="glass-effect rounded-xl border border-white/10 p-5">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+              <Shield className="w-5 h-5 text-yellow-400" />
+              Finance Overview
+            </h2>
+            <p className="text-sm text-gray-400">
+              Totals and liabilities across wallets, royalties, and Stripe top-ups (gross/fee/net).
+            </p>
+          </div>
+          <div className="flex items-end gap-2">
+            <div className="space-y-1">
+              <Label className="text-gray-200">Window (days)</Label>
+              <Input
+                type="number"
+                min="1"
+                value={overviewDays}
+                onChange={(e) => setOverviewDays(e.target.value)}
+                className="w-32 bg-black/30 border-white/10 text-white"
+              />
+            </div>
+            <Button type="button" variant="outline" className="border-white/10 text-gray-200" onClick={loadData} disabled={loading}>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+              Refresh
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-5">
+          <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+            <div className="text-xs text-gray-400">Wallet Liabilities (CC)</div>
+            <div className="text-2xl font-semibold text-white">{formatNumber(liabilities.wallet_total_cc)} CC</div>
+            <div className="text-[11px] text-gray-500">Total spendable balances held by users.</div>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+            <div className="text-xs text-gray-400">Royalties Owed (CC)</div>
+            <div className="text-2xl font-semibold text-white">{formatNumber(liabilities.withdrawable_total_cc)} CC</div>
+            <div className="text-[11px] text-gray-500">
+              Pending withdraw requests: {formatNumber(liabilities.withdraw_requests_pending_cc)} CC
+            </div>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+            <div className="text-xs text-gray-400">Stripe Top-Ups (Net)</div>
+            <div className="text-2xl font-semibold text-white">{formatUsdCents(topups.net_usd_cents_window)}</div>
+            <div className="text-[11px] text-gray-500">
+              Window: {topups.count_window || 0} payments · Fees {formatUsdCents(topups.fee_usd_cents_window)}
+            </div>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+            <div className="text-xs text-gray-400">Membership Purchases (CC)</div>
+            <div className="text-2xl font-semibold text-white">{formatNumber(memberships.purchases_net_cc_window)} CC</div>
+            <div className="text-[11px] text-gray-500">Window: {memberships.purchases_count_window || 0} purchases.</div>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+            <div className="text-xs text-gray-400">Platform Fees (Streams)</div>
+            <div className="text-2xl font-semibold text-white">{formatNumber(streams.platform_fee_cc_window)} CC</div>
+            <div className="text-[11px] text-gray-500">
+              Window spend: {formatNumber(streams.spend_cc_window)} CC · {streams.count_window || 0} streams
+            </div>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+            <div className="text-xs text-gray-400">Withdraw Approved (CC)</div>
+            <div className="text-2xl font-semibold text-white">{formatNumber(liabilities.withdraw_requests_approved_cc)} CC</div>
+            <div className="text-[11px] text-gray-500">Approved requests (treat as paid once processed externally).</div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+          <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+            <div className="text-xs text-gray-400">Creator Subscriptions</div>
+            <div className="text-2xl font-semibold text-white">{creatorBilling.active_subscriptions || 0}</div>
+            <div className="text-[11px] text-gray-500">Active + trialing users.</div>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+            <div className="text-xs text-gray-400">Upload Fees (window)</div>
+            <div className="text-2xl font-semibold text-white">
+              {Number(creatorBilling.upload_fee_track_count_window || 0) + Number(creatorBilling.upload_fee_album_count_window || 0)}
+            </div>
+            <div className="text-[11px] text-gray-500">
+              Track: {creatorBilling.upload_fee_track_count_window || 0} · Album: {creatorBilling.upload_fee_album_count_window || 0}
+            </div>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+            <div className="text-xs text-gray-400">Top-Ups by Country (window)</div>
+            <div className="text-sm text-gray-200 mt-1">
+              {topupsByCountry.length === 0 ? (
+                <span className="text-gray-500">No data yet.</span>
+              ) : (
+                topupsByCountry.slice(0, 5).map((row, idx) => (
+                  <span key={`${row.country}-${idx}`} className="inline-block mr-3">
+                    <span className="text-white font-semibold">{row.country}</span> <span className="text-gray-400">({row.count})</span>
+                  </span>
+                ))
+              )}
+            </div>
+            <div className="text-xs text-gray-300 mt-2">
+              Top cities:{' '}
+              {topupsByCity.length === 0 ? (
+                <span className="text-gray-500">—</span>
+              ) : (
+                topupsByCity.slice(0, 3).map((row, idx) => (
+                  <span key={`${row.city}-${row.country}-${idx}`} className="inline-block mr-3">
+                    <span className="text-white">{row.city}</span> <span className="text-gray-500">{row.country}</span>{' '}
+                    <span className="text-gray-400">({row.count})</span>
+                  </span>
+                ))
+              )}
+            </div>
+            <div className="text-[11px] text-gray-500">Country comes from Stripe billing_details when available.</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="glass-effect rounded-xl border border-white/10 p-5">
+        <h3 className="text-lg font-semibold text-white mb-2">Top Wallet Holders</h3>
+        <p className="text-sm text-gray-400 mb-4">Ordered by wallet balance (CC). Useful for support and auditing.</p>
+        <div className="space-y-2">
+          {walletHolders.length === 0 ? (
+            <p className="text-sm text-gray-500">No data.</p>
+          ) : (
+            walletHolders.map((row) => (
+              <div key={row.user_id} className="p-3 rounded-lg border border-white/10 bg-white/5 flex items-center justify-between gap-3 flex-wrap">
+                <div className="min-w-[220px]">
+                  <div className="text-sm text-white font-semibold">
+                    {row.username || row.full_name || row.user_id}
+                    {row.is_verified_creator ? <Badge className="ml-2 bg-purple-500/20 text-purple-200">Creator</Badge> : null}
+                  </div>
+                  <div className="text-xs text-gray-500">{row.user_id}</div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <div className="text-xs text-gray-400">Wallet</div>
+                    <div className="text-sm text-white font-semibold">{formatNumber(row.wallet_balance)} CC</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-gray-400">Withdrawable</div>
+                    <div className="text-sm text-white font-semibold">{formatNumber(row.withdrawable_balance)} CC</div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
       {missingTables && (
         <div className="p-4 rounded-xl border border-yellow-500/40 bg-yellow-500/10 text-yellow-100 text-sm flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 mt-0.5" />

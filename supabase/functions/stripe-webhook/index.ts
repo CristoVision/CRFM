@@ -118,6 +118,7 @@ Deno.serve(async (req) => {
     let chargeId: string | null = null;
     let balanceTransactionId: string | null = null;
     let feeDetails: unknown = null;
+    let billingDetails: unknown = null;
     try {
       const expanded = await stripe.paymentIntents.retrieve(paymentIntent.id, {
         expand: ['latest_charge.balance_transaction']
@@ -127,6 +128,7 @@ Deno.serve(async (req) => {
         const charge = latestCharge as Stripe.Charge;
         chargeId = charge.id || null;
         currency = charge.currency || currency;
+        billingDetails = (charge as any).billing_details ?? null;
         const btAny = (charge as any).balance_transaction;
         if (btAny && typeof btAny === 'object') {
           const bt = btAny as Stripe.BalanceTransaction;
@@ -140,6 +142,11 @@ Deno.serve(async (req) => {
     } catch (err) {
       console.warn('stripe-webhook: failed to expand balance_transaction', err?.message || String(err));
     }
+
+    const feeDetailsPayload = {
+      fee_details: feeDetails,
+      billing_details: billingDetails
+    };
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const { data, error } = await supabase.rpc('rpc_apply_stripe_topup', {
@@ -156,7 +163,7 @@ Deno.serve(async (req) => {
       p_net_usd_cents: netUsdCents,
       p_charge_id: chargeId,
       p_balance_transaction_id: balanceTransactionId,
-      p_fee_details: feeDetails
+      p_fee_details: feeDetailsPayload
     });
 
     if (error) {
@@ -211,6 +218,7 @@ Deno.serve(async (req) => {
     let chargeId: string | null = null;
     let balanceTransactionId: string | null = null;
     let feeDetails: unknown = null;
+    let billingDetails: unknown = null;
     try {
       const expanded = await stripe.paymentIntents.retrieve(paymentIntentId, {
         expand: ['latest_charge.balance_transaction']
@@ -220,6 +228,7 @@ Deno.serve(async (req) => {
         const charge = latestCharge as Stripe.Charge;
         chargeId = charge.id || null;
         currency = charge.currency || currency;
+        billingDetails = (charge as any).billing_details ?? null;
         const btAny = (charge as any).balance_transaction;
         if (btAny && typeof btAny === 'object') {
           const bt = btAny as Stripe.BalanceTransaction;
@@ -234,6 +243,11 @@ Deno.serve(async (req) => {
       console.warn('stripe-webhook: failed to expand balance_transaction (checkout topup)', err?.message || String(err));
     }
 
+    const feeDetailsPayload = {
+      fee_details: feeDetails,
+      billing_details: billingDetails
+    };
+
     const { data, error } = await supabase.rpc('rpc_apply_stripe_topup', {
       p_user_id: userId,
       p_amount_cc: Number(amountCc.toFixed(2)),
@@ -247,7 +261,7 @@ Deno.serve(async (req) => {
       p_net_usd_cents: netUsdCents,
       p_charge_id: chargeId,
       p_balance_transaction_id: balanceTransactionId,
-      p_fee_details: feeDetails
+      p_fee_details: feeDetailsPayload
     });
 
     if (error) {
