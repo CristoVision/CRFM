@@ -112,7 +112,7 @@ const handleOpenFlagModal = () => {
         if (id) {
           fetchAlbumDetails();
         }
-      }, [id]);
+      }, [id, user?.id, profile?.is_admin]);
 
       const handlePlayAlbum = () => {
         if (!album || tracks.length === 0 || !queueContext) return;
