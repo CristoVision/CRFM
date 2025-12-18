@@ -89,7 +89,8 @@ const guessTrackTitleFromFilename = (name) => {
 
 const DEFAULTS = {
   is_public: false,
-  stream_cost: 1,
+  // Platform-wide default: 0.5 CC per play (unless explicitly overridden).
+  stream_cost: 0.5,
   is_christian_nature: true,
 };
 
