@@ -1,0 +1,34 @@
+root_dir: ./media
+creator_display_name: "CristoVision"
+
+defaults:
+  is_public: false
+  upload_policy: free # free | pay_per_upload | subscription | null (inherit)
+  stream_cost: 1
+  genre: "Christian"
+  languages: ["es", "en"]
+  is_christian_nature: true
+
+albums:
+  - key: "album-2024-demo"
+    title: "Mi Album Demo"
+    release_date: "2024-12-01"
+    genre: "Christian Pop"
+    cover_art: "albums/mi-album-demo/cover.jpg"
+    tracks:
+      - key: "track-01"
+        title: "Canción 1"
+        track_number_on_album: 1
+        audio: "albums/mi-album-demo/01-cancion-1.mp3"
+        cover_art: "albums/mi-album-demo/01-cover.jpg"
+      - key: "track-02"
+        title: "Canción 2"
+        track_number_on_album: 2
+        audio: "albums/mi-album-demo/02-cancion-2.mp3"
+
+singles:
+  - key: "single-2025-01"
+    title: "Single 2025"
+    release_date: "2025-01-10"
+    audio: "singles/single-2025.mp3"
+    cover_art: "singles/single-2025.jpg"
