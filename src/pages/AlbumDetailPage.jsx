@@ -79,12 +79,19 @@ const handleOpenFlagModal = () => {
             if (albumError) throw albumError;
             setAlbum(albumData);
 
-            const { data: tracksData, error: tracksError } = await supabase
+            const isOwnerOrAdmin = !!user && (user.id === albumData.uploader_id || profile?.is_admin);
+            let tracksQuery = supabase
               .from('tracks')
-              .select('id, title, creator_display_name, uploader_id, audio_file_url, cover_art_url, video_cover_art_url, stream_cost, album_id, release_date')
+              .select('id, title, creator_display_name, uploader_id, audio_file_url, cover_art_url, video_cover_art_url, stream_cost, album_id, release_date, track_number_on_album')
               .eq('album_id', id)
-              .eq('is_public', true)
-              .order('release_date', { ascending: true }); 
+              .order('track_number_on_album', { ascending: true, nullsFirst: false })
+              .order('release_date', { ascending: true });
+
+            if (!isOwnerOrAdmin) {
+              tracksQuery = tracksQuery.eq('is_public', true);
+            }
+
+            const { data: tracksData, error: tracksError } = await tracksQuery;
             
             if (tracksError) throw tracksError;
             setTracks(tracksData || []);
