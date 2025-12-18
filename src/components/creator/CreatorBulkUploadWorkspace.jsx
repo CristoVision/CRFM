@@ -229,6 +229,40 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
     return { ok: true };
   }, [credits.album, credits.track, effectiveCreatorPolicy, mode, unlimitedActive]);
 
+  const removeTrackById = (trackId) => {
+    const target = tracks.find((t) => t.id === trackId);
+    if (!target) return;
+
+    setTracks((prev) => {
+      const remaining = (prev || []).filter((t) => t.id !== trackId);
+      return remaining.map((t, idx) => ({ ...t, trackNumber: idx + 1 }));
+    });
+
+    setFiles((prev) => {
+      const next = [...(prev || [])];
+      const isUsedAsAlbumCover = (fileId) => !!fileId && fileId === albumCoverFileId;
+      const isUsedByOtherTracks = (fileId) => !!fileId && tracks.some((t) => t.id !== trackId && (t.audioFileId === fileId || t.coverFileId === fileId));
+      const shouldKeep = (fileId) => isUsedAsAlbumCover(fileId) || isUsedByOtherTracks(fileId);
+
+      const maybeDrop = (fileId) => {
+        if (!fileId) return;
+        if (shouldKeep(fileId)) return;
+        const idx = next.findIndex((f) => f.id === fileId);
+        if (idx < 0) return;
+        const meta = next[idx];
+        const canSafelyDrop = !meta.publicUrl && !meta.storageKey;
+        if (canSafelyDrop) next.splice(idx, 1);
+      };
+
+      maybeDrop(target.audioFileId);
+      maybeDrop(target.coverFileId);
+
+      return next;
+    });
+
+    toast({ title: 'Track removed', description: target.title || 'Untitled' });
+  };
+
   const supportedAudioCount = useMemo(() => files.filter((f) => f.kind === 'audio').length, [files]);
   const supportedImageCount = useMemo(() => files.filter((f) => f.kind === 'image').length, [files]);
   const unsupportedCount = useMemo(() => files.filter((f) => f.kind === 'other').length, [files]);
@@ -1050,24 +1084,33 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
 	              <div key={t.id} className="p-3 rounded-lg border border-white/10 bg-white/5 grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
 		                <div className="md:col-span-12 text-xs text-gray-400 flex items-center justify-between gap-2">
 		                  <span className="truncate">Audio: {audioName}</span>
-		                  <div className="flex items-center gap-2">
-		                    {audioMissing ? (
-		                      <Button
-		                        type="button"
-		                        size="sm"
-		                        variant="outline"
-		                        className="border-white/10 text-gray-200 h-7 px-2"
-		                        onClick={() => {
-		                          pendingTrackAudioIdRef.current = t.id;
-		                          trackAudioInputRef.current?.click();
-		                        }}
-		                      >
-		                        Attach audio
-		                      </Button>
-		                    ) : null}
-		                    {audioMissing ? <span className="text-red-300">missing attachment</span> : <span className="text-green-300">attached</span>}
-		                  </div>
-		                </div>
+			                  <div className="flex items-center gap-2">
+			                    {audioMissing ? (
+			                      <Button
+			                        type="button"
+			                        size="sm"
+			                        variant="outline"
+			                        className="border-white/10 text-gray-200 h-7 px-2"
+			                        onClick={() => {
+			                          pendingTrackAudioIdRef.current = t.id;
+			                          trackAudioInputRef.current?.click();
+			                        }}
+			                      >
+			                        Attach audio
+			                      </Button>
+			                    ) : null}
+			                    <Button
+			                      type="button"
+			                      size="sm"
+			                      variant="outline"
+			                      className="border-red-500/30 text-red-200 hover:bg-red-500/10 h-7 px-2"
+			                      onClick={() => removeTrackById(t.id)}
+			                    >
+			                      Remove
+			                    </Button>
+			                    {audioMissing ? <span className="text-red-300">missing attachment</span> : <span className="text-green-300">attached</span>}
+			                  </div>
+			                </div>
 	                <div className="md:col-span-2">
 	                  <Label className="text-xs text-gray-400">#</Label>
 	                  <Input
@@ -1200,13 +1243,13 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
     </div>
   );
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl glass-effect text-white font-montserrat max-h-[85vh] overflow-y-auto">
-        <DialogHeader className="space-y-2">
-          <DialogTitle className="golden-text text-2xl flex items-center gap-2">
-            <FolderUp className="w-6 h-6 text-yellow-300" />
-            Bulk Upload Workspace
+	  return (
+	    <Dialog open={open} onOpenChange={onOpenChange}>
+	      <DialogContent className="sm:max-w-4xl glass-effect-light text-white font-montserrat max-h-[90vh] overflow-y-auto border-yellow-500/30">
+	        <DialogHeader className="space-y-2">
+	          <DialogTitle className="golden-text text-2xl flex items-center gap-2">
+	            <FolderUp className="w-6 h-6 text-yellow-300" />
+	            Bulk Upload Workspace
           </DialogTitle>
           <DialogDescription className="text-gray-300">
             Upload albums or singles in batches, with review before saving to your library. Works best when files are already downloaded locally.
