@@ -42,9 +42,9 @@ Este repo incluye Edge Functions de Supabase para iniciar Checkout y procesar el
 Configura en tu proyecto Supabase (CLI: `supabase secrets set ...`):
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
-- `SUPABASE_PROJECT_URL`
-- `SUPABASE_PROJECT_ANON_KEY`
-- `SUPABASE_PROJECT_SERVICE_ROLE_KEY`
+- `SB_PROJECT_URL` (Supabase CLI no permite nombres que empiecen con `SUPABASE_`)
+- `SB_ANON_KEY`
+- `SB_SERVICE_ROLE_KEY`
 - `CC_TO_USD` (default recomendado: `0.01`)
 - `MIN_TOPUP_USD` (default recomendado: `5`)
 - `MAX_TOPUP_USD` (default recomendado: `100`)
@@ -78,7 +78,7 @@ En Stripe → Developers → Webhooks, habilita estos eventos hacia `.../stripe-
 ## Checklist rápido (Top Up / Stripe)
 1) En Supabase SQL editor, correr: `stripe_wallet.sql` (crea `rpc_apply_stripe_topup` + tablas idempotentes).
 2) En Supabase Edge Functions, desplegar: `stripe-create-payment-intent` y `stripe-webhook`.
-3) En Supabase Edge secrets, setear: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+3) En Supabase Edge secrets, setear: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SB_PROJECT_URL`, `SB_ANON_KEY`, `SB_SERVICE_ROLE_KEY`.
 4) En Stripe Webhooks, agregar el endpoint `https://<project-ref>.supabase.co/functions/v1/stripe-webhook` con los eventos listados arriba.
 5) En GitHub Actions, setear `VITE_STRIPE_PUBLISHABLE_KEY` y redeploy para que el frontend tenga Stripe habilitado.
 

@@ -38,7 +38,7 @@ const CreatorWalletPanel = () => {
         actionType={activeAction}
         open={!!activeAction}
         onOpenChange={(open) => (open ? null : setActiveAction(null))}
-        balance={withdrawableBalance ?? walletBalance}
+        balance={activeAction === 'withdraw' ? (withdrawableBalance ?? 0) : walletBalance}
         userId={user.id}
         returnUrl={activeAction === 'add_funds' ? returnUrl : undefined}
         onSuccess={() => {
@@ -109,6 +109,7 @@ const CreatorWalletPanel = () => {
             type="button"
             variant="outline"
             className="border-yellow-400/40 text-yellow-200 hover:bg-yellow-400/10"
+            disabled={withdrawableBalance == null || withdrawableBalance <= 0}
             onClick={() => setActiveAction('withdraw')}
           >
             <CreditCard className="w-4 h-4 mr-2" />

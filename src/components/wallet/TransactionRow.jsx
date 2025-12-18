@@ -3,13 +3,24 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ArrowRightCircle, TrendingUp, TrendingDown, Gift, ShoppingCart, Award } from 'lucide-react';
 
+const formatUsdCents = (cents) => {
+  const n = Number(cents);
+  if (!Number.isFinite(n)) return null;
+  return `$${(n / 100).toFixed(2)}`;
+};
+
 const TransactionRow = ({ transaction }) => {
-  const { id, transaction_type, amount, description, related_track_id, created_at } = transaction;
+  const { id, transaction_type, amount, description, related_track_id, created_at, details } = transaction;
 
   const formattedDate = format(new Date(created_at), 'MMM dd, yyyy - HH:mm');
   const numericAmount = Number(amount) || 0;
   const isCredit = numericAmount > 0;
   const displayAmount = Math.abs(numericAmount);
+
+  const usdPaid = details?.amount_usd_cents != null ? formatUsdCents(details.amount_usd_cents) : null;
+  const usdFee = details?.fee_usd_cents != null ? formatUsdCents(details.fee_usd_cents) : null;
+  const usdNet = details?.net_usd_cents != null ? formatUsdCents(details.net_usd_cents) : null;
+  const showStripeBreakdown = details?.kind === 'stripe_topup' && (usdPaid || usdFee || usdNet);
   
   const typeDisplay = {
     'deposit': { text: 'Deposit', icon: <TrendingUp className="w-4 h-4 mr-2 text-green-400" />, color: 'text-green-400' },
@@ -42,6 +53,13 @@ const TransactionRow = ({ transaction }) => {
             </Link>
           )}
         </p>
+        {showStripeBreakdown && (
+          <p className="text-xs text-gray-400 mt-1">
+            {usdPaid ? `Paid ${usdPaid}` : null}
+            {usdFee ? `${usdPaid ? ' · ' : ''}Stripe fee ${usdFee}` : null}
+            {usdNet ? `${usdPaid || usdFee ? ' · ' : ''}Net ${usdNet}` : null}
+          </p>
+        )}
       </div>
       <div className="text-left sm:text-right w-full sm:w-auto">
         <p className={`text-lg font-bold ${isCredit ? 'text-green-400' : 'text-red-400'}`}>

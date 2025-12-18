@@ -17,6 +17,7 @@ function WalletPage() {
     user
   } = useAuth();
   const [balance, setBalance] = useState(0);
+  const [withdrawableBalance, setWithdrawableBalance] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
@@ -43,10 +44,11 @@ function WalletPage() {
       const {
         data: profileData,
         error: profileError
-      } = await supabase.from('profiles').select('wallet_balance').eq('id', user.id).single();
+      } = await supabase.from('profiles').select('wallet_balance, withdrawable_balance').eq('id', user.id).single();
       if (profileError && profileError.code !== 'PGRST116') throw profileError;
       if (profileData) {
         setBalance(profileData.wallet_balance || 0);
+        setWithdrawableBalance(profileData.withdrawable_balance ?? null);
       } else {
         // This case should ideally not happen if user profile is created on signup
         // For safety, we can attempt to insert, but it might be redundant
@@ -55,10 +57,12 @@ function WalletPage() {
           error: insertError
         } = await supabase.from('profiles').insert({
           id: user.id,
-          wallet_balance: 0
-        }).select('wallet_balance').single();
+          wallet_balance: 0,
+          withdrawable_balance: 0
+        }).select('wallet_balance, withdrawable_balance').single();
         if (insertError) throw insertError;
         setBalance(0);
+        setWithdrawableBalance(0);
       }
     } catch (error) {
       console.error('Error fetching wallet balance:', error.message);
@@ -72,7 +76,7 @@ function WalletPage() {
   const fetchTransactions = useCallback(async (page = 1, mode = viewMode, currentFilters = activeFilters) => {
     if (!user) return;
     setLoadingTransactions(true);
-    let query = supabase.from('wallet_transactions').select('id, transaction_type, amount, description, related_track_id, created_at', {
+    let query = supabase.from('wallet_transactions').select('id, transaction_type, amount, description, related_track_id, created_at, details', {
       count: 'exact'
     }).eq('user_id', user.id);
     if (currentFilters.searchQuery) {
@@ -254,7 +258,7 @@ function WalletPage() {
           </div>;
   }
   return <>
-          <WalletActionModal actionType={activeAction} open={!!activeAction} onOpenChange={handleActionModalChange} balance={balance} userId={user?.id} onSuccess={handleActionSuccess} />
+          <WalletActionModal actionType={activeAction} open={!!activeAction} onOpenChange={handleActionModalChange} balance={activeAction === 'withdraw' ? (withdrawableBalance ?? 0) : balance} userId={user?.id} onSuccess={handleActionSuccess} />
           <div className="container mx-auto px-4 py-8 font-['Montserrat'] page-gradient-bg"> {/* Applied page-gradient-bg here */}
             <div className="text-center mb-12 mt-8">
               <h1 className="text-5xl font-bold mb-4">
@@ -288,11 +292,30 @@ function WalletPage() {
               </div>
               <div className="glass-effect p-8 rounded-xl shadow-xl md:col-span-2">
                 <h2 className="text-3xl font-bold text-white mb-6">Quick Actions</h2>
+                <div className="text-sm text-gray-300 mb-4">
+                  Withdrawable (Royalties):{' '}
+                  <span className="text-yellow-200 font-semibold">
+                    {withdrawableBalance == null ? '—' : `${Number(withdrawableBalance || 0).toFixed(2)} CC`}
+                  </span>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <Button className="golden-gradient text-black font-semibold py-6 text-base hover:opacity-90 transition-opacity" onClick={() => setActiveAction('add_funds')}>
                     <DollarSign className="w-5 h-5 mr-2" /> Add Funds
                   </Button>
-                  <Button className="golden-gradient text-black font-semibold py-6 text-base hover:opacity-90 transition-opacity" onClick={() => setActiveAction('withdraw')}>
+                  <Button
+                    className="golden-gradient text-black font-semibold py-6 text-base hover:opacity-90 transition-opacity"
+                    onClick={() => {
+                      const w = Number(withdrawableBalance);
+                      if (!Number.isFinite(w) || w <= 0) {
+                        toast({
+                          title: 'No withdrawable balance',
+                          description: 'Only stream royalties are withdrawable. Your current withdrawable balance is 0.',
+                        });
+                        return;
+                      }
+                      setActiveAction('withdraw');
+                    }}
+                  >
                     <CreditCard className="w-5 h-5 mr-2" /> Withdraw
                   </Button>
                   <Button className="golden-gradient text-black font-semibold py-6 text-base hover:opacity-90 transition-opacity" onClick={() => setActiveAction('redeem_code')}>

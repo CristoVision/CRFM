@@ -13,6 +13,10 @@ function json(data: unknown, init: ResponseInit = {}) {
   });
 }
 
+function receivedIgnored(details: Record<string, unknown>) {
+  return json({ received: true, ignored: true, ...details });
+}
+
 Deno.serve(async (req) => {
   const cors = handleCors(req);
   if (cors) return cors;
@@ -20,15 +24,17 @@ Deno.serve(async (req) => {
 
   const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
   const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
-  const supabaseUrl = Deno.env.get('SUPABASE_PROJECT_URL') || Deno.env.get('SUPABASE_URL');
+  const supabaseUrl = Deno.env.get('SB_PROJECT_URL') || Deno.env.get('SUPABASE_PROJECT_URL') || Deno.env.get('SUPABASE_URL');
   const supabaseServiceKey =
-    Deno.env.get('SUPABASE_PROJECT_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    Deno.env.get('SB_SERVICE_ROLE_KEY') ||
+    Deno.env.get('SUPABASE_PROJECT_SERVICE_ROLE_KEY') ||
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
   if (!stripeSecretKey || !webhookSecret) {
     return json({ error: 'Missing STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET' }, { status: 500 });
   }
   if (!supabaseUrl || !supabaseServiceKey) {
-    return json({ error: 'Missing SUPABASE_PROJECT_URL/SUPABASE_PROJECT_SERVICE_ROLE_KEY' }, { status: 500 });
+    return json({ error: 'Missing SB_PROJECT_URL/SB_SERVICE_ROLE_KEY' }, { status: 500 });
   }
 
   const signature = req.headers.get('stripe-signature');
@@ -43,6 +49,8 @@ Deno.serve(async (req) => {
   } catch (err) {
     return json({ error: `Invalid signature: ${err?.message || String(err)}` }, { status: 400 });
   }
+
+  console.log(`stripe-webhook received: ${event.type} (${event.id})`);
 
   if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
     const subscription = event.data.object as Stripe.Subscription;
@@ -60,7 +68,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (subLookupError || !subRow?.user_id) {
-      return json({ received: true, ignored: true, reason: 'unknown_subscription' });
+      return receivedIgnored({ type: event.type, reason: 'unknown_subscription', subscription_id: subscriptionId });
     }
 
     const { data, error } = await supabase.rpc('rpc_apply_stripe_creator_subscription', {
@@ -88,12 +96,49 @@ Deno.serve(async (req) => {
     const userId = paymentIntent.metadata?.user_id || null;
     const amountCcRaw = paymentIntent.metadata?.amount_cc || null;
 
-    if (kind !== 'topup') return json({ received: true, ignored: true, kind });
+    if (kind !== 'topup') return receivedIgnored({ type: event.type, kind, reason: 'not_topup' });
     if (!userId) return json({ error: 'Missing user_id metadata' }, { status: 400 });
 
     const amountCc = Number(amountCcRaw);
     if (!Number.isFinite(amountCc) || amountCc <= 0) {
-      return json({ error: 'Missing metadata for top-up' }, { status: 400 });
+      return json(
+        {
+          error: 'Missing metadata for top-up',
+          details: { amount_cc: amountCcRaw, kind, user_id: userId, payment_intent_id: paymentIntent.id }
+        },
+        { status: 400 }
+      );
+    }
+
+    // For transparency, fetch balance transaction to log gross/fee/net.
+    let currency: string | null = paymentIntent.currency || null;
+    let amountUsdCents: number | null = Number.isFinite(paymentIntent.amount_received) ? paymentIntent.amount_received : null;
+    let feeUsdCents: number | null = null;
+    let netUsdCents: number | null = null;
+    let chargeId: string | null = null;
+    let balanceTransactionId: string | null = null;
+    let feeDetails: unknown = null;
+    try {
+      const expanded = await stripe.paymentIntents.retrieve(paymentIntent.id, {
+        expand: ['latest_charge.balance_transaction']
+      });
+      const latestCharge = expanded.latest_charge as unknown;
+      if (latestCharge && typeof latestCharge === 'object') {
+        const charge = latestCharge as Stripe.Charge;
+        chargeId = charge.id || null;
+        currency = charge.currency || currency;
+        const btAny = (charge as any).balance_transaction;
+        if (btAny && typeof btAny === 'object') {
+          const bt = btAny as Stripe.BalanceTransaction;
+          balanceTransactionId = bt.id || null;
+          amountUsdCents = typeof bt.amount === 'number' ? bt.amount : amountUsdCents;
+          feeUsdCents = typeof bt.fee === 'number' ? bt.fee : null;
+          netUsdCents = typeof bt.net === 'number' ? bt.net : null;
+          feeDetails = (bt as any).fee_details ?? null;
+        }
+      }
+    } catch (err) {
+      console.warn('stripe-webhook: failed to expand balance_transaction', err?.message || String(err));
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -104,6 +149,14 @@ Deno.serve(async (req) => {
       p_payment_intent_id: paymentIntent.id,
       // The table expects a non-null checkout_session_id; for PaymentIntents we store the PI id.
       p_checkout_session_id: paymentIntent.id,
+      p_event_type: event.type,
+      p_currency: currency,
+      p_amount_usd_cents: amountUsdCents,
+      p_fee_usd_cents: feeUsdCents,
+      p_net_usd_cents: netUsdCents,
+      p_charge_id: chargeId,
+      p_balance_transaction_id: balanceTransactionId,
+      p_fee_details: feeDetails
     });
 
     if (error) {
@@ -115,12 +168,12 @@ Deno.serve(async (req) => {
   }
 
   if (event.type !== 'checkout.session.completed') {
-    return json({ received: true, ignored: true });
+    return receivedIgnored({ type: event.type, reason: 'unhandled_event' });
   }
 
   const session = event.data.object as Stripe.Checkout.Session;
   if (session.payment_status !== 'paid') {
-    return json({ received: true, ignored: true, reason: 'payment_status_not_paid' });
+    return receivedIgnored({ type: event.type, reason: 'payment_status_not_paid' });
   }
 
   const kind = session.metadata?.kind || 'topup';
@@ -135,7 +188,50 @@ Deno.serve(async (req) => {
     const paymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : null;
     const amountCc = Number(amountCcRaw);
     if (!Number.isFinite(amountCc) || amountCc <= 0 || !paymentIntentId) {
-      return json({ error: 'Missing metadata for top-up' }, { status: 400 });
+      return json(
+        {
+          error: 'Missing metadata for top-up',
+          details: {
+            amount_cc: amountCcRaw,
+            kind,
+            user_id: userId,
+            checkout_session_id: session.id,
+            payment_intent_id: paymentIntentId
+          }
+        },
+        { status: 400 }
+      );
+    }
+
+    // For transparency, fetch balance transaction to log gross/fee/net.
+    let currency: string | null = session.currency || null;
+    let amountUsdCents: number | null = null;
+    let feeUsdCents: number | null = null;
+    let netUsdCents: number | null = null;
+    let chargeId: string | null = null;
+    let balanceTransactionId: string | null = null;
+    let feeDetails: unknown = null;
+    try {
+      const expanded = await stripe.paymentIntents.retrieve(paymentIntentId, {
+        expand: ['latest_charge.balance_transaction']
+      });
+      const latestCharge = expanded.latest_charge as unknown;
+      if (latestCharge && typeof latestCharge === 'object') {
+        const charge = latestCharge as Stripe.Charge;
+        chargeId = charge.id || null;
+        currency = charge.currency || currency;
+        const btAny = (charge as any).balance_transaction;
+        if (btAny && typeof btAny === 'object') {
+          const bt = btAny as Stripe.BalanceTransaction;
+          balanceTransactionId = bt.id || null;
+          amountUsdCents = typeof bt.amount === 'number' ? bt.amount : null;
+          feeUsdCents = typeof bt.fee === 'number' ? bt.fee : null;
+          netUsdCents = typeof bt.net === 'number' ? bt.net : null;
+          feeDetails = (bt as any).fee_details ?? null;
+        }
+      }
+    } catch (err) {
+      console.warn('stripe-webhook: failed to expand balance_transaction (checkout topup)', err?.message || String(err));
     }
 
     const { data, error } = await supabase.rpc('rpc_apply_stripe_topup', {
@@ -143,7 +239,15 @@ Deno.serve(async (req) => {
       p_amount_cc: Number(amountCc.toFixed(2)),
       p_stripe_event_id: event.id,
       p_payment_intent_id: paymentIntentId,
-      p_checkout_session_id: session.id
+      p_checkout_session_id: session.id,
+      p_event_type: event.type,
+      p_currency: currency,
+      p_amount_usd_cents: amountUsdCents,
+      p_fee_usd_cents: feeUsdCents,
+      p_net_usd_cents: netUsdCents,
+      p_charge_id: chargeId,
+      p_balance_transaction_id: balanceTransactionId,
+      p_fee_details: feeDetails
     });
 
     if (error) {
@@ -203,5 +307,5 @@ Deno.serve(async (req) => {
     return json({ received: true, applied: true, kind: 'upload_fee', data });
   }
 
-  return json({ received: true, ignored: true, kind });
+  return receivedIgnored({ type: event.type, kind, reason: 'unknown_kind' });
 });

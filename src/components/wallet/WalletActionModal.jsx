@@ -27,7 +27,7 @@ const ACTION_COPY = {
   },
   withdraw: {
     title: 'Withdraw',
-    description: 'Request a payout from your CrossCoins balance. We review withdrawals to prevent fraud and chargebacks.',
+    description: 'Request a payout from your withdrawable balance (stream royalties). Top-ups are spendable inside the platform and are not withdrawable.',
   },
   redeem_code: {
     title: 'Redeem Code',
@@ -307,7 +307,9 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
       
       {actionType !== 'redeem_code' && (
         <div className="space-y-2">
-          <Label htmlFor="wallet-amount-legacy" className="text-gray-200">Amount (CrossCoins)</Label>
+          <Label htmlFor="wallet-amount-legacy" className="text-gray-200">
+            {actionType === 'withdraw' ? 'Amount (Withdrawable CC)' : 'Amount (CrossCoins)'}
+          </Label>
           <Input id="wallet-amount-legacy" type="number" min="0" step="any" value={formState.amount} onChange={(e) => setFormState((prev) => ({ ...prev, amount: e.target.value }))} placeholder="e.g., 250" className="bg-black/20 border-white/10 text-white placeholder-gray-500 focus:border-yellow-400" required/>
           {actionType === 'withdraw' && (<p className="text-xs text-gray-400">Available: {balance?.toLocaleString?.() || balance} CC</p>)}
         </div>

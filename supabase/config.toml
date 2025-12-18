@@ -4,6 +4,10 @@
 # working directory name when running `supabase init`.
 project_id = "CRFM"
 
+[functions.stripe-webhook]
+# Stripe does NOT send Supabase JWTs; webhook must accept unauthenticated POSTs.
+verify_jwt = false
+
 [api]
 enabled = true
 # Port to use for the API URL.
