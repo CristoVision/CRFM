@@ -13,6 +13,7 @@ import { EmbeddedCheckout, EmbeddedCheckoutProvider } from '@stripe/react-stripe
 
 const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : null;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 const ACTIVE_SUB_STATUSES = new Set(['active', 'trialing']);
 
@@ -161,7 +162,10 @@ const CreatorBillingPanel = () => {
             : 'stripe-create-upload-fee-checkout-session';
 
         const { data, error } = await supabase.functions.invoke(fn, {
-          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+          headers: {
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            ...(SUPABASE_ANON_KEY ? { apikey: SUPABASE_ANON_KEY } : {}),
+          },
           body: { ...payload, ui_mode: 'embedded' },
         });
 
