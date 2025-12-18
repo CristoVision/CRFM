@@ -1163,10 +1163,10 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
         <Button type="button" variant="outline" className="border-white/10 text-gray-200" onClick={() => onOpenChange(false)}>
           Close
         </Button>
-	        <Button type="button" className="gold-to-yellow-gradient text-black font-semibold" onClick={uploadAll} disabled={busy}>
-	          {busy ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Cloud className="w-4 h-4 mr-2" />}
-	          Upload & Create
-	        </Button>
+		        <Button type="button" className="gold-to-yellow-gradient text-white font-semibold" onClick={uploadAll} disabled={busy}>
+		          {busy ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Cloud className="w-4 h-4 mr-2" />}
+		          Upload & Create
+		        </Button>
       </div>
     </div>
   );

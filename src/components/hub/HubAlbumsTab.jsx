@@ -39,11 +39,12 @@ import React, { useState, useEffect, useCallback } from 'react';
         }
         setLoading(true);
         try {
-          const { data, error } = await supabase
-            .from('albums')
-            .select('id, title, cover_art_url, video_cover_art_url, uploader_id, genre, release_date, languages, is_public, created_at, updated_at, total_royalty_percentage_allocated')
-            .eq('uploader_id', user.id)
-            .order('created_at', { ascending: false });
+	          const { data, error } = await supabase
+	            .from('albums')
+	            // Avoid hard-failing if a column is missing in a given Supabase project.
+	            .select('id, title, cover_art_url, video_cover_art_url, uploader_id, genre, release_date, languages, is_public, created_at, updated_at')
+	            .eq('uploader_id', user.id)
+	            .order('created_at', { ascending: false });
 
           if (error) throw error;
           setAlbums(data || []);

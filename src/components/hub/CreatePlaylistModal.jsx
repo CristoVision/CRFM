@@ -202,11 +202,11 @@ import { ListMusic, PlusCircle, Loader2, Image as ImageIcon } from 'lucide-react
                 <DialogClose asChild>
                   <Button type="button" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">Cancel</Button>
                 </DialogClose>
-                <Button type="submit" disabled={isSubmitDisabled} className="gold-to-purple-gradient text-black font-semibold hover:opacity-90 transition-opacity proximity-glow-button">
-                  {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <PlusCircle className="w-4 h-4 mr-2" />}
-                  Create Playlist
-                </Button>
-              </DialogFooter>
+	                <Button type="submit" disabled={isSubmitDisabled} className="gold-to-purple-gradient text-white font-semibold hover:opacity-90 transition-opacity proximity-glow-button">
+	                  {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <PlusCircle className="w-4 h-4 mr-2" />}
+	                  Create Playlist
+	                </Button>
+	              </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>

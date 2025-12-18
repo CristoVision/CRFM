@@ -265,7 +265,7 @@ import React, { useState, useEffect, useRef } from 'react';
                 <DialogClose asChild>
                   <Button type="button" variant="outline" className="bg-white/10 border-white/20 text-gray-300 hover:bg-white/20" disabled={isUploading}>Cancel</Button>
                 </DialogClose>
-                <Button type="submit" className="gold-to-red-gradient text-black font-semibold hover:opacity-90" disabled={isUploading}>
+                <Button type="submit" className="gold-to-red-gradient text-white font-semibold hover:opacity-90" disabled={isUploading}>
                   {isUploading ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <UploadCloud className="w-5 h-5 mr-2" />}
                   {isUploading ? 'Uploading...' : 'Upload Video'}
                 </Button>

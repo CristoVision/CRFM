@@ -414,10 +414,10 @@ const initialAlbumFormData = {
 	                <DialogClose asChild>
 	                  <Button type="button" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20" disabled={isSubmitting}>Cancel</Button>
 	                </DialogClose>
-	                <Button type="submit" disabled={isSaveDisabled} className="gold-to-blue-gradient text-black font-semibold hover:opacity-90 transition-opacity proximity-glow-button disabled:opacity-60 disabled:cursor-not-allowed">
-	                  {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-	                  {overallProgress > 0 && overallProgress < 100 ? 'Creating Album...' : (overallProgress === 100 ? 'Finalizing...' : 'Create Album')}
-	                </Button>
+		                <Button type="submit" disabled={isSaveDisabled} className="gold-to-blue-gradient text-white font-semibold hover:opacity-90 transition-opacity proximity-glow-button disabled:opacity-60 disabled:cursor-not-allowed">
+		                  {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+		                  {overallProgress > 0 && overallProgress < 100 ? 'Creating Album...' : (overallProgress === 100 ? 'Finalizing...' : 'Create Album')}
+		                </Button>
 	              </DialogFooter>
             </form>
           </DialogContent>
