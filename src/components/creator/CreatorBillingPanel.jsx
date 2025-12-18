@@ -150,12 +150,18 @@ const CreatorBillingPanel = () => {
       setCheckoutOpen(true);
 
       try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        const accessToken = session?.access_token || '';
+
         const fn =
           kind === 'creator_subscription'
             ? 'stripe-create-subscription-checkout-session'
             : 'stripe-create-upload-fee-checkout-session';
 
         const { data, error } = await supabase.functions.invoke(fn, {
+          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
           body: { ...payload, ui_mode: 'embedded' },
         });
 
