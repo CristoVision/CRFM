@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, Users, Mail, Package, Gamepad2, BookOpen, BookText, Briefcase, Store, Tag, CalendarDays } from 'lucide-react';
+import { Eye, Users, Mail, Package, Gamepad2, BookOpen, Briefcase, Store, Tag, CalendarDays } from 'lucide-react';
 import RequestCreatorTagsTab from '@/components/about/RequestCreatorTagsTab';
 import PublicAppsDisplay from '@/components/about/PublicAppsDisplay';
 import PublicGamesDisplay from '@/components/about/PublicGamesDisplay';
@@ -105,7 +105,7 @@ function AboutPage() {
                           <TabsTrigger value="apps" className="tab-button text-xs whitespace-nowrap px-3 py-2 rounded-lg flex-1 sm:flex-none"><Package className="w-3 h-3 mr-1" />{t('about.tabs.apps')}</TabsTrigger>
                           <TabsTrigger value="calendar" className="tab-button text-xs whitespace-nowrap px-3 py-2 rounded-lg flex-1 sm:flex-none"><CalendarDays className="w-3 h-3 mr-1" />{t('about.tabs.calendar')}</TabsTrigger>
                           <TabsTrigger value="games" className="tab-button text-xs whitespace-nowrap px-3 py-2 rounded-lg flex-1 sm:flex-none"><Gamepad2 className="w-3 h-3 mr-1" />{t('about.tabs.games')}</TabsTrigger>
-                          <TabsTrigger value="stories" className="tab-button text-xs whitespace-nowrap px-3 py-2 rounded-lg flex-1 sm:flex-none"><BookText className="w-3 h-3 mr-1" />{t('about.tabs.stories')}</TabsTrigger>
+                          <TabsTrigger value="stories" className="tab-button text-xs whitespace-nowrap px-3 py-2 rounded-lg flex-1 sm:flex-none"><BookOpen className="w-3 h-3 mr-1" />{t('about.tabs.stories')}</TabsTrigger>
                           <TabsTrigger value="bible" className="tab-button text-xs whitespace-nowrap px-3 py-2 rounded-lg flex-1 sm:flex-none"><BookOpen className="w-3 h-3 mr-1" />{t('about.tabs.bible')}</TabsTrigger>
                           <TabsTrigger value="portfolio" className="tab-button text-xs whitespace-nowrap px-3 py-2 rounded-lg flex-1 sm:flex-none"><Briefcase className="w-3 h-3 mr-1" />{t('about.tabs.portfolio')}</TabsTrigger>
                           <TabsTrigger value="stores" className="tab-button text-xs whitespace-nowrap px-3 py-2 rounded-lg flex-1 sm:flex-none"><Store className="w-3 h-3 mr-1" />{t('about.tabs.stores')}</TabsTrigger>
