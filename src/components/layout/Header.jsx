@@ -2,22 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut, UserCircle, Wallet, Home, Info, ShieldCheck, BarChartHorizontalBig, Menu, X, LogIn } from 'lucide-react';
+import { LogOut, UserCircle, Wallet, Home, Info, ShieldCheck, BarChartHorizontalBig, Menu, X, LogIn, BookOpen } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from '@/components/ui/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BRAND_LOGO_GIF_URL, CROSSCOIN_ICON_URL } from '@/lib/brandAssets';
-
-const mainNavLinks = [
-  { to: '/', text: 'Home', icon: <Home className="w-5 h-5" />, auth: null }, // Always show
-  { to: '/hub', text: 'Hub', icon: <BarChartHorizontalBig className="w-5 h-5" />, auth: true },
-  { to: '/about', text: 'About', icon: <Info className="w-5 h-5" />, auth: null }, // Always show
-  { to: '/admin', text: 'Admin', icon: <ShieldCheck className="w-5 h-5" />, auth: true },
-];
+import { useLanguage } from '@/contexts/LanguageContext';
 
 function Header() {
   const { user, profile, logout } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [walletBalance, setWalletBalance] = useState(0);
@@ -56,6 +51,7 @@ function Header() {
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
+  const toggleLanguage = () => setLanguage(language === 'en' ? 'es' : 'en');
 
   const displayBalance = () => {
     if (loadingBalance) return '...';
@@ -63,6 +59,14 @@ function Header() {
     return `${walletBalance.toLocaleString()}`;
   };
   
+  const mainNavLinks = [
+    { to: '/', text: t('nav.home'), icon: <Home className="w-5 h-5" />, auth: null },
+    { to: '/hub', text: t('nav.hub'), icon: <BarChartHorizontalBig className="w-5 h-5" />, auth: true },
+    { to: '/about', text: t('nav.about'), icon: <Info className="w-5 h-5" />, auth: null },
+    { to: '/stories', text: t('nav.stories'), icon: <BookOpen className="w-5 h-5" />, auth: null },
+    { to: '/bible', text: t('nav.bible'), icon: <BookOpen className="w-5 h-5" />, auth: null },
+    { to: '/admin', text: t('nav.admin'), icon: <ShieldCheck className="w-5 h-5" />, auth: true },
+  ];
   const filteredNavLinks = mainNavLinks.filter(link => link.auth === null || (link.auth === true && !!user));
 
   const NavItem = ({ to, text, icon, onClick }) => (
@@ -139,15 +143,23 @@ function Header() {
                     />
                     <span>{displayBalance()}</span>
                   </NavLink>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowUsd(!showUsd)}
-                    className="text-yellow-400 border-yellow-400/50 hover:bg-yellow-400/10 hover:text-yellow-300 h-9 px-3"
-                  >
-                    {showUsd ? 'CC' : 'USD'}
-                  </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowUsd(!showUsd)}
+                  className="text-yellow-400 border-yellow-400/50 hover:bg-yellow-400/10 hover:text-yellow-300 h-9 px-3"
+                >
+                  {showUsd ? t('wallet.cc') : t('wallet.usd')}
+                </Button>
                 </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleLanguage}
+                  className="text-yellow-400 border-yellow-400/50 hover:bg-yellow-400/10 hover:text-yellow-300 h-9 px-3"
+                >
+                  {language === 'en' ? 'ES' : 'EN'}
+                </Button>
                 
                 <Button
                   variant="ghost"
@@ -170,17 +182,27 @@ function Header() {
                   className="text-red-500 hover:bg-red-500/20 hover:text-red-400 glass-effect-button-hover"
                 >
                   <LogOut className="w-4 h-4 mr-1 md:mr-2" />
-                  <span className="hidden md:inline">Sign Out</span>
+                  <span className="hidden md:inline">{t('auth.signOut')}</span>
                 </Button>
               </>
             ) : (
-                <Button
-                    onClick={() => handleOpenAuthModal('login')}
-                    className="golden-gradient text-black font-semibold hover:opacity-90 transition-opacity text-sm py-2 px-4 proximity-glow-button h-10"
-                >
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Sign In / Up
-                </Button>
+                <>
+                  <Button
+                      onClick={() => handleOpenAuthModal('login')}
+                      className="golden-gradient text-black font-semibold hover:opacity-90 transition-opacity text-sm py-2 px-4 proximity-glow-button h-10"
+                  >
+                      <LogIn className="w-4 h-4 mr-2" />
+                      {t('auth.signInUp')}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleLanguage}
+                    className="text-yellow-400 border-yellow-400/50 hover:bg-yellow-400/10 hover:text-yellow-300 h-9 px-3"
+                  >
+                    {language === 'en' ? 'ES' : 'EN'}
+                  </Button>
+                </>
             )}
           </div>
 
@@ -253,7 +275,7 @@ function Header() {
                             onClick={() => setShowUsd(!showUsd)}
                             className="h-7 text-yellow-400 border-yellow-400/50 hover:bg-yellow-400/10 hover:text-yellow-300 px-2"
                           >
-                            {showUsd ? 'CC' : 'USD'}
+                            {showUsd ? t('wallet.cc') : t('wallet.usd')}
                           </Button>
                         </div>
                       </div>
@@ -261,7 +283,7 @@ function Header() {
                   </div>
 
                   {filteredNavLinks.map(link => <NavItem key={link.to} {...link} onClick={closeMobileMenu} />)}
-                  <NavItem to="/profile" text="Profile" icon={<UserCircle className="w-5 h-5" />} onClick={closeMobileMenu} />
+                  <NavItem to="/profile" text={t('nav.profile')} icon={<UserCircle className="w-5 h-5" />} onClick={closeMobileMenu} />
                   
                   <div className="pt-2 border-t border-white/10">
                     <Button
@@ -270,14 +292,16 @@ function Header() {
                       className="w-full justify-start text-red-400 hover:bg-red-500/20 hover:text-red-300 flex items-center space-x-3 px-3 py-3"
                     >
                       <LogOut className="w-5 h-5" />
-                      <span>Sign Out</span>
+                      <span>{t('auth.signOut')}</span>
                     </Button>
                   </div>
                 </>
               ) : (
                 <>
-                  <NavItem to="/" text="Home" icon={<Home className="w-5 h-5" />} onClick={closeMobileMenu} />
-                  <NavItem to="/about" text="About" icon={<Info className="w-5 h-5" />} onClick={closeMobileMenu} />
+                  <NavItem to="/" text={t('nav.home')} icon={<Home className="w-5 h-5" />} onClick={closeMobileMenu} />
+                  <NavItem to="/about" text={t('nav.about')} icon={<Info className="w-5 h-5" />} onClick={closeMobileMenu} />
+                  <NavItem to="/stories" text={t('nav.stories')} icon={<BookOpen className="w-5 h-5" />} onClick={closeMobileMenu} />
+                  <NavItem to="/bible" text={t('nav.bible')} icon={<BookOpen className="w-5 h-5" />} onClick={closeMobileMenu} />
                   <div className="pt-2 border-t border-white/10">
                     <Button
                       onClick={() => handleOpenAuthModal('login')}
@@ -285,11 +309,21 @@ function Header() {
                       className="w-full justify-start text-yellow-400 hover:bg-yellow-500/20 hover:text-yellow-300 flex items-center space-x-3 px-3 py-3"
                     >
                       <LogIn className="w-5 h-5" />
-                      <span>Sign In / Up</span>
+                      <span>{t('auth.signInUp')}</span>
                     </Button>
                   </div>
                 </>
               )}
+              <div className="pt-2 border-t border-white/10">
+                <Button
+                  onClick={toggleLanguage}
+                  variant="ghost"
+                  className="w-full justify-start text-yellow-400 hover:bg-yellow-500/20 hover:text-yellow-300 flex items-center space-x-3 px-3 py-3"
+                >
+                  <span>{t('language.label')}:</span>
+                  <span>{language === 'en' ? t('language.english') : t('language.spanish')}</span>
+                </Button>
+              </div>
             </div>
           </motion.div>
         )}

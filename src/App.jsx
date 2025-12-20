@@ -8,6 +8,8 @@ import HomePage from '@/pages/HomePage';
 
 import HubPage from '@/pages/Hub/HubPage';
 import AboutPage from '@/pages/AboutPage';
+import BiblePage from '@/pages/BiblePage';
+import DUStoriesPage from '@/pages/DUStoriesPage';
 import AdminPage from '@/pages/AdminPage';
 import WalletPage from '@/pages/WalletPage';
 import ProfilePage from '@/pages/ProfilePage';
@@ -32,8 +34,10 @@ import { VideoPlayerProvider } from '@/contexts/VideoPlayerContext';
 import { Helmet } from 'react-helmet-async';
 import UnauthenticatedRadio from '@/components/player/UnauthenticatedRadio';
 import { BRAND_LOGO_GIF_URL } from '@/lib/brandAssets';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 function FullScreenSpinner() {
+  const { t } = useLanguage();
   return (
     <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
       <div className="text-center">
@@ -47,8 +51,8 @@ function FullScreenSpinner() {
           }}
         />
         <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-        <p className="text-white text-xl font-semibold">Loading CRFM...</p>
-        <p className="text-yellow-300 text-sm mt-1">Connecting to the Ministry of Music</p>
+        <p className="text-white text-xl font-semibold">{t('auth.loadingTitle')}</p>
+        <p className="text-yellow-300 text-sm mt-1">{t('auth.loadingSubtitle')}</p>
       </div>
     </div>
   );
@@ -108,6 +112,8 @@ function AppContent() {
         <Route path="/" element={<MainLayout />}>
           <Route index element={<HomePage />} />
           <Route path="about" element={<AboutPage />} />
+          <Route path="stories" element={<DUStoriesPage />} />
+          <Route path="bible" element={<BiblePage />} />
           
           {/* Protected Routes */}
           <Route path="hub" element={user ? <HubPage /> : <Navigate to="/?auth=login" />} />

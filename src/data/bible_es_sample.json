@@ -1,0 +1,26 @@
+{
+  "version": "sample-es-hebrew",
+  "isSample": true,
+  "books": [
+    {
+      "id": "gn",
+      "name": "Genesis",
+      "chapters": [
+        [
+          {
+            "verse": 1,
+            "text": "Contenido de muestra. Reemplaza con la traduccion hebrea al espanol."
+          },
+          {
+            "verse": 2,
+            "text": "Contenido de muestra. Agrega el archivo completo en public/bible/hebrew_es.json."
+          },
+          {
+            "verse": 3,
+            "text": "Contenido de muestra. Esta pagina espera la traduccion oficial del proyecto."
+          }
+        ]
+      ]
+    }
+  ]
+}
