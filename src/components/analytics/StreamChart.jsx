@@ -52,7 +52,7 @@ const StreamChart = ({ data }) => {
         labels: {
           color: '#e5e7eb', // text-gray-200
           font: {
-            family: 'Montserrat, sans-serif',
+            family: 'system-ui, sans-serif',
           }
         }
       },
@@ -78,7 +78,7 @@ const StreamChart = ({ data }) => {
         ticks: {
           color: '#9ca3af', // text-gray-400
            font: {
-            family: 'Montserrat, sans-serif',
+            family: 'system-ui, sans-serif',
           }
         },
         grid: {
@@ -89,7 +89,7 @@ const StreamChart = ({ data }) => {
         ticks: {
           color: '#9ca3af', // text-gray-400
           font: {
-            family: 'Montserrat, sans-serif',
+            family: 'system-ui, sans-serif',
           },
           beginAtZero: true,
           stepSize: 1, // Ensure whole numbers for stream counts

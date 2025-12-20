@@ -266,7 +266,7 @@ function WalletPage() {
   }
   return <>
           <WalletActionModal actionType={activeAction} open={!!activeAction} onOpenChange={handleActionModalChange} balance={activeAction === 'withdraw' ? (withdrawableBalance ?? 0) : balance} userId={user?.id} onSuccess={handleActionSuccess} />
-          <div className="container mx-auto px-4 py-8 font-['Montserrat'] page-gradient-bg"> {/* Applied page-gradient-bg here */}
+        <div className="container mx-auto px-4 py-8 page-gradient-bg"> {/* Applied page-gradient-bg here */}
             <div className="text-center mb-12 mt-8">
               <h1 className="text-5xl font-bold mb-4">
                 {t('wallet.titlePrefix')} <span className="golden-text">{t('wallet.titleAccent')}</span>
