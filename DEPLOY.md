@@ -138,3 +138,12 @@ La versión que se muestra en la app se toma del release más reciente (tag) si 
 - Mantener el mismo `X.Y.Z` como “marketing version” entre web y mobile cuando se sincronice un release.
 - Usar tags de Git (`v1.2.3`) cuando quieras “congelar” una versión para App Store/Play Store.
 - El SHA puede servir como identificador interno para soporte (qué build exacto tiene un usuario).
+
+## Mobile (Capacitor) — iOS/iPadOS + Android
+Este repo incluye configuración base para correr como app nativa “wrapper” con Capacitor:
+- Config: `capacitor.config.json`
+- Guía: `CAPACITOR.md`
+
+Comandos:
+- `npm run ios` (build + sync + abrir Xcode)
+- `npm run android` (build + sync + abrir Android Studio)

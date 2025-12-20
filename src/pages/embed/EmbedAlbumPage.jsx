@@ -1,18 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
-    import { useParams, Link } from 'react-router-dom';
-    import { supabase } from '@/lib/supabaseClient';
-    import { Play, Pause, Volume2, VolumeX, SkipForward, SkipBack, ListMusic, ExternalLink, Music, AlertTriangle, Maximize2, Minimize2 } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { supabase } from '@/lib/supabaseClient';
+import { Play, Pause, Volume2, VolumeX, SkipForward, SkipBack, ListMusic, ExternalLink, Music, AlertTriangle, Maximize2, Minimize2 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Helmet } from 'react-helmet-async';
 import CoverArtMedia from '@/components/common/CoverArtMedia';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-    const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8YWxidW18ZW58MHx8MHx8fDA%3D&w=1000&q=80';
-    const CRFM_LOGO_URL = '/favicon-32x32.png';
+const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8YWxidW18ZW58MHx8MHx8fDA%3D&w=1000&q=80';
+const CRFM_LOGO_URL = '/favicon-32x32.png';
 
-    const EmbedAlbumPage = () => {
+const EmbedAlbumPage = () => {
       const { id } = useParams();
+      const { t } = useLanguage();
       const [album, setAlbum] = useState(null);
       const [tracks, setTracks] = useState([]);
       const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -40,7 +42,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
             .single();
 
             if (albumError) throw albumError;
-            if (!albumData) throw new Error("Album not found");
+            if (!albumData) throw new Error(t('embed.album.notFound'));
             setAlbum(albumData);
 
             const trackSelectFields = `
@@ -61,12 +63,12 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
               newAudio.volume = volume;
               setAudio(newAudio);
             } else {
-              setError("No tracks found in this album.");
+              setError(t('embed.album.noTracks'));
             }
 
           } catch (err) {
             console.error('Error fetching album data:', err);
-            setError(err.message || 'Failed to load album data.');
+            setError(err.message || t('embed.album.loadError'));
           } finally {
             setIsLoading(false);
           }
@@ -82,7 +84,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
             audio.src = '';
           }
         };
-      }, [id]);
+      }, [id, t]);
 
       useEffect(() => {
         if (!audio) return;
@@ -93,7 +95,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
         const handleCanPlay = () => setIsLoading(false);
         const handleError = (e) => {
           console.error("Audio Error:", e);
-          setError("Error playing audio. The file might be corrupted or unavailable.");
+          setError(t('embed.album.audioError'));
           setIsLoading(false);
         };
 
@@ -143,7 +145,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
         } else {
           audio.play().catch(e => {
             console.error("Error playing audio:", e);
-            setError("Could not play audio. Please try again.");
+            setError(t('embed.album.playError'));
           });
         }
         setIsPlaying(!isPlaying);
@@ -216,7 +218,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
         return (
           <div className="w-full h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-gray-800 text-white p-4">
             <Music className="w-16 h-16 text-yellow-400 animate-pulse mb-4" />
-            <p className="text-lg">Loading Album...</p>
+            <p className="text-lg">{t('embed.album.loading')}</p>
           </div>
         );
       }
@@ -225,14 +227,14 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
         return (
           <div className="w-full h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-900 to-red-700 text-white p-4 text-center">
             <AlertTriangle className="w-16 h-16 text-yellow-300 mb-4" />
-            <h2 className="text-2xl font-semibold mb-2">Playback Error</h2>
+            <h2 className="text-2xl font-semibold mb-2">{t('embed.album.playbackErrorTitle')}</h2>
             <p className="text-sm mb-4">{error}</p>
             <Button 
               variant="outline" 
               className="border-yellow-300 text-yellow-300 hover:bg-yellow-300/10"
               onClick={() => window.location.reload()}
             >
-              Try Again
+              {t('embed.album.tryAgain')}
             </Button>
           </div>
         );
@@ -242,7 +244,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
          return (
           <div className="w-full h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-gray-800 text-white p-4">
             <AlertTriangle className="w-16 h-16 text-red-500 mb-4" />
-            <p className="text-lg">Album data not found.</p>
+            <p className="text-lg">{t('embed.album.dataNotFound')}</p>
           </div>
         );
       }
@@ -250,10 +252,10 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
       return (
         <>
         <Helmet>
-            <title>{album ? `${album.title} by ${album.creator_display_name}` : "Embedded Album"} - CRFM</title>
-            <meta name="description" content={album ? `Listen to the album ${album.title} by ${album.creator_display_name} embedded from CRFM.` : "Embedded music album player from CRFM."} />
+            <title>{album ? t('embed.album.metaTitle', { title: album.title, creator: album.creator_display_name }) : t('embed.album.metaTitleFallback')} - CRFM</title>
+            <meta name="description" content={album ? t('embed.album.metaDescription', { title: album.title, creator: album.creator_display_name }) : t('embed.album.metaDescriptionFallback')} />
             {album && <meta property="og:title" content={`${album.title} - ${album.creator_display_name}`} />}
-            {album && <meta property="og:description" content={`Listen to the album ${album.title} by ${album.creator_display_name} on CRFM.`} />}
+            {album && <meta property="og:description" content={t('embed.album.ogDescription', { title: album.title, creator: album.creator_display_name })} />}
             {album && <meta property="og:image" content={album.cover_art_url || DEFAULT_COVER_ART} />}
             {album && <meta property="og:type" content="music.album" />}
             {currentTrack && <meta property="og:audio" content={currentTrack.audio_file_url} />}
@@ -273,7 +275,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
               <div>
                 <h2 className="text-lg sm:text-xl font-semibold truncate" title={album.title}>{album.title}</h2>
                 <p className="text-xs sm:text-sm text-gray-400 truncate" title={album.creator_display_name}>{album.creator_display_name}</p>
-                {currentTrack && <p className="text-xs text-yellow-300 truncate" title={currentTrack.title}>Now Playing: {currentTrack.title}</p>}
+                {currentTrack && <p className="text-xs text-yellow-300 truncate" title={currentTrack.title}>{t('embed.album.nowPlaying', { title: currentTrack.title })}</p>}
               </div>
               <div className="flex items-center space-x-1 sm:space-x-2 mt-auto">
                 <Button variant="ghost" size="icon" onClick={playPrevTrack} className="text-gray-400 hover:text-white w-8 h-8 sm:w-10 sm:h-10" disabled={tracks.length <= 1}>
@@ -295,7 +297,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
                     step={0.01}
                     onValueChange={handleVolumeChange}
                     className="w-full max-w-[60px] sm:max-w-[80px]"
-                    aria-label="Volume"
+                    aria-label={t('embed.album.volumeLabel')}
                   />
                 </div>
               </div>
@@ -311,7 +313,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
                 step={1}
                 onValueChange={handleSeek}
                 className="w-full"
-                aria-label="Seek"
+                aria-label={t('embed.album.seekLabel')}
                 disabled={!audio || duration === 0 || tracks.length === 0}
               />
               <span>{formatTime(duration)}</span>
@@ -335,11 +337,11 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
           
           <div className="bg-black/30 px-3 py-1.5 flex justify-between items-center text-xs">
             <a href={`https://crfm.app/album/${id}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-yellow-400 hover:text-yellow-300 transition-colors">
-              <img src={CRFM_LOGO_URL} alt="CRFM Logo" className="w-4 h-4 mr-1.5"/>
-              Open on CRFM <ExternalLink className="w-3 h-3 ml-1" />
+              <img src={CRFM_LOGO_URL} alt={t('embed.common.crfmLogoAlt')} className="w-4 h-4 mr-1.5"/>
+              {t('embed.common.openOnCrfm')} <ExternalLink className="w-3 h-3 ml-1" />
             </a>
             <div className="flex items-center space-x-1">
-              <Button variant="ghost" size="icon" onClick={() => setShowPlaylist(!showPlaylist)} className="text-gray-400 hover:text-white w-6 h-6" title={showPlaylist ? "Hide Tracklist" : "Show Tracklist"} disabled={tracks.length === 0}>
+              <Button variant="ghost" size="icon" onClick={() => setShowPlaylist(!showPlaylist)} className="text-gray-400 hover:text-white w-6 h-6" title={showPlaylist ? t('embed.album.hideTracklist') : t('embed.album.showTracklist')} disabled={tracks.length === 0}>
                 <ListMusic className="w-3.5 h-3.5" />
               </Button>
               <Button variant="ghost" size="icon" onClick={toggleFullScreen} className="text-gray-400 hover:text-white w-6 h-6">

@@ -4,12 +4,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { Mail, Lock, LogIn, Loader2, Eye, EyeOff } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const LoginForm = ({ onSwitchToSignUp, onSwitchToForgotPassword, onSuccessfulLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const { login, loading } = useAuth();
+  const { t } = useLanguage();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,7 +29,7 @@ const LoginForm = ({ onSwitchToSignUp, onSwitchToForgotPassword, onSuccessfulLog
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2 relative">
-        <Label htmlFor="email-login" className="text-gray-300 text-sm">Email</Label>
+        <Label htmlFor="email-login" className="text-gray-300 text-sm">{t('auth.login.emailLabel')}</Label>
         <Mail className="absolute left-3 top-10 transform -translate-y-1/2 w-4 h-4 text-yellow-400/70" />
         <Input
           id="email-login"
@@ -35,14 +37,14 @@ const LoginForm = ({ onSwitchToSignUp, onSwitchToForgotPassword, onSuccessfulLog
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="bg-black/20 border-white/10 text-white placeholder-gray-500 pl-10 focus:border-yellow-400 h-11"
-          placeholder="your@email.com"
+          placeholder={t('auth.login.emailPlaceholder')}
           required
           disabled={loading}
         />
       </div>
 
       <div className="space-y-2 relative">
-        <Label htmlFor="password-login" className="text-gray-300 text-sm">Password</Label>
+        <Label htmlFor="password-login" className="text-gray-300 text-sm">{t('auth.login.passwordLabel')}</Label>
         <Lock className="absolute left-3 top-10 transform -translate-y-1/2 w-4 h-4 text-yellow-400/70" />
         <Input
           id="password-login"
@@ -50,7 +52,7 @@ const LoginForm = ({ onSwitchToSignUp, onSwitchToForgotPassword, onSuccessfulLog
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="bg-black/20 border-white/10 text-white placeholder-gray-500 pl-10 pr-10 focus:border-yellow-400 h-11"
-          placeholder="Enter your password"
+          placeholder={t('auth.login.passwordPlaceholder')}
           required
           disabled={loading}
         />
@@ -58,7 +60,7 @@ const LoginForm = ({ onSwitchToSignUp, onSwitchToForgotPassword, onSuccessfulLog
           type="button"
           onClick={() => setShowPassword(!showPassword)}
           className="absolute right-3 top-10 transform -translate-y-1/2 text-yellow-400/70 hover:text-yellow-300 focus:outline-none"
-          aria-label={showPassword ? 'Hide password' : 'Show password'}
+          aria-label={showPassword ? t('auth.login.hidePassword') : t('auth.login.showPassword')}
           disabled={loading}
         >
           {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -71,7 +73,7 @@ const LoginForm = ({ onSwitchToSignUp, onSwitchToForgotPassword, onSuccessfulLog
             onClick={handleForgotPassword} 
             className="text-xs text-yellow-400 hover:text-yellow-300 hover:underline"
         >
-            Forgot Password?
+            {t('auth.login.forgotPassword')}
         </a>
       </div>
 
@@ -81,19 +83,19 @@ const LoginForm = ({ onSwitchToSignUp, onSwitchToForgotPassword, onSuccessfulLog
         className="w-full golden-gradient text-black font-semibold hover:opacity-90 transition-opacity text-base py-3 proximity-glow-button h-11"
       >
         {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <LogIn className="w-5 h-5 mr-2" />}
-        Sign In
+        {t('auth.login.signInButton')}
       </Button>
 
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-400">
-          Don't have an account?{' '}
+          {t('auth.login.noAccountPrompt')}{' '}
           <button
             type="button"
             onClick={onSwitchToSignUp}
             className="font-semibold text-yellow-400 hover:text-yellow-300 hover:underline"
             disabled={loading}
           >
-            Sign Up
+            {t('auth.login.signUpLink')}
           </button>
         </p>
       </div>

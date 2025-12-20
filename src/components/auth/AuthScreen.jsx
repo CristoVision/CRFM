@@ -3,12 +3,14 @@
 // All its functionality has been moved to the new AuthModal and its handler.
 import React from 'react';
 import AuthLayout from './AuthLayout';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const DeprecatedAuthScreen = () => {
+  const { t } = useLanguage();
   return (
-    <AuthLayout title="Page moved" subtitle="Authentication is now handled in a modal.">
+    <AuthLayout title={t('auth.deprecated.title')} subtitle={t('auth.deprecated.subtitle')}>
       <div className="text-center text-gray-400">
-        Please access Sign In, Sign Up, or Password Reset options from the header on the main page.
+        {t('auth.deprecated.body')}
       </div>
     </AuthLayout>
   );

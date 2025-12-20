@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-    import { useParams } from 'react-router-dom';
-    import { supabase } from '@/lib/supabaseClient';
+import { useParams } from 'react-router-dom';
+import { supabase } from '@/lib/supabaseClient';
 import { Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, ExternalLink, Music, AlertTriangle } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Helmet } from 'react-helmet-async';
 import CoverArtMedia from '@/components/common/CoverArtMedia';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-    const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXVkaW98ZW58MHx8MHx8fDA%3D&w=1000&q=80';
-    const CRFM_LOGO_URL = '/favicon-32x32.png';
+const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXVkaW98ZW58MHx8MHx8fDA%3D&w=1000&q=80';
+const CRFM_LOGO_URL = '/favicon-32x32.png';
 
-    const EmbedTrackPage = () => {
+const EmbedTrackPage = () => {
       const { id } = useParams();
+      const { t } = useLanguage();
       const [track, setTrack] = useState(null);
       const [audio, setAudio] = useState(null);
       const [isPlaying, setIsPlaying] = useState(false);
@@ -39,7 +41,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
               .single();
 
             if (fetchError) throw fetchError;
-            if (!data) throw new Error("Track not found");
+            if (!data) throw new Error(t('embed.track.notFound'));
             
             setTrack(data);
             const newAudio = new Audio(data.audio_file_url);
@@ -48,7 +50,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
 
           } catch (err) {
             console.error('Error fetching track:', err);
-            setError(err.message || 'Failed to load track data.');
+            setError(err.message || t('embed.track.loadError'));
           } finally {
             setIsLoading(false);
           }
@@ -64,7 +66,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
             audio.src = ''; 
           }
         };
-      }, [id]);
+      }, [id, t]);
 
       useEffect(() => {
         if (!audio) return;
@@ -75,7 +77,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
         const handleCanPlay = () => setIsLoading(false);
         const handleError = (e) => {
           console.error("Audio Error:", e);
-          setError("Error playing audio. The file might be corrupted or unavailable.");
+          setError(t('embed.track.audioError'));
           setIsLoading(false);
         };
 
@@ -101,7 +103,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
         } else {
           audio.play().catch(e => {
             console.error("Error playing audio:", e);
-            setError("Could not play audio. Please try again.");
+            setError(t('embed.track.playError'));
           });
         }
         setIsPlaying(!isPlaying);
@@ -163,7 +165,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
         return (
           <div className="w-full h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-gray-800 text-white p-4">
             <Music className="w-16 h-16 text-yellow-400 animate-pulse mb-4" />
-            <p className="text-lg">Loading Track...</p>
+            <p className="text-lg">{t('embed.track.loading')}</p>
           </div>
         );
       }
@@ -172,14 +174,14 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
         return (
           <div className="w-full h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-900 to-red-700 text-white p-4 text-center">
             <AlertTriangle className="w-16 h-16 text-yellow-300 mb-4" />
-            <h2 className="text-2xl font-semibold mb-2">Playback Error</h2>
+            <h2 className="text-2xl font-semibold mb-2">{t('embed.track.playbackErrorTitle')}</h2>
             <p className="text-sm mb-4">{error}</p>
             <Button 
               variant="outline" 
               className="border-yellow-300 text-yellow-300 hover:bg-yellow-300/10"
               onClick={() => window.location.reload()}
             >
-              Try Again
+              {t('embed.track.tryAgain')}
             </Button>
           </div>
         );
@@ -189,7 +191,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
          return (
           <div className="w-full h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-gray-800 text-white p-4">
             <AlertTriangle className="w-16 h-16 text-red-500 mb-4" />
-            <p className="text-lg">Track data not found.</p>
+            <p className="text-lg">{t('embed.track.dataNotFound')}</p>
           </div>
         );
       }
@@ -197,10 +199,10 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
       return (
         <>
         <Helmet>
-            <title>{track ? `${track.title} by ${track.creator_display_name}` : "Embedded Track"} - CRFM</title>
-            <meta name="description" content={track ? `Listen to ${track.title} by ${track.creator_display_name} embedded from CRFM.` : "Embedded music player from CRFM."} />
+            <title>{track ? t('embed.track.metaTitle', { title: track.title, creator: track.creator_display_name }) : t('embed.track.metaTitleFallback')} - CRFM</title>
+            <meta name="description" content={track ? t('embed.track.metaDescription', { title: track.title, creator: track.creator_display_name }) : t('embed.track.metaDescriptionFallback')} />
             {track && <meta property="og:title" content={`${track.title} - ${track.creator_display_name}`} />}
-            {track && <meta property="og:description" content={`Listen to ${track.title} by ${track.creator_display_name} on CRFM.`} />}
+            {track && <meta property="og:description" content={t('embed.track.ogDescription', { title: track.title, creator: track.creator_display_name })} />}
             {track && <meta property="og:image" content={track.cover_art_url || DEFAULT_COVER_ART} />}
             {track && <meta property="og:type" content="music.song" />}
             {track && <meta property="og:audio" content={track.audio_file_url} />}
@@ -220,7 +222,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
               <div>
                 <h2 className="text-lg sm:text-xl font-semibold truncate" title={track.title}>{track.title}</h2>
                 <p className="text-xs sm:text-sm text-gray-400 truncate" title={track.creator_display_name}>{track.creator_display_name}</p>
-                {track.albums && <p className="text-xs text-gray-500 truncate" title={track.albums.title}>From: {track.albums.title}</p>}
+                {track.albums && <p className="text-xs text-gray-500 truncate" title={track.albums.title}>{t('embed.track.fromAlbum', { album: track.albums.title })}</p>}
               </div>
               <div className="flex items-center space-x-2 mt-auto">
                 <Button variant="ghost" size="icon" onClick={togglePlayPause} className="text-yellow-400 hover:text-yellow-300 w-10 h-10 sm:w-12 sm:h-12">
@@ -236,7 +238,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
                     step={0.01}
                     onValueChange={handleVolumeChange}
                     className="w-full max-w-[80px] sm:max-w-[100px]"
-                    aria-label="Volume"
+                    aria-label={t('embed.track.volumeLabel')}
                   />
                 </div>
               </div>
@@ -252,17 +254,17 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
                 step={1}
                 onValueChange={handleSeek}
                 className="w-full"
-                aria-label="Seek"
+                aria-label={t('embed.track.seekLabel')}
                 disabled={!audio || duration === 0}
               />
               <span>{formatTime(duration)}</span>
             </div>
           </div>
-          
+
           <div className="bg-black/20 px-3 py-1.5 flex justify-between items-center text-xs">
             <a href={`https://crfm.app/track/${id}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-yellow-400 hover:text-yellow-300 transition-colors">
-              <img src={CRFM_LOGO_URL} alt="CRFM Logo" className="w-4 h-4 mr-1.5"/>
-              Open on CRFM <ExternalLink className="w-3 h-3 ml-1" />
+              <img src={CRFM_LOGO_URL} alt={t('embed.common.crfmLogoAlt')} className="w-4 h-4 mr-1.5"/>
+              {t('embed.common.openOnCrfm')} <ExternalLink className="w-3 h-3 ml-1" />
             </a>
             <Button variant="ghost" size="icon" onClick={toggleFullScreen} className="text-gray-400 hover:text-white w-6 h-6">
               {isFullScreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}

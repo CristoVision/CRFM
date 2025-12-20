@@ -11,6 +11,7 @@ import FlagFormModal from '@/components/common/FlagFormModal';
 import ShareModal from '@/components/ShareModal';
 import { useAuth } from '@/contexts/AuthContext';
 import CoverArtMedia from '@/components/common/CoverArtMedia';
+import { useLanguage } from '@/contexts/LanguageContext';
 
     const DEFAULT_PLAYLIST_COVER = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8bXVzaWMlMjBwbGF5bGlzdHxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80';
     const DEFAULT_TRACK_COVER = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXVkaW98ZW58MHx8MHx8fDA%3D&w=1000&q=80';
@@ -18,6 +19,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
     function PlaylistDetailPage() {
       const { id } = useParams();
       const navigate = useNavigate();
+      const { t, language } = useLanguage();
       const [playlist, setPlaylist] = useState(null);
       const [tracks, setTracks] = useState([]);
       const [creatorProfile, setCreatorProfile] = useState(null);
@@ -33,7 +35,7 @@ const [visibilityUpdating, setVisibilityUpdating] = useState(false);
 
 const handleOpenFlagModal = () => {
   if (!user) {
-    toast({ title: "Authentication Required", description: "Please log in to flag content.", variant: "destructive" });
+    toast({ title: t('playlistDetail.toasts.authRequiredTitle'), description: t('playlistDetail.toasts.authRequiredBody'), variant: "destructive" });
     return;
   }
         if (!playlist) return;
@@ -59,9 +61,9 @@ const handleOpenFlagModal = () => {
       });
       if (error) throw error;
       setPlaylist(prev => prev ? { ...prev, is_public: isPublic } : prev);
-      toast({ title: isPublic ? 'Playlist is now public' : 'Playlist hidden', className: 'bg-green-600 text-white' });
+      toast({ title: isPublic ? t('playlistDetail.toasts.playlistPublic') : t('playlistDetail.toasts.playlistHidden'), className: 'bg-green-600 text-white' });
     } catch (err) {
-      toast({ title: 'Visibility update failed', description: err.message, variant: 'destructive' });
+      toast({ title: t('playlistDetail.toasts.visibilityFailed'), description: err.message, variant: 'destructive' });
     } finally {
       setVisibilityUpdating(false);
     }
@@ -97,7 +99,7 @@ const handleOpenFlagModal = () => {
           } catch (error) {
             console.error("Error fetching playlist details:", error);
             toast({
-              title: 'Error fetching playlist details',
+              title: t('playlistDetail.toasts.fetchErrorTitle'),
               description: error.message,
               variant: 'destructive',
             });
@@ -111,7 +113,7 @@ const handleOpenFlagModal = () => {
         if (id) {
           fetchPlaylistDetails();
         }
-      }, [id]);
+      }, [id, t]);
 
       const handlePlayPlaylist = () => {
         if (!playlist || tracks.length === 0 || !queueContext) return;
@@ -136,8 +138,8 @@ const handleOpenFlagModal = () => {
       };
 
       const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        if (!dateString) return t('common.na');
+        return new Date(dateString).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
       };
 
       const isPlaylistPlaying = () => {
@@ -157,10 +159,10 @@ const handleOpenFlagModal = () => {
         return (
           <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center text-center">
             <ListMusic className="w-24 h-24 text-gray-600 mb-4" />
-            <h1 className="text-3xl font-bold text-white mb-2">Playlist Not Found</h1>
-            <p className="text-gray-400 mb-6">The playlist you are looking for could not be found.</p>
+            <h1 className="text-3xl font-bold text-white mb-2">{t('playlistDetail.notFoundHeading')}</h1>
+            <p className="text-gray-400 mb-6">{t('playlistDetail.notFoundBody')}</p>
             <Button asChild className="golden-gradient text-black font-semibold">
-              <Link to="/">Go Back Home</Link>
+              <Link to="/">{t('playlistDetail.backHome')}</Link>
             </Button>
           </div>
         );
@@ -183,16 +185,16 @@ const handleOpenFlagModal = () => {
                 className="w-full mt-6 golden-gradient text-black font-bold py-3 text-lg hover:opacity-90 transition-opacity flex items-center justify-center disabled:opacity-50"
               >
                 {isPlaylistPlaying() ? <Pause className="w-6 h-6 mr-2" /> : <Play className="w-6 h-6 mr-2" />}
-                {isPlaylistPlaying() ? 'Pause Playlist' : (tracks.length > 0 ? 'Play Playlist' : 'No Tracks')}
+                {isPlaylistPlaying() ? t('playlistDetail.player.pausePlaylist') : (tracks.length > 0 ? t('playlistDetail.player.playPlaylist') : t('playlistDetail.player.noTracks'))}
               </Button>
               <div className="grid grid-cols-3 gap-2 mt-4">
-                <Button variant="outline" className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20" title="Favorite (Soon)">
+                <Button variant="outline" className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20" title={t('playlistDetail.actions.favoriteSoon')}>
                   <Heart className="w-4 h-4 text-red-400" />
                 </Button>
-                <Button onClick={() => setIsShareModalOpen(true)} variant="outline" className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20" title="Share">
+                <Button onClick={() => setIsShareModalOpen(true)} variant="outline" className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20" title={t('playlistDetail.actions.share')}>
                   <ShareIcon className="w-4 h-4 text-blue-400" />
                 </Button>
-                <Button onClick={handleOpenFlagModal} variant="outline" className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20" title="Report">
+                <Button onClick={handleOpenFlagModal} variant="outline" className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20" title={t('playlistDetail.actions.report')}>
                   <Flag className="w-4 h-4 text-yellow-400" />
                 </Button>
                 {profile?.is_admin && (
@@ -202,7 +204,7 @@ const handleOpenFlagModal = () => {
                       variant="outline"
                       className="w-full bg-red-500/10 border-red-500/40 text-red-200 hover:bg-red-500/20"
                       disabled={visibilityUpdating}
-                      title="Hide playlist"
+                      title={t('playlistDetail.actions.hidePlaylist')}
                     >
                       <EyeOff className="w-4 h-4 mr-1" />
                     </Button>
@@ -211,7 +213,7 @@ const handleOpenFlagModal = () => {
                       variant="outline"
                       className="w-full bg-emerald-500/10 border-emerald-500/40 text-emerald-200 hover:bg-emerald-500/20"
                       disabled={visibilityUpdating}
-                      title="Make playlist public"
+                      title={t('playlistDetail.actions.makePublic')}
                     >
                       <Eye className="w-4 h-4 mr-1" />
                     </Button>
@@ -228,33 +230,33 @@ const handleOpenFlagModal = () => {
                     <AvatarImage src={creatorProfile.avatar_url || `https://avatar.vercel.sh/${creatorProfile.username}.png?text=${creatorProfile.username?.charAt(0).toUpperCase() || 'C'}`} />
                     <AvatarFallback>{creatorProfile.username ? creatorProfile.username.charAt(0).toUpperCase() : <User />}</AvatarFallback>
                   </Avatar>
-                  <span>{creatorProfile.username || 'Unknown Creator'}</span>
+                  <span>{creatorProfile.username || t('playlistDetail.labels.unknownCreator')}</span>
                 </Link>
               )}
-              <p className="text-gray-400 mb-6 text-sm">{playlist.description || 'No description available.'}</p>
+              <p className="text-gray-400 mb-6 text-sm">{playlist.description || t('playlistDetail.labels.noDescription')}</p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <div className="flex items-center space-x-2 p-3 bg-white/5 rounded-lg">
                   {playlist.is_public ? <Globe className="w-5 h-5 text-green-400" /> : <Lock className="w-5 h-5 text-gray-400" />}
-                  <span className="text-sm text-gray-300">Visibility:</span>
-                  <span className={`text-sm font-semibold ${playlist.is_public ? 'text-green-300' : 'text-gray-300'}`}>{playlist.is_public ? 'Public' : 'Private'}</span>
+                  <span className="text-sm text-gray-300">{t('playlistDetail.labels.visibility')}</span>
+                  <span className={`text-sm font-semibold ${playlist.is_public ? 'text-green-300' : 'text-gray-300'}`}>{playlist.is_public ? t('playlistDetail.labels.public') : t('playlistDetail.labels.private')}</span>
                 </div>
                 <div className="flex items-center space-x-2 p-3 bg-white/5 rounded-lg">
                   <Calendar className="w-5 h-5 text-yellow-400" />
-                  <span className="text-sm text-gray-300">Created:</span>
+                  <span className="text-sm text-gray-300">{t('playlistDetail.labels.created')}</span>
                   <span className="text-sm font-semibold text-white">{formatDate(playlist.created_at)}</span>
                 </div>
                 {playlist.languages && playlist.languages.length > 0 && (
                   <div className="flex items-center space-x-2 p-3 bg-white/5 rounded-lg col-span-1 sm:col-span-2">
                     <Languages className="w-5 h-5 text-yellow-400" />
-                    <span className="text-sm text-gray-300">Language(s):</span>
+                    <span className="text-sm text-gray-300">{t('playlistDetail.labels.languages')}</span>
                     <span className="text-sm font-semibold text-white">{playlist.languages.join(', ')}</span>
                   </div>
                 )}
               </div>
               
               <h2 className="text-2xl font-semibold text-white mt-8 mb-4 flex items-center">
-                <Music className="w-6 h-6 mr-3 text-yellow-400" /> Tracks in this Playlist
+                <Music className="w-6 h-6 mr-3 text-yellow-400" /> {t('playlistDetail.labels.tracksInPlaylist')}
               </h2>
               {tracks.length > 0 ? (
                 <div className="space-y-2 max-h-96 overflow-y-auto lyrics-container pr-2">
@@ -282,7 +284,7 @@ const handleOpenFlagModal = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-400 p-4 bg-white/5 rounded-lg text-center">No public tracks found in this playlist.</p>
+                <p className="text-gray-400 p-4 bg-white/5 rounded-lg text-center">{t('playlistDetail.labels.noPublicTracks')}</p>
               )}
             </div>
           </div>

@@ -36,6 +36,7 @@ import AdsTab from '@/components/admin/AdsTab';
 import AdminAchievementsTab from '@/components/admin/AdminAchievementsTab';
 import WalletAdminTab from '@/components/admin/WalletAdminTab';
 import AdminSupportTab from '@/components/admin/AdminSupportTab';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 function SectionShell({ children }) {
   return (
@@ -46,44 +47,46 @@ function SectionShell({ children }) {
 }
 
 function PlaceholderContent({ title, icon }) {
+  const { t } = useLanguage();
   return (
     <div className="min-h-[50vh] flex flex-col items-center justify-center text-center p-8">
       {React.cloneElement(icon, { className: 'w-16 h-16 text-yellow-400 mb-6 opacity-70' })}
       <h2 className="text-3xl sm:text-4xl font-bold golden-text mb-4">{title}</h2>
-      <p className="text-base sm:text-lg text-gray-300">Admin tools for this section are in development.</p>
+      <p className="text-base sm:text-lg text-gray-300">{t('admin.placeholder')}</p>
     </div>
   );
 }
 
 export default function AdminPage() {
   const { profile } = useAuth();
+  const { t } = useLanguage();
   // opciones principales
   const MAIN = useMemo(
     () => [
-      { value: 'creatorTags', label: 'Creator Tags', Icon: Tag },
-      { value: 'contentFlags', label: 'Content Flags', Icon: Flag },
-      { value: 'userManagement', label: 'Users', Icon: Users },
-      { value: 'platformAnalytics', label: 'Analytics', Icon: BarChartBig },
-      { value: 'achievements', label: 'Achievements', Icon: Trophy },
-      { value: 'ecosystem', label: 'Ecosystem', Icon: Package },
-      { value: 'stations', label: 'Stations', Icon: Radio },
-      { value: 'ads', label: 'Ads', Icon: Megaphone },
-      { value: 'wallet', label: 'Wallet', Icon: DollarSign },
-      { value: 'support', label: 'Support', Icon: MessageSquare },
+      { value: 'creatorTags', label: t('admin.mainTabs.creatorTags'), Icon: Tag },
+      { value: 'contentFlags', label: t('admin.mainTabs.contentFlags'), Icon: Flag },
+      { value: 'userManagement', label: t('admin.mainTabs.userManagement'), Icon: Users },
+      { value: 'platformAnalytics', label: t('admin.mainTabs.platformAnalytics'), Icon: BarChartBig },
+      { value: 'achievements', label: t('admin.mainTabs.achievements'), Icon: Trophy },
+      { value: 'ecosystem', label: t('admin.mainTabs.ecosystem'), Icon: Package },
+      { value: 'stations', label: t('admin.mainTabs.stations'), Icon: Radio },
+      { value: 'ads', label: t('admin.mainTabs.ads'), Icon: Megaphone },
+      { value: 'wallet', label: t('admin.mainTabs.wallet'), Icon: DollarSign },
+      { value: 'support', label: t('admin.mainTabs.support'), Icon: MessageSquare },
     ],
-    []
+    [t]
   );
 
   // sub-opciones de Ecosystem
   const ECO = useMemo(
     () => [
-      { value: 'appsAdmin', label: 'Apps', Icon: Package },
-      { value: 'gamesAdmin', label: 'Games', Icon: Gamepad2 },
-      { value: 'storiesAdmin', label: 'Stories', Icon: BookOpen },
-      { value: 'portfolioAdmin', label: 'Portfolio', Icon: Briefcase },
-      { value: 'storesAdmin', label: 'Stores', Icon: Store },
+      { value: 'appsAdmin', label: t('admin.ecosystemTabs.appsAdmin'), Icon: Package },
+      { value: 'gamesAdmin', label: t('admin.ecosystemTabs.gamesAdmin'), Icon: Gamepad2 },
+      { value: 'storiesAdmin', label: t('admin.ecosystemTabs.storiesAdmin'), Icon: BookOpen },
+      { value: 'portfolioAdmin', label: t('admin.ecosystemTabs.portfolioAdmin'), Icon: Briefcase },
+      { value: 'storesAdmin', label: t('admin.ecosystemTabs.storesAdmin'), Icon: Store },
     ],
-    []
+    [t]
   );
 
   const [mainTab, setMainTab] = useState('creatorTags');
@@ -95,8 +98,8 @@ export default function AdminPage() {
   if (!profile?.is_admin) {
     return (
       <div className="container mx-auto px-4 py-20 text-center text-white">
-        <h2 className="text-3xl font-bold mb-3">Access denied</h2>
-        <p className="text-gray-400">Administrator privileges are required to view this page.</p>
+        <h2 className="text-3xl font-bold mb-3">{t('admin.accessDeniedTitle')}</h2>
+        <p className="text-gray-400">{t('admin.accessDeniedBody')}</p>
       </div>
     );
   }
@@ -106,9 +109,9 @@ export default function AdminPage() {
       {/* Header */}
       <header className="text-center mb-6 sm:mb-8 mt-4 sm:mt-6">
         <h1 className="text-4xl sm:text-5xl font-bold mb-3">
-          Admin <span className="golden-text">Dashboard</span>
+          {t('admin.titlePrefix')} <span className="golden-text">{t('admin.titleAccent')}</span>
         </h1>
-        <p className="text-base sm:text-xl text-gray-300">Platform management and oversight tools.</p>
+        <p className="text-base sm:text-xl text-gray-300">{t('admin.subtitle')}</p>
       </header>
 
       <SectionShell>
@@ -155,7 +158,7 @@ export default function AdminPage() {
           {mainTab === 'contentFlags' && <AdminContentFlagsTab />}
           {mainTab === 'userManagement' && <AdminUserManagementTab />}
           {mainTab === 'platformAnalytics' && (
-            <PlaceholderContent title="Platform Analytics" icon={<BarChartBig />} />
+            <PlaceholderContent title={t('admin.titles.platformAnalytics')} icon={<BarChartBig />} />
           )}
           {mainTab === 'achievements' && <AdminAchievementsTab />}
           {mainTab === 'stations' && <StationsTab />}
@@ -168,13 +171,13 @@ export default function AdminPage() {
               {ecoTab === 'appsAdmin' && <AppsTab />}
               {ecoTab === 'gamesAdmin' && <GamesTab />}
               {ecoTab === 'storiesAdmin' && (
-                <PlaceholderContent title="Stories Management" icon={<BookOpen />} />
+                <PlaceholderContent title={t('admin.titles.storiesManagement')} icon={<BookOpen />} />
               )}
               {ecoTab === 'portfolioAdmin' && (
-                <PlaceholderContent title="Portfolio Management" icon={<Briefcase />} />
+                <PlaceholderContent title={t('admin.titles.portfolioManagement')} icon={<Briefcase />} />
               )}
               {ecoTab === 'storesAdmin' && (
-                <PlaceholderContent title="Stores Management" icon={<Store />} />
+                <PlaceholderContent title={t('admin.titles.storesManagement')} icon={<Store />} />
               )}
             </div>
           )}

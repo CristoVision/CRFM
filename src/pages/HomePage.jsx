@@ -10,21 +10,23 @@ import MusicVideosTab from '@/components/dashboard/MusicVideosTab';
 import RadioStationsTab from '@/components/dashboard/RadioStationsTab';
 import { Search, Music, Disc, ListMusic, Users, LayoutGrid, List, Film, Radio } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const [timeRange, setTimeRange] = useState('all'); // all, daily, weekly, monthly, yearly
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-8">
       <div className="text-center mb-12 mt-4 sm:mt-8">
         <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-          <span className="golden-text">CRFM</span> Streaming
+          <span className="golden-text">CRFM</span> {t('home.titleSuffix')}
         </h1>
         <p className="text-lg sm:text-xl text-gray-300 mb-8">
-          Discover, Stream, and Connect with Creators.
+          {t('home.subtitle')}
         </p>
         
         <div className="max-w-2xl mx-auto w-full relative glass-effect rounded-xl p-1 sm:p-2">
@@ -32,7 +34,7 @@ function HomePage() {
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search tracks, albums, creators..."
+            placeholder={t('home.searchPlaceholder')}
             className="pl-11 sm:pl-12 pr-4 py-3 text-base sm:text-lg bg-transparent border-0 text-white placeholder:text-gray-400 focus:ring-0"
           />
         </div>
@@ -62,22 +64,22 @@ function HomePage() {
             </style>
             <TabsList className="glass-effect border border-white/10 p-1 rounded-lg inline-flex flex-nowrap tabs-scrollbar">
               <TabsTrigger value="tracks" className="tab-button flex-shrink-0">
-                <Music className="w-4 h-4 mr-2" /> Tracks
+                <Music className="w-4 h-4 mr-2" /> {t('home.tabs.tracks')}
               </TabsTrigger>
               <TabsTrigger value="albums" className="tab-button flex-shrink-0">
-                <Disc className="w-4 h-4 mr-2" /> Albums
+                <Disc className="w-4 h-4 mr-2" /> {t('home.tabs.albums')}
               </TabsTrigger>
               <TabsTrigger value="playlists" className="tab-button flex-shrink-0">
-                <ListMusic className="w-4 h-4 mr-2" /> Playlists
+                <ListMusic className="w-4 h-4 mr-2" /> {t('home.tabs.playlists')}
               </TabsTrigger>
               <TabsTrigger value="videos" className="tab-button flex-shrink-0">
-                <Film className="w-4 h-4 mr-2" /> Music Videos
+                <Film className="w-4 h-4 mr-2" /> {t('home.tabs.videos')}
               </TabsTrigger>
               <TabsTrigger value="creators" className="tab-button flex-shrink-0">
-                <Users className="w-4 h-4 mr-2" /> Creators
+                <Users className="w-4 h-4 mr-2" /> {t('home.tabs.creators')}
               </TabsTrigger>
               <TabsTrigger value="radio" className="tab-button flex-shrink-0">
-                <Radio className="w-4 h-4 mr-2" /> Radio Stations
+                <Radio className="w-4 h-4 mr-2" /> {t('home.tabs.radio')}
               </TabsTrigger>
             </TabsList>
           </div>
@@ -87,7 +89,7 @@ function HomePage() {
               size="icon" 
               onClick={() => setViewMode('grid')}
               className={`hover:text-yellow-400 ${viewMode === 'grid' ? 'text-yellow-400 bg-white/10' : 'text-white'}`}
-              title="Grid View"
+              title={t('home.gridView')}
             >
               <LayoutGrid className="w-5 h-5" />
             </Button>
@@ -96,7 +98,7 @@ function HomePage() {
               size="icon" 
               onClick={() => setViewMode('list')}
               className={`hover:text-yellow-400 ${viewMode === 'list' ? 'text-yellow-400 bg-white/10' : 'text-white'}`}
-              title="List View"
+              title={t('home.listView')}
             >
               <List className="w-5 h-5" />
             </Button>
@@ -113,18 +115,18 @@ function HomePage() {
                 className={timeRange === range ? 'golden-gradient text-black font-semibold' : 'border-yellow-400/40 text-yellow-200'}
                 onClick={() => setTimeRange(range)}
               >
-                {range === 'all' ? 'All time' : range.charAt(0).toUpperCase() + range.slice(1)}
+                {t(`home.range.${range}`)}
               </Button>
             ))}
           </div>
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-400">View</span>
+            <span className="text-sm text-gray-400">{t('home.view')}</span>
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => setViewMode('grid')}
               className={`hover:text-yellow-400 ${viewMode === 'grid' ? 'text-yellow-400 bg-white/10' : 'text-white'}`}
-              title="Grid View"
+              title={t('home.gridView')}
             >
               <LayoutGrid className="w-5 h-5" />
             </Button>
@@ -133,7 +135,7 @@ function HomePage() {
               size="icon" 
               onClick={() => setViewMode('list')}
               className={`hover:text-yellow-400 ${viewMode === 'list' ? 'text-yellow-400 bg-white/10' : 'text-white'}`}
-              title="List View"
+              title={t('home.listView')}
             >
               <List className="w-5 h-5" />
             </Button>

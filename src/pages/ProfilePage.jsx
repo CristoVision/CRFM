@@ -10,9 +10,11 @@ import React, { useState, useEffect, useCallback } from 'react';
     import EditProfileForm from '@/components/profile/EditProfileForm';
     import InviteFriendsTab from '@/components/profile/InviteFriendsTab';
     import MembershipsAndCodesTab from '@/components/profile/MembershipsAndCodesTab';
+    import { useLanguage } from '@/contexts/LanguageContext';
 
     function ProfilePage() {
       const { user, loading: authLoading } = useAuth();
+      const { t } = useLanguage();
       const [profile, setProfile] = useState(null);
       const [loadingProfile, setLoadingProfile] = useState(true);
 
@@ -28,11 +30,11 @@ import React, { useState, useEffect, useCallback } from 'react';
             if (error && error.code !== 'PGRST116') throw error;
             setProfile(data);
         } catch (error) {
-            toast({ title: "Error fetching profile data", description: error.message, variant: "destructive"});
+            toast({ title: t('profile.toasts.fetchErrorTitle'), description: error.message, variant: "destructive"});
         } finally {
             setLoadingProfile(false);
         }
-      }, [user]);
+      }, [user, t]);
 
       useEffect(() => {
         if (user) {
@@ -47,7 +49,7 @@ import React, { useState, useEffect, useCallback } from 'react';
         return (
           <div className="container mx-auto px-4 py-8 text-center min-h-[calc(100vh-160px)] flex flex-col justify-center items-center page-gradient-bg"> {/* Applied page-gradient-bg here */}
             <Loader2 className="w-12 h-12 animate-spin text-yellow-400" />
-            <p className="text-xl text-gray-300 mt-4">Loading Profile...</p>
+            <p className="text-xl text-gray-300 mt-4">{t('profile.loading')}</p>
           </div>
         );
       }
@@ -56,9 +58,9 @@ import React, { useState, useEffect, useCallback } from 'react';
         return (
           <div className="container mx-auto px-4 py-8 text-center min-h-[calc(100vh-160px)] flex flex-col justify-center items-center page-gradient-bg"> {/* Applied page-gradient-bg here */}
             <User className="w-16 h-16 text-yellow-400 mb-4"/>
-            <p className="text-2xl text-gray-200 mb-6">Please log in to view your profile.</p>
+            <p className="text-2xl text-gray-200 mb-6">{t('profile.loginPrompt')}</p>
             <Button asChild className="golden-gradient text-black font-semibold hover:opacity-90">
-                <RouterLink to="/auth">Login / Register</RouterLink>
+                <RouterLink to="/auth">{t('profile.loginAction')}</RouterLink>
             </Button>
           </div>
         );
@@ -90,19 +92,19 @@ import React, { useState, useEffect, useCallback } from 'react';
 
                     <div className="mt-4 flex flex-wrap justify-center items-center gap-2">
                         <span className="bg-green-500/20 text-green-300 px-3 py-1 text-xs font-medium rounded-full flex items-center">
-                            <Shield className="w-3 h-3 mr-1" /> Verified User
+                            <Shield className="w-3 h-3 mr-1" /> {t('profile.badges.verifiedUser')}
                         </span>
                         {profile?.is_verified_creator && (
                              <span className="bg-purple-500/20 text-purple-300 px-3 py-1 text-xs font-medium rounded-full flex items-center">
-                                <BadgeCheck className="w-3 h-3 mr-1" /> Verified Creator
+                                <BadgeCheck className="w-3 h-3 mr-1" /> {t('profile.badges.verifiedCreator')}
                             </span>
                         )}
                          <span className="bg-blue-400/20 text-blue-300 px-3 py-1 text-xs font-medium rounded-full flex items-center">
-                            <Gift className="w-3 h-3 mr-1" /> Early Adopter
+                            <Gift className="w-3 h-3 mr-1" /> {t('profile.badges.earlyAdopter')}
                         </span>
                         {profile?.is_public === false && (
                              <span className="bg-red-500/20 text-red-300 px-3 py-1 text-xs font-medium rounded-full flex items-center">
-                                <Zap className="w-3 h-3 mr-1" /> Private Profile
+                                <Zap className="w-3 h-3 mr-1" /> {t('profile.badges.privateProfile')}
                             </span>
                         )}
                     </div>
@@ -116,9 +118,9 @@ import React, { useState, useEffect, useCallback } from 'react';
           
           <Tabs defaultValue="editProfile" className="w-full">
             <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-2 mb-8 glass-effect p-1 sm:p-2 rounded-lg">
-              <TabsTrigger value="editProfile" className="tab-button"><Edit className="w-4 h-4 mr-2"/>Edit Profile</TabsTrigger>
-              <TabsTrigger value="inviteFriends" className="tab-button"><UserPlus className="w-4 h-4 mr-2"/>Invite Friends</TabsTrigger>
-              <TabsTrigger value="memberships" className="tab-button"><Coins className="w-4 h-4 mr-2"/>Memberships & Codes</TabsTrigger>
+              <TabsTrigger value="editProfile" className="tab-button"><Edit className="w-4 h-4 mr-2"/>{t('profile.tabs.editProfile')}</TabsTrigger>
+              <TabsTrigger value="inviteFriends" className="tab-button"><UserPlus className="w-4 h-4 mr-2"/>{t('profile.tabs.inviteFriends')}</TabsTrigger>
+              <TabsTrigger value="memberships" className="tab-button"><Coins className="w-4 h-4 mr-2"/>{t('profile.tabs.memberships')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="editProfile">

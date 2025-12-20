@@ -10,12 +10,14 @@ import TransactionFilters from '@/components/wallet/TransactionFilters';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LineChart as ReLineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { CROSSCOIN_ICON_URL } from '@/lib/brandAssets';
+import { useLanguage } from '@/contexts/LanguageContext';
 const ITEMS_PER_PAGE_RECENT = 10;
 const ITEMS_PER_PAGE_ALL = 25;
 function WalletPage() {
   const {
     user
   } = useAuth();
+  const { t } = useLanguage();
   const [balance, setBalance] = useState(0);
   const [withdrawableBalance, setWithdrawableBalance] = useState(null);
   const [transactions, setTransactions] = useState([]);
@@ -67,12 +69,12 @@ function WalletPage() {
     } catch (error) {
       console.error('Error fetching wallet balance:', error.message);
       toast({
-        title: 'Wallet Balance Error',
-        description: 'Could not fetch wallet balance.',
+        title: t('wallet.toasts.walletBalanceError'),
+        description: t('wallet.toasts.walletBalanceErrorBody'),
         variant: 'destructive'
       });
     }
-  }, [user]);
+  }, [user, t]);
   const fetchTransactions = useCallback(async (page = 1, mode = viewMode, currentFilters = activeFilters) => {
     if (!user) return;
     setLoadingTransactions(true);
@@ -122,8 +124,8 @@ function WalletPage() {
     } catch (error) {
       console.error('Error fetching transactions:', error.message);
       toast({
-        title: 'Transaction Error',
-        description: 'Could not fetch transactions.',
+        title: t('wallet.toasts.transactionError'),
+        description: t('wallet.toasts.transactionErrorBody'),
         variant: 'destructive'
       });
       setTransactions([]);
@@ -132,7 +134,7 @@ function WalletPage() {
       setLoadingTransactions(false);
       setLoading(false); // Also set main loading to false after first fetch
     }
-  }, [user, viewMode, activeFilters]);
+  }, [user, viewMode, activeFilters, t]);
   useEffect(() => {
     // build graph data from currently loaded transactions
     const agg = {};
@@ -161,17 +163,17 @@ function WalletPage() {
     if (!checkout) return;
 
     if (checkout === 'success') {
-      toast({ title: 'Payment received', description: 'Your top-up will appear once confirmed.', className: 'bg-green-600 text-white' });
+      toast({ title: t('wallet.toasts.paymentReceived'), description: t('wallet.toasts.paymentReceivedBody'), className: 'bg-green-600 text-white' });
       fetchWalletBalance();
       fetchTransactions(1, viewMode, activeFilters);
     } else if (checkout === 'cancel') {
-      toast({ title: 'Checkout canceled', description: 'No payment was completed.' });
+      toast({ title: t('wallet.toasts.checkoutCanceled'), description: t('wallet.toasts.checkoutCanceledBody') });
     }
 
     params.delete('checkout');
     const next = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
     window.history.replaceState({}, '', next);
-  }, [activeFilters, fetchTransactions, fetchWalletBalance, user, viewMode]);
+  }, [activeFilters, fetchTransactions, fetchWalletBalance, user, viewMode, t]);
   const handleApplyFilters = newFilters => {
     setActiveFilters(newFilters);
     setViewMode('all'); // Switch to 'all' mode when filters are applied
@@ -230,7 +232,12 @@ function WalletPage() {
 
   const exportCsv = () => {
     if (!transactions.length) return;
-    const header = ['Date', 'Type', 'Description', 'Amount'];
+    const header = [
+      t('wallet.exportHeaders.date'),
+      t('wallet.exportHeaders.type'),
+      t('wallet.exportHeaders.description'),
+      t('wallet.exportHeaders.amount'),
+    ];
     const rows = transactions.map((tx) => [
       new Date(tx.created_at).toISOString(),
       tx.transaction_type,
@@ -254,7 +261,7 @@ function WalletPage() {
     // Show main loader only on initial load
     return <div className="container mx-auto px-4 py-8 text-center page-gradient-bg"> {/* Applied page-gradient-bg here */}
              <div className="w-12 h-12 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mt-20"></div>
-             <p className="text-gray-300 mt-4">Loading Wallet...</p>
+             <p className="text-gray-300 mt-4">{t('wallet.loading')}</p>
           </div>;
   }
   return <>
@@ -262,10 +269,10 @@ function WalletPage() {
           <div className="container mx-auto px-4 py-8 font-['Montserrat'] page-gradient-bg"> {/* Applied page-gradient-bg here */}
             <div className="text-center mb-12 mt-8">
               <h1 className="text-5xl font-bold mb-4">
-                My <span className="golden-text">Wallet</span>
+                {t('wallet.titlePrefix')} <span className="golden-text">{t('wallet.titleAccent')}</span>
               </h1>
               <p className="text-xl text-gray-300">
-                Manage your CrossCoins and view transaction history.
+                {t('wallet.subtitle')}
               </p>
             </div>
 
@@ -280,27 +287,27 @@ function WalletPage() {
                     e.currentTarget.src = '/favicon-32x32.png';
                   }}
                 />
-                <h2 className="text-2xl text-gray-400">Current Balance</h2>
+                <h2 className="text-2xl text-gray-400">{t('wallet.currentBalance')}</h2>
                 <p className="text-5xl font-bold golden-text">{formatBalance()}</p>
                 <div className="flex items-center justify-center gap-2 text-xs text-gray-300">
-                  <span>Rate: 1 CC = $0.01 USD</span>
+                  <span>{t('wallet.rate', { rate: conversionRate.toFixed(2) })}</span>
                   <Button size="sm" variant="outline" onClick={() => setShowUsd(!showUsd)} className="h-8 text-yellow-400 border-yellow-400/50 hover:bg-yellow-400/10 hover:text-yellow-300">
-                    {showUsd ? 'Show CC' : 'Show USD'}
+                    {showUsd ? t('wallet.showCc') : t('wallet.showUsd')}
                   </Button>
                 </div>
-                <p className="text-yellow-400">Cross Coins</p>
+                <p className="text-yellow-400">{t('wallet.crossCoins')}</p>
               </div>
               <div className="glass-effect p-8 rounded-xl shadow-xl md:col-span-2">
-                <h2 className="text-3xl font-bold text-white mb-6">Quick Actions</h2>
+                <h2 className="text-3xl font-bold text-white mb-6">{t('wallet.quickActions')}</h2>
                 <div className="text-sm text-gray-300 mb-4">
-                  Withdrawable (Royalties):{' '}
+                  {t('wallet.withdrawable')}{' '}
                   <span className="text-yellow-200 font-semibold">
                     {withdrawableBalance == null ? '—' : `${Number(withdrawableBalance || 0).toFixed(2)} CC`}
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <Button className="golden-gradient text-black font-semibold py-6 text-base hover:opacity-90 transition-opacity" onClick={() => setActiveAction('add_funds')}>
-                    <DollarSign className="w-5 h-5 mr-2" /> Add Funds
+                    <DollarSign className="w-5 h-5 mr-2" /> {t('wallet.addFunds')}
                   </Button>
                   <Button
                     className="golden-gradient text-black font-semibold py-6 text-base hover:opacity-90 transition-opacity"
@@ -308,21 +315,21 @@ function WalletPage() {
                       const w = Number(withdrawableBalance);
                       if (!Number.isFinite(w) || w <= 0) {
                         toast({
-                          title: 'No withdrawable balance',
-                          description: 'Only stream royalties are withdrawable. Your current withdrawable balance is 0.',
+                          title: t('wallet.toasts.noWithdrawableTitle'),
+                          description: t('wallet.toasts.noWithdrawableBody'),
                         });
                         return;
                       }
                       setActiveAction('withdraw');
                     }}
                   >
-                    <CreditCard className="w-5 h-5 mr-2" /> Withdraw
+                    <CreditCard className="w-5 h-5 mr-2" /> {t('wallet.withdraw')}
                   </Button>
                   <Button className="golden-gradient text-black font-semibold py-6 text-base hover:opacity-90 transition-opacity" onClick={() => setActiveAction('redeem_code')}>
-                    <Gift className="w-5 h-5 mr-2" /> Redeem Code
+                    <Gift className="w-5 h-5 mr-2" /> {t('wallet.redeemCode')}
                   </Button>
                 </div>
-                <p className="text-sm text-gray-500 mt-6">Top-ups and withdrawals are reviewed before any balance changes. Redeem codes are validated and applied securely on the server.</p>
+                <p className="text-sm text-gray-500 mt-6">{t('wallet.reviewNote')}</p>
               </div>
             </div>
 
@@ -330,14 +337,14 @@ function WalletPage() {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center">
                   <Activity className="w-6 h-6 md:w-7 md:h-7 mr-3 text-yellow-400" />
-                  {viewMode === 'recent' && !Object.values(activeFilters).some(f => f) ? 'Recent Activity' : 'Transaction History'}
+                  {viewMode === 'recent' && !Object.values(activeFilters).some(f => f) ? t('wallet.recentActivity') : t('wallet.transactionHistory')}
                 </h2>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={exportCsv} className="text-yellow-400 border-yellow-400/50 hover:bg-yellow-400/10 hover:text-yellow-300">
-                    <Download className="w-4 h-4 mr-2" /> Export CSV
+                    <Download className="w-4 h-4 mr-2" /> {t('wallet.exportCsv')}
                   </Button>
                   <Button variant="outline" size="sm" onClick={printPage} className="text-yellow-400 border-yellow-400/50 hover:bg-yellow-400/10 hover:text-yellow-300">
-                    <Printer className="w-4 h-4 mr-2" /> Print / PDF
+                    <Printer className="w-4 h-4 mr-2" /> {t('wallet.printPdf')}
                   </Button>
                   <Button onClick={handleRefresh} variant="ghost" size="icon" className="text-yellow-400 hover:text-yellow-300 hover:bg-white/10">
                     {loadingTransactions ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
@@ -349,23 +356,23 @@ function WalletPage() {
               
               <div className="flex flex-wrap gap-2 mb-4">
                 <Button size="sm" variant={activeFilters.flow === 'all' ? 'default' : 'outline'} onClick={() => quickSetFlow('all')} className={activeFilters.flow === 'all' ? 'golden-gradient text-black' : 'text-white border-white/20'}>
-                  All
+                  {t('wallet.flowAll')}
                 </Button>
                 <Button size="sm" variant={activeFilters.flow === 'credit' ? 'default' : 'outline'} onClick={() => quickSetFlow('credit')} className={activeFilters.flow === 'credit' ? 'bg-green-500 text-white' : 'text-green-300 border-green-400/40'}>
-                  Credits
+                  {t('wallet.flowCredits')}
                 </Button>
                 <Button size="sm" variant={activeFilters.flow === 'debit' ? 'default' : 'outline'} onClick={() => quickSetFlow('debit')} className={activeFilters.flow === 'debit' ? 'bg-red-500 text-white' : 'text-red-300 border-red-400/40'}>
-                  Debits
+                  {t('wallet.flowDebits')}
                 </Button>
               </div>
               
               <div className="glass-effect-light p-4 rounded-lg mb-4">
                 <div className="flex items-center gap-2 mb-3">
                   <LineChart className="w-5 h-5 text-yellow-400" />
-                  <h3 className="text-lg font-semibold text-white">Credits vs Debits (current view)</h3>
+                  <h3 className="text-lg font-semibold text-white">{t('wallet.graphTitle')}</h3>
                 </div>
                 {graphData.length === 0 ? (
-                  <p className="text-sm text-gray-400">No data to plot.</p>
+                  <p className="text-sm text-gray-400">{t('wallet.graphEmpty')}</p>
                 ) : (
                   <div style={{ height: 240 }}>
                     <ResponsiveContainer width="100%" height="100%">
@@ -405,21 +412,21 @@ function WalletPage() {
                       </motion.div>)}
                   </AnimatePresence>
                 </motion.div>
-                ) : <p className="text-gray-400 text-center py-8 text-lg">No transactions found matching your criteria.</p>}
+                ) : <p className="text-gray-400 text-center py-8 text-lg">{t('wallet.noTransactions')}</p>}
 
               <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <Button onClick={handleViewModeToggle} variant="outline" className="w-full sm:w-auto text-yellow-400 border-yellow-400/50 hover:bg-yellow-400/10 hover:text-yellow-300">
                   {viewMode === 'recent' ? <ListChecks className="w-4 h-4 mr-2" /> : <ListCollapse className="w-4 h-4 mr-2" />}
-                  {viewMode === 'recent' ? 'See All Transactions' : 'Back to Recent'}
+                  {viewMode === 'recent' ? t('wallet.seeAll') : t('wallet.backRecent')}
                 </Button>
 
                 {viewMode === 'all' && totalTransactions > ITEMS_PER_PAGE_ALL && <div className="flex items-center space-x-2">
                     <Button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1 || loadingTransactions} variant="outline" className="text-white border-white/20 hover:bg-white/10">
-                      Previous
+                      {t('wallet.pagination.previous')}
                     </Button>
-                    <span className="text-gray-400">Page {currentPage} of {totalPages}</span>
+                    <span className="text-gray-400">{t('wallet.pagination.pageOf', { current: currentPage, total: totalPages })}</span>
                     <Button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages || loadingTransactions} variant="outline" className="text-white border-white/20 hover:bg-white/10">
-                      Next
+                      {t('wallet.pagination.next')}
                     </Button>
                   </div>}
               </div>

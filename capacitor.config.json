@@ -1,0 +1,14 @@
+{
+  "appId": "com.crfministry.crfm",
+  "appName": "CRFM",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "allowNavigation": [
+      "*.supabase.co",
+      "*.stripe.com",
+      "stripe.com"
+    ]
+  }
+}

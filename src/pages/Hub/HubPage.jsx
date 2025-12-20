@@ -10,6 +10,7 @@ import HubItemCard from '@/components/hub/HubItemCard';
 import MyActions from '@/components/hub/MyActions';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { logContentView } from '@/lib/analyticsClient';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const CreateTrackModal = React.lazy(() => import('@/components/hub/CreateTrackModal'));
 const CreateAlbumModal = React.lazy(() => import('@/components/hub/CreateAlbumModal'));
@@ -32,24 +33,28 @@ const LoadingSpinner = () => (
   </div>
 );
 
-const ErrorDisplay = ({ message }) => (
-  <div className="flex flex-col items-center justify-center h-64 bg-red-500/10 p-4 rounded-lg">
-    <AlertTriangle className="h-12 w-12 text-red-500 mb-4" />
-    <p className="text-red-500 font-semibold">Error loading content</p>
-    <p className="text-red-400 text-sm">{message}</p>
-  </div>
-);
+const ErrorDisplay = ({ message }) => {
+  const { t } = useLanguage();
+  return (
+    <div className="flex flex-col items-center justify-center h-64 bg-red-500/10 p-4 rounded-lg">
+      <AlertTriangle className="h-12 w-12 text-red-500 mb-4" />
+      <p className="text-red-500 font-semibold">{t('hub.loadingErrorTitle')}</p>
+      <p className="text-red-400 text-sm">{message}</p>
+    </div>
+  );
+};
 
 function PlaceholderContent({ title, icon, message, showLoginButton = false }) {
+  const { t } = useLanguage();
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8 glass-effect rounded-xl">
       {React.cloneElement(icon, { className: "w-16 h-16 text-yellow-400 mb-6 opacity-70" })}
       <h2 className="text-4xl font-bold golden-text mb-4">{title}</h2>
-      <p className="text-xl text-gray-300 mb-6">{message || "This section is under construction."}</p>
-      <p className="text-gray-400">Exciting features are being developed. Stay tuned!</p>
+      <p className="text-xl text-gray-300 mb-6">{message || t('hub.underConstruction')}</p>
+      <p className="text-gray-400">{t('hub.excitingFeatures')}</p>
       {showLoginButton && (
         <Button asChild className="mt-8 golden-gradient text-black font-semibold hover:opacity-90 transition-opacity proximity-glow-button">
-          <Link to="/auth">Login to Access Creator Hub</Link>
+          <Link to="/auth">{t('hub.loginToAccessHub')}</Link>
         </Button>
       )}
     </div>
@@ -58,16 +63,17 @@ function PlaceholderContent({ title, icon, message, showLoginButton = false }) {
 
 function ContentSubTabs({ uploadGate }) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   if (!user) {
-    return <PlaceholderContent title="Your Content" icon={<UploadCloud />} message="Please log in to manage your content." showLoginButton={true} />;
+    return <PlaceholderContent title={t('hub.placeholders.yourContentTitle')} icon={<UploadCloud />} message={t('hub.placeholders.yourContentMessage')} showLoginButton={true} />;
   }
   return (
     <Tabs defaultValue="tracks" className="w-full">
       <TabsList className="flex w-full overflow-x-auto pb-2 space-x-2 bg-transparent p-1 mb-6">
-        <TabsTrigger value="tracks" className="tab-button flex-shrink-0"><Music className="w-4 h-4 mr-2"/>Tracks</TabsTrigger>
-        <TabsTrigger value="albums" className="tab-button flex-shrink-0"><Disc className="w-4 h-4 mr-2"/>Albums</TabsTrigger>
-        <TabsTrigger value="playlists" className="tab-button flex-shrink-0"><ListMusic className="w-4 h-4 mr-2"/>Playlists</TabsTrigger>
-        <TabsTrigger value="videos" className="tab-button flex-shrink-0"><Film className="w-4 h-4 mr-2"/>Music Videos</TabsTrigger>
+        <TabsTrigger value="tracks" className="tab-button flex-shrink-0"><Music className="w-4 h-4 mr-2"/>{t('hub.tabs.tracks')}</TabsTrigger>
+        <TabsTrigger value="albums" className="tab-button flex-shrink-0"><Disc className="w-4 h-4 mr-2"/>{t('hub.tabs.albums')}</TabsTrigger>
+        <TabsTrigger value="playlists" className="tab-button flex-shrink-0"><ListMusic className="w-4 h-4 mr-2"/>{t('hub.tabs.playlists')}</TabsTrigger>
+        <TabsTrigger value="videos" className="tab-button flex-shrink-0"><Film className="w-4 h-4 mr-2"/>{t('hub.tabs.videos')}</TabsTrigger>
       </TabsList>
       <TabsContent value="tracks"><Suspense fallback={<LoadingSpinner />}><HubTracksTab uploadGate={uploadGate} /></Suspense></TabsContent>
       <TabsContent value="albums"><Suspense fallback={<LoadingSpinner />}><HubAlbumsTab uploadGate={uploadGate} /></Suspense></TabsContent>
@@ -80,6 +86,7 @@ function ContentSubTabs({ uploadGate }) {
 const HubPage = () => {
   const { user, profile, refreshUserProfile } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
   const [isCreateTrackModalOpen, setIsCreateTrackModalOpen] = useState(false);
@@ -217,8 +224,8 @@ const HubPage = () => {
     (actionKey, onAllowed) => {
       if (!user) {
         toast({
-          title: 'Login required',
-          description: 'Please sign in to access creator uploads.',
+          title: t('hub.toasts.loginRequiredTitle'),
+          description: t('hub.toasts.loginRequiredBody'),
           variant: 'destructive',
         });
         navigate('/auth');
@@ -228,8 +235,8 @@ const HubPage = () => {
       if (actionKey === 'bulk') {
         if (!policyConfirmed) {
           toast({
-            title: 'Choose your upload plan',
-            description: 'Select Free (10% platform fee) or a plan for 100% royalties before uploading.',
+            title: t('hub.toasts.choosePlanTitle'),
+            description: t('hub.toasts.choosePlanBody'),
             variant: 'destructive',
           });
           openMonetization({ bulkUpload: true });
@@ -243,8 +250,8 @@ const HubPage = () => {
       // so creators explicitly choose between 10% fee (Free) vs 100% royalties plans.
       if (!policyConfirmed) {
         toast({
-          title: 'Choose your upload plan',
-          description: 'Select Free (10% platform fee) or a plan for 100% royalties before uploading.',
+          title: t('hub.toasts.choosePlanTitle'),
+          description: t('hub.toasts.choosePlanBody'),
           variant: 'destructive',
         });
         openMonetization();
@@ -259,8 +266,8 @@ const HubPage = () => {
       const wantsCredits = creatorUploadPolicy === 'pay_per_upload' && (actionKey === 'track' || actionKey === 'album');
       if (wantsCredits) {
         toast({
-          title: 'Upload locked',
-          description: `Buy a ${actionKey} upload credit to continue.`,
+          title: t('hub.toasts.uploadLockedTitle'),
+          description: t('hub.toasts.uploadLockedCreditsBody', { type: t(`hub.uploadTypes.${actionKey}`) }),
           variant: 'destructive',
         });
         openMonetization({ billingAction: 'upload_fee', feeType: actionKey });
@@ -268,13 +275,13 @@ const HubPage = () => {
       }
 
       toast({
-        title: 'Upload locked',
-        description: 'Visit Monetization to activate a plan (Free / Pay Per Upload / Unlimited Uploads).',
+        title: t('hub.toasts.uploadLockedTitle'),
+        description: t('hub.toasts.uploadLockedPlanBody'),
         variant: 'destructive',
       });
       openMonetization();
     },
-    [creatorUploadPolicy, navigate, openMonetization, permissions, policyConfirmed, toast, user]
+    [creatorUploadPolicy, navigate, openMonetization, permissions, policyConfirmed, t, toast, user]
   );
 
   const uploadGate = useMemo(
@@ -293,21 +300,21 @@ const HubPage = () => {
 
   const quickActions = useMemo(
     () => [
-      { key: 'track', label: 'Upload Track', icon: Music, action: () => setIsCreateTrackModalOpen(true), gradientClass: 'gold-to-green-gradient' },
-      { key: 'album', label: 'Create Album', icon: Disc, action: () => setIsCreateAlbumModalOpen(true), gradientClass: 'gold-to-blue-gradient' },
-      { key: 'playlist', label: 'New Playlist', icon: ListMusic, action: () => setIsCreatePlaylistModalOpen(true), gradientClass: 'gold-to-purple-gradient' },
-      { key: 'video', label: 'Upload Video', icon: Film, action: () => setIsUploadVideoModalOpen(true), gradientClass: 'gold-to-red-gradient' },
-      { key: 'bulk', label: 'Bulk Upload', icon: FolderUp, action: () => openMonetization({ bulkUpload: true }), gradientClass: 'gold-to-yellow-gradient' },
+      { key: 'track', label: t('hub.quickActions.uploadTrack'), icon: Music, action: () => setIsCreateTrackModalOpen(true), gradientClass: 'gold-to-green-gradient' },
+      { key: 'album', label: t('hub.quickActions.createAlbum'), icon: Disc, action: () => setIsCreateAlbumModalOpen(true), gradientClass: 'gold-to-blue-gradient' },
+      { key: 'playlist', label: t('hub.quickActions.newPlaylist'), icon: ListMusic, action: () => setIsCreatePlaylistModalOpen(true), gradientClass: 'gold-to-purple-gradient' },
+      { key: 'video', label: t('hub.quickActions.uploadVideo'), icon: Film, action: () => setIsUploadVideoModalOpen(true), gradientClass: 'gold-to-red-gradient' },
+      { key: 'bulk', label: t('hub.quickActions.bulkUpload'), icon: FolderUp, action: () => openMonetization({ bulkUpload: true }), gradientClass: 'gold-to-yellow-gradient' },
     ],
-    [openMonetization]
+    [openMonetization, t]
   );
 
   const hubTabs = [
-    { value: "content", label: "Content", icon: <UploadCloud/>, component: <ContentSubTabs uploadGate={uploadGate} /> },
-    { value: "lyrics", label: "Lyrics Editor", icon: <Edit3/>, component: user ? <Suspense fallback={<LoadingSpinner />}><HubLyricsTab openLrcEditor={openLrcEditor} /></Suspense> : <PlaceholderContent title="LRC Lyrics Editor" icon={<Edit3 />} message={"Log in to access the Lyrics Editor."} showLoginButton={true}/> },
-    { value: "actions", label: "My Actions", icon: <ShieldAlert/>, component: user ? <Suspense fallback={<LoadingSpinner />}><HubActionsTab /></Suspense> : <PlaceholderContent title="My Actions & Tasks" icon={<ShieldAlert />} message={"Log in to see your Actions."} showLoginButton={true}/> },
-    { value: "analytics", label: "Analytics", icon: <BarChart2/>, component: user ? <Suspense fallback={<LoadingSpinner />}><AnalyticsTab /></Suspense> : <PlaceholderContent title="Content Analytics" icon={<BarChart2 />} message={"Log in to view your Analytics."} showLoginButton={true}/> },
-    { value: "monetization", label: "Monetization", icon: <Settings/>, component: user ? <Suspense fallback={<LoadingSpinner />}><CreatorMonetizationTab /></Suspense> : <PlaceholderContent title="Monetization" icon={<Settings />} message={"Log in to manage tiers and upload preferences."} showLoginButton={true}/> },
+    { value: "content", label: t('hub.tabs.content'), icon: <UploadCloud/>, component: <ContentSubTabs uploadGate={uploadGate} /> },
+    { value: "lyrics", label: t('hub.tabs.lyrics'), icon: <Edit3/>, component: user ? <Suspense fallback={<LoadingSpinner />}><HubLyricsTab openLrcEditor={openLrcEditor} /></Suspense> : <PlaceholderContent title={t('hub.placeholders.lrcTitle')} icon={<Edit3 />} message={t('hub.placeholders.lrcMessage')} showLoginButton={true}/> },
+    { value: "actions", label: t('hub.tabs.actions'), icon: <ShieldAlert/>, component: user ? <Suspense fallback={<LoadingSpinner />}><HubActionsTab /></Suspense> : <PlaceholderContent title={t('hub.placeholders.actionsTitle')} icon={<ShieldAlert />} message={t('hub.placeholders.actionsMessage')} showLoginButton={true}/> },
+    { value: "analytics", label: t('hub.tabs.analytics'), icon: <BarChart2/>, component: user ? <Suspense fallback={<LoadingSpinner />}><AnalyticsTab /></Suspense> : <PlaceholderContent title={t('hub.placeholders.analyticsTitle')} icon={<BarChart2 />} message={t('hub.placeholders.analyticsMessage')} showLoginButton={true}/> },
+    { value: "monetization", label: t('hub.tabs.monetization'), icon: <Settings/>, component: user ? <Suspense fallback={<LoadingSpinner />}><CreatorMonetizationTab /></Suspense> : <PlaceholderContent title={t('hub.placeholders.monetizationTitle')} icon={<Settings />} message={t('hub.placeholders.monetizationMessage')} showLoginButton={true}/> },
   ];
 
   useEffect(() => {
@@ -339,8 +346,8 @@ const HubPage = () => {
     }
 
     toast({
-      title: 'Stripe checkout complete',
-      description: 'We are applying your payment. This may take a few seconds.',
+      title: t('hub.toasts.stripeCheckoutCompleteTitle'),
+      description: t('hub.toasts.stripeCheckoutCompleteBody'),
     });
 
     // Remove transient params so refreshes don’t re-toast.
@@ -361,7 +368,7 @@ const HubPage = () => {
     // Best-effort refresh profile (webhook might take a moment, billing panel also polls).
     refreshUserProfile?.();
     loadCredits();
-  }, [location.pathname, location.search, navigate, refreshUserProfile, toast, loadCredits]);
+  }, [location.pathname, location.search, navigate, refreshUserProfile, t, toast, loadCredits]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search || '');
@@ -369,8 +376,8 @@ const HubPage = () => {
     if (!walletCheckout) return;
 
     toast({
-      title: 'Top up complete',
-      description: 'We are applying your wallet balance. This may take a few seconds.',
+      title: t('hub.toasts.topUpCompleteTitle'),
+      description: t('hub.toasts.topUpCompleteBody'),
     });
 
     params.delete('wallet_checkout');
@@ -383,7 +390,7 @@ const HubPage = () => {
     );
 
     refreshUserProfile?.();
-  }, [location.pathname, location.search, navigate, refreshUserProfile, toast]);
+  }, [location.pathname, location.search, navigate, refreshUserProfile, t, toast]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white p-4 md:p-8">
@@ -393,8 +400,8 @@ const HubPage = () => {
         transition={{ duration: 0.5 }}
         className="mb-8"
       >
-        <h1 className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 via-amber-300 to-orange-400">Creator Hub</h1>
-        <p className="text-slate-400 mt-1">Manage your music, lyrics, videos, and see your impact.</p>
+        <h1 className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 via-amber-300 to-orange-400">{t('hub.title')}</h1>
+        <p className="text-slate-400 mt-1">{t('hub.subtitle')}</p>
       </motion.div>
 
 	      <motion.div 
@@ -416,7 +423,7 @@ const HubPage = () => {
             {locked ? (
               <span className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full bg-black/40 px-2 py-1 text-[10px] text-yellow-100 border border-white/10">
                 <Lock className="w-3 h-3" />
-                Locked
+                {t('hub.locked')}
               </span>
             ) : null}
             <action.icon className="w-8 h-8 md:w-10 md:h-10 mb-2" />

@@ -12,12 +12,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Helmet } from 'react-helmet-async';
 import CoverArtMedia from '@/components/common/CoverArtMedia';
+import { useLanguage } from '@/contexts/LanguageContext';
 
     const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXVkaW98ZW58MHx8MHx8fDA%3D&w=1000&q=80';
 
     function TrackDetailPage() {
       const { id } = useParams();
       const navigate = useNavigate();
+      const { t, language } = useLanguage();
       const [track, setTrack] = useState(null);
       const [albumInfo, setAlbumInfo] = useState(null);
       const [loading, setLoading] = useState(true);
@@ -44,13 +46,13 @@ const [visibilityUpdating, setVisibilityUpdating] = useState(false);
       const handleToggleFavorite = async () => {
         if (!track) return;
         if (!user) {
-          toast({ title: "Login Required", description: "Please log in to add to favorites.", variant: "destructive" });
+          toast({ title: t('trackDetail.toasts.loginRequiredTitle'), description: t('trackDetail.toasts.loginRequiredBody'), variant: "destructive" });
           return;
         }
         if (loadingFavorite) return;
 
         if (typeof addFavorite !== 'function' || typeof removeFavorite !== 'function') {
-            toast({ title: "Feature not available", description: "Favorites functionality is currently unavailable.", variant: "destructive" });
+            toast({ title: t('trackDetail.toasts.featureUnavailableTitle'), description: t('trackDetail.toasts.featureUnavailableBody'), variant: "destructive" });
             return;
         }
 
@@ -58,13 +60,13 @@ const [visibilityUpdating, setVisibilityUpdating] = useState(false);
         try {
           if (isFavorite) {
             await removeFavorite('track', track.id);
-            toast({ title: "Removed from favorites", variant: 'success' });
+            toast({ title: t('trackDetail.toasts.removedFavorite'), variant: 'success' });
           } else {
             await addFavorite('track', track.id);
-            toast({ title: "Added to favorites", variant: 'success' });
+            toast({ title: t('trackDetail.toasts.addedFavorite'), variant: 'success' });
           }
         } catch (error) {
-          toast({ title: 'Error updating favorites', description: error.message, variant: 'destructive' });
+          toast({ title: t('trackDetail.toasts.favoritesError'), description: error.message, variant: 'destructive' });
         } finally {
           setLoadingFavorite(false);
         }
@@ -72,7 +74,7 @@ const [visibilityUpdating, setVisibilityUpdating] = useState(false);
 
 const handleOpenFlagModal = () => {
   if (!user) {
-    toast({ title: "Authentication Required", description: "Please log in to flag content.", variant: "destructive" });
+    toast({ title: t('trackDetail.toasts.authRequiredTitle'), description: t('trackDetail.toasts.authRequiredBody'), variant: "destructive" });
     return;
   }
         if (!track) return;
@@ -99,11 +101,11 @@ const handleOpenFlagModal = () => {
       if (error) throw error;
       setTrack(prev => prev ? { ...prev, is_public: isPublic } : prev);
       toast({
-        title: isPublic ? 'Track is now public' : 'Track hidden',
+        title: isPublic ? t('trackDetail.toasts.trackPublic') : t('trackDetail.toasts.trackHidden'),
         className: 'bg-green-600 text-white'
       });
     } catch (err) {
-      toast({ title: 'Visibility update failed', description: err.message, variant: 'destructive' });
+      toast({ title: t('trackDetail.toasts.visibilityFailed'), description: err.message, variant: 'destructive' });
     } finally {
       setVisibilityUpdating(false);
     }
@@ -144,7 +146,7 @@ const handleOpenFlagModal = () => {
           } catch (error) {
             console.error("Error fetching track details in TrackDetailPage:", error);
             toast({
-              title: 'Error fetching track details',
+              title: t('trackDetail.toasts.fetchErrorTitle'),
               description: error.message,
               variant: 'destructive',
             });
@@ -157,7 +159,7 @@ const handleOpenFlagModal = () => {
         if (id) {
           fetchTrackAndAlbum();
         }
-      }, [id]);
+      }, [id, t]);
 
       const handleInitiatePlay = () => {
         if (!track || isPaymentProcessingForThisTrack) return;
@@ -174,12 +176,12 @@ const handleOpenFlagModal = () => {
       };
       
       const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        if (!dateString) return t('common.na');
+        return new Date(dateString).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
       };
 
       const getLyricsPreview = (lyricsText) => {
-        if (!lyricsText) return "No lyrics preview available.";
+        if (!lyricsText) return t('trackDetail.labels.noLyricsPreview');
         const lines = lyricsText.split('\n');
         return lines.slice(0, 4).join('\n') + (lines.length > 4 ? '\n...' : '');
       };
@@ -189,7 +191,7 @@ const handleOpenFlagModal = () => {
           {React.cloneElement(icon, { className: `w-5 h-5 ${isPositive ? 'text-green-400' : 'text-red-400'}` })}
           <span className="text-sm text-gray-300">{label}:</span>
           <span className={`text-sm font-semibold ${isPositive ? 'text-green-300' : 'text-red-300'}`}>
-            {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value}
+            {typeof value === 'boolean' ? (value ? t('trackDetail.labels.yes') : t('trackDetail.labels.no')) : value}
           </span>
         </div>
       );
@@ -198,7 +200,7 @@ const handleOpenFlagModal = () => {
         return (
           <div className="min-h-[calc(100vh-80px)] flex items-center justify-center">
             <Helmet>
-                <title>Loading Track... - CRFM</title>
+                <title>{t('trackDetail.loadingTitle')}</title>
             </Helmet>
             <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
           </div>
@@ -209,13 +211,13 @@ const handleOpenFlagModal = () => {
         return (
           <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center text-center">
             <Helmet>
-                <title>Track Not Found - CRFM</title>
+                <title>{t('trackDetail.notFoundTitle')}</title>
             </Helmet>
             <Music className="w-24 h-24 text-gray-600 mb-4" />
-            <h1 className="text-3xl font-bold text-white mb-2">Track Not Found</h1>
-            <p className="text-gray-400 mb-6">The track you are looking for could not be found.</p>
+            <h1 className="text-3xl font-bold text-white mb-2">{t('trackDetail.notFoundHeading')}</h1>
+            <p className="text-gray-400 mb-6">{t('trackDetail.notFoundBody')}</p>
             <Button asChild className="golden-gradient text-black font-semibold">
-              <Link to="/">Go Back Home</Link>
+              <Link to="/">{t('trackDetail.backHome')}</Link>
             </Button>
           </div>
         );
@@ -255,7 +257,7 @@ const handleOpenFlagModal = () => {
                     <Loader2 className="w-6 h-6 mr-2 animate-spin" /> : 
                     (isCurrentPlayingTrack && isPlaying ? <Pause className="w-6 h-6 mr-2" /> : <Play className="w-6 h-6 mr-2" />)
                   }
-                  {isPaymentProcessingForThisTrack ? 'Processing...' : (isCurrentPlayingTrack && isPlaying ? 'Pause' : 'Play Track')}
+                  {isPaymentProcessingForThisTrack ? t('trackDetail.player.processing') : (isCurrentPlayingTrack && isPlaying ? t('trackDetail.player.pause') : t('trackDetail.player.playTrack'))}
                 </Button>
                 {track.stream_cost > 0 && (
                   <TooltipProvider delayDuration={100}>
@@ -267,7 +269,7 @@ const handleOpenFlagModal = () => {
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Cost per play: {track.stream_cost} CrossCoins</p>
+                        <p>{t('trackDetail.labels.costPerPlay', { amount: track.stream_cost })}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -279,14 +281,14 @@ const handleOpenFlagModal = () => {
                     className={`w-full bg-white/10 border-white/20 text-white hover:bg-white/20 ${isFavorite ? 'border-yellow-400 text-yellow-400' : ''}`}
                     onClick={handleToggleFavorite}
                     disabled={!user || loadingFavorite}
-                    title={isFavorite ? "Favorited" : "Favorite"}
+                    title={isFavorite ? t('trackDetail.actions.favorited') : t('trackDetail.actions.favorite')}
                 >
                   {loadingFavorite ? <Loader2 className="w-4 h-4 animate-spin" /> : <Star className={`w-4 h-4 ${isFavorite ? 'text-yellow-400 fill-current' : 'text-gray-400'}`} />} 
                 </Button>
-                <Button onClick={() => setIsShareModalOpen(true)} variant="outline" className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20" title="Share">
+                <Button onClick={() => setIsShareModalOpen(true)} variant="outline" className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20" title={t('trackDetail.actions.share')}>
                   <ShareIcon className="w-4 h-4 text-blue-400" />
                 </Button>
-        <Button onClick={handleOpenFlagModal} variant="outline" className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20" title="Report">
+        <Button onClick={handleOpenFlagModal} variant="outline" className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20" title={t('trackDetail.actions.report')}>
           <Flag className="w-4 h-4 text-yellow-400" />
         </Button>
         {profile?.is_admin && (
@@ -296,7 +298,7 @@ const handleOpenFlagModal = () => {
               variant="outline"
               className="w-full bg-red-500/10 border-red-500/40 text-red-200 hover:bg-red-500/20"
               disabled={visibilityUpdating}
-              title="Hide track"
+              title={t('trackDetail.actions.hideTrack')}
             >
               <EyeOff className="w-4 h-4 mr-1" />
             </Button>
@@ -305,7 +307,7 @@ const handleOpenFlagModal = () => {
               variant="outline"
               className="w-full bg-emerald-500/10 border-emerald-500/40 text-emerald-200 hover:bg-emerald-500/20"
               disabled={visibilityUpdating}
-              title="Make track public"
+              title={t('trackDetail.actions.makePublic')}
             >
               <Eye className="w-4 h-4 mr-1" />
             </Button>
@@ -323,7 +325,7 @@ const handleOpenFlagModal = () => {
               )}
               {albumInfo && albumInfo.id && (
                 <Link to={`/album/${albumInfo.id}`} className="text-md text-gray-400 hover:text-yellow-300 transition-colors mb-6 block flex items-center">
-                  <AlbumIcon className="w-4 h-4 mr-2" /> From album: {albumInfo.title}
+                  <AlbumIcon className="w-4 h-4 mr-2" /> {t('trackDetail.labels.fromAlbum')} {albumInfo.title}
                 </Link>
               )}
 
@@ -331,44 +333,44 @@ const handleOpenFlagModal = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <div className="flex items-center space-x-2 p-3 bg-white/5 rounded-lg">
                   <Tag className="w-5 h-5 text-yellow-400" />
-                  <span className="text-sm text-gray-300">Genre:</span>
-                  <span className="text-sm font-semibold text-white">{track.genre || 'N/A'}</span>
+                  <span className="text-sm text-gray-300">{t('trackDetail.labels.genre')}</span>
+                  <span className="text-sm font-semibold text-white">{track.genre || t('common.na')}</span>
                 </div>
                 <div className="flex items-center space-x-2 p-3 bg-white/5 rounded-lg">
                   <Calendar className="w-5 h-5 text-yellow-400" />
-                  <span className="text-sm text-gray-300">Released:</span>
+                  <span className="text-sm text-gray-300">{t('trackDetail.labels.released')}</span>
                   <span className="text-sm font-semibold text-white">{formatDate(track.release_date)}</span>
                 </div>
                 <div className="flex items-center space-x-2 p-3 bg-white/5 rounded-lg col-span-1 sm:col-span-2">
                   <Languages className="w-5 h-5 text-yellow-400" />
-                  <span className="text-sm text-gray-300">Language(s):</span>
-                  <span className="text-sm font-semibold text-white">{(track.languages && track.languages.length > 0) ? track.languages.join(', ') : 'N/A'}</span>
+                  <span className="text-sm text-gray-300">{t('trackDetail.labels.languages')}</span>
+                  <span className="text-sm font-semibold text-white">{(track.languages && track.languages.length > 0) ? track.languages.join(', ') : t('common.na')}</span>
                 </div>
               </div>
               
-              <h2 className="text-2xl font-semibold text-white mt-8 mb-4">Content Declarations</h2>
+              <h2 className="text-2xl font-semibold text-white mt-8 mb-4">{t('trackDetail.labels.contentDeclarations')}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
-                <DeclarationItem icon={<CheckCircle />} label="Christian Nature" value={track.is_christian_nature} isPositive={track.is_christian_nature}/>
-                <DeclarationItem icon={<Mic2 />} label="Instrumental" value={track.is_instrumental} isPositive={track.is_instrumental}/>
-                <DeclarationItem icon={<Palette />} label="AI in Artwork" value={track.ai_in_artwork} isPositive={!track.ai_in_artwork}/>
-                <DeclarationItem icon={<Brain />} label="AI in Production" value={track.ai_in_production} isPositive={!track.ai_in_production}/>
-                <DeclarationItem icon={<FileText />} label="AI in Lyrics" value={track.ai_in_lyrics} isPositive={!track.ai_in_lyrics}/>
+                <DeclarationItem icon={<CheckCircle />} label={t('trackDetail.labels.christianNature')} value={track.is_christian_nature} isPositive={track.is_christian_nature}/>
+                <DeclarationItem icon={<Mic2 />} label={t('trackDetail.labels.instrumental')} value={track.is_instrumental} isPositive={track.is_instrumental}/>
+                <DeclarationItem icon={<Palette />} label={t('trackDetail.labels.aiArtwork')} value={track.ai_in_artwork} isPositive={!track.ai_in_artwork}/>
+                <DeclarationItem icon={<Brain />} label={t('trackDetail.labels.aiProduction')} value={track.ai_in_production} isPositive={!track.ai_in_production}/>
+                <DeclarationItem icon={<FileText />} label={t('trackDetail.labels.aiLyrics')} value={track.ai_in_lyrics} isPositive={!track.ai_in_lyrics}/>
               </div>
 
               {track.stream_cost != null && track.stream_cost > 0 && (
                  <div className="flex items-center space-x-2 p-3 bg-yellow-400/10 rounded-lg mb-6">
                   <DollarSign className="w-5 h-5 text-yellow-300" />
-                  <span className="text-sm text-yellow-200">Stream Cost:</span>
+                  <span className="text-sm text-yellow-200">{t('trackDetail.labels.streamCost')}</span>
                   <span className="text-sm font-semibold text-yellow-100">{track.stream_cost} CrossCoins</span>
                 </div>
               )}
 
-              <h2 className="text-2xl font-semibold text-white mt-8 mb-4">Lyrics Preview</h2>
+              <h2 className="text-2xl font-semibold text-white mt-8 mb-4">{t('trackDetail.labels.lyricsPreview')}</h2>
               <div className="p-4 bg-white/5 rounded-lg whitespace-pre-wrap text-gray-300 text-sm leading-relaxed max-h-40 overflow-y-auto lyrics-container mb-4">
                 {getLyricsPreview(track.lyrics_text)}
               </div>
-              <Button variant="outline" className="w-full sm:w-auto bg-white/10 border-white/20 text-white hover:bg-white/20" onClick={() => toast({ title: "Feature Coming Soon!", description: "Full lyrics view will be available soon."})}>
-                View Full Lyrics (Soon)
+              <Button variant="outline" className="w-full sm:w-auto bg-white/10 border-white/20 text-white hover:bg-white/20" onClick={() => toast({ title: t('trackDetail.toasts.lyricsSoonTitle'), description: t('trackDetail.toasts.lyricsSoonBody') })}>
+                {t('trackDetail.actions.viewFullLyricsSoon')}
               </Button>
             </div>
           </div>

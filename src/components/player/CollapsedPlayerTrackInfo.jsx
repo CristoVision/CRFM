@@ -1,11 +1,13 @@
 import React, { useMemo } from 'react';
 import { usePlayer } from '@/contexts/PlayerContext';
 import CoverArtMedia from '@/components/common/CoverArtMedia';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const FALLBACK_ART = '/favicon-32x32.png';
 
 function CollapsedPlayerTrackInfo() {
   const { currentTrack, setPlayerState } = usePlayer();
+  const { t } = useLanguage();
 
   const { videoUrl, imageUrl } = useMemo(() => {
     const videoCandidate = currentTrack?.video_cover_art_url || currentTrack?.playlist_video_cover_art_url || currentTrack?.album_video_cover_art_url;
@@ -19,7 +21,7 @@ function CollapsedPlayerTrackInfo() {
       onClick={() => setPlayerState('expanded')}
       role="button"
       tabIndex={0}
-      aria-label="Expand player to view track details"
+      aria-label={t('player.collapsed.expandLabel')}
     >
       <div className="w-12 h-12">
         <CoverArtMedia
@@ -32,8 +34,8 @@ function CollapsedPlayerTrackInfo() {
         />
       </div>
       <div className="min-w-0 flex-1">
-        <h4 className="text-white font-semibold truncate group-hover:golden-text transition-colors">{currentTrack?.title || 'CRFM'}</h4>
-        <p className="text-gray-400 text-sm truncate group-hover:text-gray-300 transition-colors">{currentTrack?.creator_display_name || 'Christian Radio & Fellowship Ministry'}</p>
+        <h4 className="text-white font-semibold truncate group-hover:golden-text transition-colors">{currentTrack?.title || t('player.track.fallbackTitle')}</h4>
+        <p className="text-gray-400 text-sm truncate group-hover:text-gray-300 transition-colors">{currentTrack?.creator_display_name || t('player.track.fallbackArtist')}</p>
       </div>
     </div>
   );

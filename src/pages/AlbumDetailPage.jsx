@@ -10,6 +10,7 @@ import FlagFormModal from '@/components/common/FlagFormModal';
 import ShareModal from '@/components/ShareModal';
 import { useAuth } from '@/contexts/AuthContext';
 import CoverArtMedia from '@/components/common/CoverArtMedia';
+import { useLanguage } from '@/contexts/LanguageContext';
 
     const DEFAULT_ALBUM_COVER = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fG11c2ljJTIwYWxidW18ZW58MHx8MHx8fDA%3D&w=1000&q=80';
     const DEFAULT_TRACK_COVER = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXVkaW98ZW58MHx8MHx8fDA%3D&w=1000&q=80';
@@ -18,6 +19,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
     function AlbumDetailPage() {
       const { id } = useParams();
       const navigate = useNavigate();
+      const { t, language } = useLanguage();
       const [album, setAlbum] = useState(null);
       const [tracks, setTracks] = useState([]);
       const [loading, setLoading] = useState(true);
@@ -32,7 +34,7 @@ const [visibilityUpdating, setVisibilityUpdating] = useState(false);
 
 const handleOpenFlagModal = () => {
   if (!user) {
-    toast({ title: "Authentication Required", description: "Please log in to flag content.", variant: "destructive" });
+    toast({ title: t('albumDetail.toasts.authRequiredTitle'), description: t('albumDetail.toasts.authRequiredBody'), variant: "destructive" });
     return;
   }
   if (!album) return;
@@ -58,9 +60,9 @@ const handleOpenFlagModal = () => {
       });
       if (error) throw error;
       setAlbum(prev => prev ? { ...prev, is_public: isPublic } : prev);
-      toast({ title: isPublic ? 'Album is now public' : 'Album hidden', className: 'bg-green-600 text-white' });
+      toast({ title: isPublic ? t('albumDetail.toasts.albumPublic') : t('albumDetail.toasts.albumHidden'), className: 'bg-green-600 text-white' });
     } catch (err) {
-      toast({ title: 'Visibility update failed', description: err.message, variant: 'destructive' });
+      toast({ title: t('albumDetail.toasts.visibilityFailed'), description: err.message, variant: 'destructive' });
     } finally {
       setVisibilityUpdating(false);
     }
@@ -98,7 +100,7 @@ const handleOpenFlagModal = () => {
 
           } catch (error) {
             toast({
-              title: 'Error fetching album details',
+              title: t('albumDetail.toasts.fetchErrorTitle'),
               description: error.message,
               variant: 'destructive',
             });
@@ -112,7 +114,7 @@ const handleOpenFlagModal = () => {
         if (id) {
           fetchAlbumDetails();
         }
-      }, [id, user?.id, profile?.is_admin]);
+      }, [id, user?.id, profile?.is_admin, t]);
 
       const handlePlayAlbum = () => {
         if (!album || tracks.length === 0 || !queueContext) return;
@@ -145,8 +147,8 @@ const handleOpenFlagModal = () => {
       };
 
       const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        if (!dateString) return t('common.na');
+        return new Date(dateString).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
       };
       
       const isAlbumPlaying = () => {
@@ -167,10 +169,10 @@ const handleOpenFlagModal = () => {
         return (
           <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center text-center">
             <Disc className="w-24 h-24 text-gray-600 mb-4" />
-            <h1 className="text-3xl font-bold text-white mb-2">Album Not Found</h1>
-            <p className="text-gray-400 mb-6">The album you are looking for could not be found.</p>
+            <h1 className="text-3xl font-bold text-white mb-2">{t('albumDetail.notFoundHeading')}</h1>
+            <p className="text-gray-400 mb-6">{t('albumDetail.notFoundBody')}</p>
             <Button asChild className="golden-gradient text-black font-semibold">
-              <Link to="/">Go Back Home</Link>
+              <Link to="/">{t('albumDetail.backHome')}</Link>
             </Button>
           </div>
         );
@@ -193,16 +195,16 @@ const handleOpenFlagModal = () => {
                 className="w-full mt-6 golden-gradient text-black font-bold py-3 text-lg hover:opacity-90 transition-opacity flex items-center justify-center disabled:opacity-50"
               >
                 {isAlbumPlaying() ? <Pause className="w-6 h-6 mr-2" /> : <Play className="w-6 h-6 mr-2" />}
-                {isAlbumPlaying() ? 'Pause Album' : (tracks.length > 0 ? 'Play Album' : 'No Tracks')}
+                {isAlbumPlaying() ? t('albumDetail.player.pauseAlbum') : (tracks.length > 0 ? t('albumDetail.player.playAlbum') : t('albumDetail.player.noTracks'))}
               </Button>
               <div className="grid grid-cols-3 gap-2 mt-4">
-                <Button variant="outline" className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20" title="Favorite (Soon)">
+                <Button variant="outline" className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20" title={t('albumDetail.actions.favoriteSoon')}>
                   <Heart className="w-4 h-4 text-red-400" />
                 </Button>
-                 <Button onClick={() => setIsShareModalOpen(true)} variant="outline" className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20" title="Share">
+                 <Button onClick={() => setIsShareModalOpen(true)} variant="outline" className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20" title={t('albumDetail.actions.share')}>
                   <ShareIcon className="w-4 h-4 text-blue-400" />
                 </Button>
-                <Button onClick={handleOpenFlagModal} variant="outline" className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20" title="Report">
+                <Button onClick={handleOpenFlagModal} variant="outline" className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20" title={t('albumDetail.actions.report')}>
                   <Flag className="w-4 h-4 text-yellow-400" />
                 </Button>
                 {profile?.is_admin && (
@@ -212,7 +214,7 @@ const handleOpenFlagModal = () => {
                       variant="outline"
                       className="w-full bg-red-500/10 border-red-500/40 text-red-200 hover:bg-red-500/20"
                       disabled={visibilityUpdating}
-                      title="Hide album"
+                      title={t('albumDetail.actions.hideAlbum')}
                     >
                       <EyeOff className="w-4 h-4 mr-1" />
                     </Button>
@@ -221,7 +223,7 @@ const handleOpenFlagModal = () => {
                       variant="outline"
                       className="w-full bg-emerald-500/10 border-emerald-500/40 text-emerald-200 hover:bg-emerald-500/20"
                       disabled={visibilityUpdating}
-                      title="Make album public"
+                      title={t('albumDetail.actions.makePublic')}
                     >
                       <Eye className="w-4 h-4 mr-1" />
                     </Button>
@@ -241,23 +243,23 @@ const handleOpenFlagModal = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <div className="flex items-center space-x-2 p-3 bg-white/5 rounded-lg">
                   <Tag className="w-5 h-5 text-yellow-400" />
-                  <span className="text-sm text-gray-300">Genre:</span>
-                  <span className="text-sm font-semibold text-white">{album.genre || 'N/A'}</span>
+                  <span className="text-sm text-gray-300">{t('albumDetail.labels.genre')}</span>
+                  <span className="text-sm font-semibold text-white">{album.genre || t('common.na')}</span>
                 </div>
                 <div className="flex items-center space-x-2 p-3 bg-white/5 rounded-lg">
                   <Calendar className="w-5 h-5 text-yellow-400" />
-                  <span className="text-sm text-gray-300">Released:</span>
+                  <span className="text-sm text-gray-300">{t('albumDetail.labels.released')}</span>
                   <span className="text-sm font-semibold text-white">{formatDate(album.release_date)}</span>
                 </div>
                 <div className="flex items-center space-x-2 p-3 bg-white/5 rounded-lg col-span-1 sm:col-span-2">
                   <Languages className="w-5 h-5 text-yellow-400" />
-                  <span className="text-sm text-gray-300">Language(s):</span>
-                  <span className="text-sm font-semibold text-white">{(album.languages && album.languages.length > 0) ? album.languages.join(', ') : 'N/A'}</span>
+                  <span className="text-sm text-gray-300">{t('albumDetail.labels.languages')}</span>
+                  <span className="text-sm font-semibold text-white">{(album.languages && album.languages.length > 0) ? album.languages.join(', ') : t('common.na')}</span>
                 </div>
               </div>
               
               <h2 className="text-2xl font-semibold text-white mt-8 mb-4 flex items-center">
-                <ListMusic className="w-6 h-6 mr-3 text-yellow-400" /> Tracks on this Album
+                <ListMusic className="w-6 h-6 mr-3 text-yellow-400" /> {t('albumDetail.labels.tracksOnAlbum')}
               </h2>
               {tracks.length > 0 ? (
                 <div className="space-y-2 max-h-96 overflow-y-auto lyrics-container pr-2">
@@ -285,7 +287,7 @@ const handleOpenFlagModal = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-400 p-4 bg-white/5 rounded-lg text-center">No public tracks found for this album.</p>
+                <p className="text-gray-400 p-4 bg-white/5 rounded-lg text-center">{t('albumDetail.labels.noPublicTracks')}</p>
               )}
             </div>
           </div>

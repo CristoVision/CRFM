@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CRFM</string>
+    <string name="title_activity_main">CRFM</string>
+    <string name="package_name">com.crfministry.crfm</string>
+    <string name="custom_url_scheme">com.crfministry.crfm</string>
+</resources>

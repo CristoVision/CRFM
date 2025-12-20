@@ -10,9 +10,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Edit, UploadCloud, Save, Loader2, Coins, Bell } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 function EditProfileForm() {
   const { user, profile, refreshUserProfile } = useAuth();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     first_name: '',
     middle_name: '',
@@ -75,7 +77,7 @@ function EditProfileForm() {
     const fileName = `${user.id}/${Date.now()}.${fileExt}`;
     const { data, error } = await supabase.storage.from('avatars').upload(fileName, avatarFile, { upsert: true });
     if (error) {
-      toast({ title: 'Avatar Upload Failed', description: error.message, variant: 'destructive' });
+      toast({ title: t('profile.edit.toasts.avatarUploadFailed'), description: error.message, variant: 'destructive' });
       throw error;
     }
     const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
@@ -116,7 +118,7 @@ function EditProfileForm() {
         const { error } = await supabase.from('profiles').upsert(updatedFields, { onConflict: 'id' });
         if (error) throw error;
 
-        toast({ title: 'Profile Updated!', description: 'Your profile has been successfully updated.' });
+        toast({ title: t('profile.edit.toasts.profileUpdatedTitle'), description: t('profile.edit.toasts.profileUpdatedBody') });
         await refreshUserProfile();
         
         if (updatedFields.avatar_url || updatedFields.full_name || updatedFields.first_name || updatedFields.middle_name || updatedFields.last_name || updatedFields.second_last_name) {
@@ -132,11 +134,11 @@ function EditProfileForm() {
             });
         }
       } else {
-        toast({ title: 'No Changes Detected', description: 'No fields were modified.' });
+        toast({ title: t('profile.edit.toasts.noChangesTitle'), description: t('profile.edit.toasts.noChangesBody') });
       }
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast({ title: 'Update Failed', description: error.message || 'Could not update profile.', variant: 'destructive' });
+      toast({ title: t('profile.edit.toasts.updateFailedTitle'), description: error.message || t('profile.edit.toasts.updateFailedBody'), variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
       setAvatarFile(null);
@@ -151,7 +153,7 @@ function EditProfileForm() {
     <div className="glass-effect-light p-6 sm:p-8 rounded-xl shadow-xl">
       <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6 sm:mb-8 flex items-center">
         <Edit className="w-6 h-6 sm:w-7 sm:h-7 mr-3 text-yellow-400" />
-        Edit Your Profile
+        {t('profile.edit.title')}
       </h2>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="flex flex-col items-center space-y-3">
@@ -164,73 +166,73 @@ function EditProfileForm() {
           <div className="relative">
             <Input id="avatar" type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
             <Button type="button" size="sm" variant="outline" onClick={() => document.getElementById('avatar').click()} className="bg-white/10 border-white/20 text-gray-300 hover:bg-white/20 hover:text-yellow-300">
-              <UploadCloud className="w-4 h-4 mr-2" /> Change Avatar
+              <UploadCloud className="w-4 h-4 mr-2" /> {t('profile.edit.changeAvatar')}
             </Button>
           </div>
-          <p className="text-xs text-gray-500">Upload your 'avatars'.</p>
+          <p className="text-xs text-gray-500">{t('profile.edit.avatarHint')}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <Label htmlFor="first_name" className="text-gray-300">First Name</Label>
+            <Label htmlFor="first_name" className="text-gray-300">{t('profile.edit.firstName')}</Label>
             <Input id="first_name" name="first_name" type="text" value={formData.first_name} onChange={handleInputChange} className="mt-1 bg-white/5 border-white/10 focus:border-yellow-400 text-white" />
           </div>
           <div>
-            <Label htmlFor="middle_name" className="text-gray-300">Middle Name (Optional)</Label>
+            <Label htmlFor="middle_name" className="text-gray-300">{t('profile.edit.middleNameOptional')}</Label>
             <Input id="middle_name" name="middle_name" type="text" value={formData.middle_name} onChange={handleInputChange} className="mt-1 bg-white/5 border-white/10 focus:border-yellow-400 text-white" />
           </div>
           <div>
-            <Label htmlFor="last_name" className="text-gray-300">Last Name</Label>
+            <Label htmlFor="last_name" className="text-gray-300">{t('profile.edit.lastName')}</Label>
             <Input id="last_name" name="last_name" type="text" value={formData.last_name} onChange={handleInputChange} className="mt-1 bg-white/5 border-white/10 focus:border-yellow-400 text-white" />
           </div>
           <div>
-            <Label htmlFor="second_last_name" className="text-gray-300">Second Last Name (Optional)</Label>
+            <Label htmlFor="second_last_name" className="text-gray-300">{t('profile.edit.secondLastNameOptional')}</Label>
             <Input id="second_last_name" name="second_last_name" type="text" value={formData.second_last_name} onChange={handleInputChange} className="mt-1 bg-white/5 border-white/10 focus:border-yellow-400 text-white" />
           </div>
           <div>
-            <Label htmlFor="username" className="text-gray-300">Username (Cannot be changed)</Label>
-            <Input id="username" type="text" value={profile?.username || 'N/A'} disabled className="mt-1 bg-white/20 border-white/30 text-gray-400 cursor-not-allowed" />
+            <Label htmlFor="username" className="text-gray-300">{t('profile.edit.usernameImmutable')}</Label>
+            <Input id="username" type="text" value={profile?.username || t('common.na')} disabled className="mt-1 bg-white/20 border-white/30 text-gray-400 cursor-not-allowed" />
           </div>
         </div>
         
         <div>
-          <Label htmlFor="bio" className="text-gray-300">Bio</Label>
-          <Textarea id="bio" name="bio" value={formData.bio} onChange={handleInputChange} rows={3} placeholder="Tell us about yourself..." className="mt-1 bg-white/5 border-white/10 focus:border-yellow-400 text-white" />
+          <Label htmlFor="bio" className="text-gray-300">{t('profile.edit.bio')}</Label>
+          <Textarea id="bio" name="bio" value={formData.bio} onChange={handleInputChange} rows={3} placeholder={t('profile.edit.bioPlaceholder')} className="mt-1 bg-white/5 border-white/10 focus:border-yellow-400 text-white" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <Label htmlFor="social_link_1" className="text-gray-300">Social Link 1 (e.g., Twitter, Instagram)</Label>
-            <Input id="social_link_1" name="social_link_1" type="url" value={formData.social_link_1} onChange={handleInputChange} placeholder="https://twitter.com/yourprofile" className="mt-1 bg-white/5 border-white/10 focus:border-yellow-400 text-white" />
+            <Label htmlFor="social_link_1" className="text-gray-300">{t('profile.edit.socialLink1')}</Label>
+            <Input id="social_link_1" name="social_link_1" type="url" value={formData.social_link_1} onChange={handleInputChange} placeholder={t('profile.edit.socialLink1Placeholder')} className="mt-1 bg-white/5 border-white/10 focus:border-yellow-400 text-white" />
           </div>
           <div>
-            <Label htmlFor="social_link_2" className="text-gray-300">Social Link 2 (e.g., Website, YouTube)</Label>
-            <Input id="social_link_2" name="social_link_2" type="url" value={formData.social_link_2} onChange={handleInputChange} placeholder="https://yourwebsite.com" className="mt-1 bg-white/5 border-white/10 focus:border-yellow-400 text-white" />
+            <Label htmlFor="social_link_2" className="text-gray-300">{t('profile.edit.socialLink2')}</Label>
+            <Input id="social_link_2" name="social_link_2" type="url" value={formData.social_link_2} onChange={handleInputChange} placeholder={t('profile.edit.socialLink2Placeholder')} className="mt-1 bg-white/5 border-white/10 focus:border-yellow-400 text-white" />
           </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-white/10 pt-6">
           <div>
-            <Label className="text-gray-300">Email (Cannot be changed)</Label>
+            <Label className="text-gray-300">{t('profile.edit.emailImmutable')}</Label>
             <Input type="email" value={user?.email} disabled className="mt-1 bg-white/20 border-white/30 text-gray-400 cursor-not-allowed" />
           </div>
           <div>
-            <Label className="text-gray-300">Wallet Balance</Label>
+            <Label className="text-gray-300">{t('profile.edit.walletBalance')}</Label>
               <div className="mt-1 flex items-center h-10 px-3 rounded-md bg-white/20 border-white/30 text-gray-400 cursor-not-allowed">
-                <Coins className="w-4 h-4 mr-2 text-yellow-400" /> {profile?.wallet_balance !== undefined ? `${profile.wallet_balance} CrossCoins` : 'N/A'}
+                <Coins className="w-4 h-4 mr-2 text-yellow-400" /> {profile?.wallet_balance !== undefined ? t('profile.edit.walletBalanceValue', { amount: profile.wallet_balance }) : t('common.na')}
             </div>
           </div>
         </div>
 
         <div className="border-t border-white/10 pt-6 space-y-4">
             <div className="flex items-center justify-between">
-                <Label htmlFor="is_public" className="text-gray-300 cursor-pointer">Make my profile public</Label>
+                <Label htmlFor="is_public" className="text-gray-300 cursor-pointer">{t('profile.edit.makePublic')}</Label>
                 <Switch id="is_public" checked={formData.is_public} onCheckedChange={(checked) => handleSwitchChange('is_public', checked)} />
             </div>
             <div className="flex items-center justify-between">
                 <Label htmlFor="enable_achievement_notifications" className="text-gray-300 cursor-pointer flex items-center">
                     <Bell className="w-4 h-4 mr-2 text-yellow-400"/>
-                    Achievement Notifications on Login
+                    {t('profile.edit.achievementNotifications')}
                 </Label>
                 <Switch id="enable_achievement_notifications" checked={formData.enable_achievement_notifications} onCheckedChange={(checked) => handleSwitchChange('enable_achievement_notifications', checked)} />
             </div>
@@ -238,7 +240,7 @@ function EditProfileForm() {
 
         <Button type="submit" disabled={isSubmitting || loadingProfile} className="w-full sm:w-auto golden-gradient text-black font-semibold hover:opacity-90 transition-opacity proximity-glow-button">
           {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-          Save Changes
+          {t('profile.edit.saveChanges')}
         </Button>
       </form>
     </div>

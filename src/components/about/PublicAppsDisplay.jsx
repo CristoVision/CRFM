@@ -4,10 +4,12 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Loader2, AlertTriangle, ExternalLink, Package } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const PublicAppsDisplay = () => {
   const [apps, setApps] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const fetchPublicApps = async () => {
@@ -23,8 +25,8 @@ const PublicAppsDisplay = () => {
         setApps(data || []);
       } catch (error) {
         toast({
-          title: "Error Fetching Apps",
-          description: "Could not load public apps at this time. Please try again later.",
+          title: t('apps.errorTitle'),
+          description: t('apps.errorBody'),
           variant: "error",
         });
         console.error("Error fetching public apps:", error);
@@ -38,9 +40,9 @@ const PublicAppsDisplay = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[300px] p-6 glass-effect rounded-xl">
-        <Loader2 className="w-12 h-12 text-yellow-400 animate-spin mb-4" />
-        <p className="text-lg text-gray-300">Loading Apps...</p>
+        <div className="flex flex-col items-center justify-center min-h-[300px] p-6 glass-effect rounded-xl">
+          <Loader2 className="w-12 h-12 text-yellow-400 animate-spin mb-4" />
+        <p className="text-lg text-gray-300">{t('apps.loading')}</p>
       </div>
     );
   }
@@ -49,8 +51,8 @@ const PublicAppsDisplay = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[300px] p-6 glass-effect rounded-xl">
         <Package className="w-16 h-16 text-yellow-400/70 mb-4" />
-        <h3 className="text-2xl font-semibold text-gray-200 mb-2">No Public Apps Available</h3>
-        <p className="text-gray-400 text-center">Check back soon for exciting new applications!</p>
+        <h3 className="text-2xl font-semibold text-gray-200 mb-2">{t('apps.emptyTitle')}</h3>
+        <p className="text-gray-400 text-center">{t('apps.emptyBody')}</p>
       </div>
     );
   }
@@ -58,7 +60,7 @@ const PublicAppsDisplay = () => {
   return (
     <div className="space-y-8">
       <h3 className="text-3xl font-bold golden-text flex items-center mb-6">
-        <Package className="w-8 h-8 mr-3 text-yellow-400" /> Featured Applications
+        <Package className="w-8 h-8 mr-3 text-yellow-400" /> {t('apps.featured')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {apps.map((app) => (
@@ -85,12 +87,12 @@ const PublicAppsDisplay = () => {
                   className="w-full golden-gradient text-black font-semibold proximity-glow-button"
                 >
                   <a href={app.site_url} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="w-4 h-4 mr-2" /> Visit App
+                    <ExternalLink className="w-4 h-4 mr-2" /> {t('apps.visit')}
                   </a>
                 </Button>
               ) : (
                 <Button disabled className="w-full bg-neutral-600 text-neutral-400 cursor-not-allowed">
-                  Link Unavailable
+                  {t('apps.linkUnavailable')}
                 </Button>
               )}
             </CardFooter>

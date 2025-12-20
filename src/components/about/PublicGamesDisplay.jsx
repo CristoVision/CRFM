@@ -4,10 +4,12 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Loader2, AlertTriangle, ExternalLink, Gamepad2 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const PublicGamesDisplay = () => {
   const [games, setGames] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const fetchPublicGames = async () => {
@@ -23,8 +25,8 @@ const PublicGamesDisplay = () => {
         setGames(data || []);
       } catch (error) {
         toast({
-          title: "Error Fetching Games",
-          description: "Could not load public games at this time. Please try again later.",
+          title: t('games.errorTitle'),
+          description: t('games.errorBody'),
           variant: "error",
         });
         console.error("Error fetching public games:", error);
@@ -40,7 +42,7 @@ const PublicGamesDisplay = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[300px] p-6 glass-effect rounded-xl">
         <Loader2 className="w-12 h-12 text-yellow-400 animate-spin mb-4" />
-        <p className="text-lg text-gray-300">Loading Games...</p>
+        <p className="text-lg text-gray-300">{t('games.loading')}</p>
       </div>
     );
   }
@@ -49,8 +51,8 @@ const PublicGamesDisplay = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[300px] p-6 glass-effect rounded-xl">
         <Gamepad2 className="w-16 h-16 text-yellow-400/70 mb-4" />
-        <h3 className="text-2xl font-semibold text-gray-200 mb-2">No Public Games Available</h3>
-        <p className="text-gray-400 text-center">Stay tuned for new and exciting game releases!</p>
+        <h3 className="text-2xl font-semibold text-gray-200 mb-2">{t('games.emptyTitle')}</h3>
+        <p className="text-gray-400 text-center">{t('games.emptyBody')}</p>
       </div>
     );
   }
@@ -58,7 +60,7 @@ const PublicGamesDisplay = () => {
   return (
     <div className="space-y-8">
        <h3 className="text-3xl font-bold golden-text flex items-center mb-6">
-        <Gamepad2 className="w-8 h-8 mr-3 text-yellow-400" /> Featured Games
+        <Gamepad2 className="w-8 h-8 mr-3 text-yellow-400" /> {t('games.featured')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {games.map((game) => (
@@ -85,12 +87,12 @@ const PublicGamesDisplay = () => {
                   className="w-full golden-gradient text-black font-semibold proximity-glow-button"
                 >
                   <a href={game.site_url} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="w-4 h-4 mr-2" /> Play Game
+                    <ExternalLink className="w-4 h-4 mr-2" /> {t('games.play')}
                   </a>
                 </Button>
               ) : (
                  <Button disabled className="w-full bg-neutral-600 text-neutral-400 cursor-not-allowed">
-                  Link Unavailable
+                  {t('games.linkUnavailable')}
                 </Button>
               )}
             </CardFooter>

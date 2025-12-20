@@ -4,6 +4,7 @@ import { Music, MessageSquare, Type, XCircle, ChevronUp, Settings2 } from 'lucid
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 function FloatingPlayer() {
   const { 
@@ -14,6 +15,7 @@ function FloatingPlayer() {
     hasLrc 
   } = usePlayer();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [showOptions, setShowOptions] = useState(false);
   const optionsRef = useRef(null);
 
@@ -48,9 +50,9 @@ function FloatingPlayer() {
   };
   
   const getLabelForMode = () => {
-    if (floatingLyricsMode === 'phantom') return "Lyrics: Phantom";
-    if (floatingLyricsMode === 'karaoke') return "Lyrics: Karaoke";
-    return "Lyrics: Off";
+    if (floatingLyricsMode === 'phantom') return t('player.floating.lyricsPhantom');
+    if (floatingLyricsMode === 'karaoke') return t('player.floating.lyricsKaraoke');
+    return t('player.floating.lyricsOff');
   };
 
   return (
@@ -62,7 +64,7 @@ function FloatingPlayer() {
         tabIndex={0}
         aria-haspopup="true"
         aria-expanded={showOptions}
-        aria-label="Open player options"
+        aria-label={t('player.floating.openOptions')}
       >
         <Music className="w-7 h-7 text-black group-hover:rotate-[15deg] transition-transform duration-300" />
       </div>
@@ -87,7 +89,7 @@ function FloatingPlayer() {
               }}
               disabled={!currentTrack} 
             >
-              <ChevronUp className="w-4 h-4 mr-2" /> Open Player
+              <ChevronUp className="w-4 h-4 mr-2" /> {t('player.floating.openPlayer')}
             </Button>
             
             {currentTrack && hasLrc && (
@@ -104,15 +106,15 @@ function FloatingPlayer() {
               </Button>
             )}
              {currentTrack && !hasLrc && (
-              <div className="px-3 py-2 text-xs text-gray-400 flex items-center w-full justify-start">
+             <div className="px-3 py-2 text-xs text-gray-400 flex items-center w-full justify-start">
                 <Settings2 className="w-4 h-4 mr-2 text-gray-500" />
-                <span>Lyrics options unavailable</span>
+                <span>{t('player.floating.lyricsUnavailable')}</span>
               </div>
             )}
             {!currentTrack && (
                  <div className="px-3 py-2 text-xs text-gray-400 flex items-center w-full justify-start">
                     <Music className="w-4 h-4 mr-2 text-gray-500" />
-                    <span>No track loaded</span>
+                    <span>{t('player.floating.noTrack')}</span>
                 </div>
             )}
           </motion.div>

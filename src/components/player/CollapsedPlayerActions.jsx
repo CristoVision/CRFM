@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { Maximize2, Minimize2, Baseline, Text } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 function CollapsedPlayerActions() {
   const { 
@@ -12,6 +13,7 @@ function CollapsedPlayerActions() {
     currentLyrics,
     lrcError
   } = usePlayer();
+  const { t } = useLanguage();
 
   const hasLrc = currentTrack && (currentTrack.lrc_file_path || currentTrack.lyrics_text) && !lrcError && currentLyrics.length > 0;
 
@@ -23,7 +25,7 @@ function CollapsedPlayerActions() {
           variant="ghost"
           size="icon"
           className={`player-button ${showCollapsedLyrics ? 'active-icon' : ''}`}
-          aria-label={showCollapsedLyrics ? "Hide lyrics" : "Show lyrics"}
+          aria-label={showCollapsedLyrics ? t('player.collapsed.hideLyrics') : t('player.collapsed.showLyrics')}
         >
           {showCollapsedLyrics ? <Text className="w-4 h-4" /> : <Baseline className="w-4 h-4" />}
         </Button>
@@ -34,7 +36,7 @@ function CollapsedPlayerActions() {
         size="icon"
         className="player-button"
         disabled={!currentTrack}
-        aria-label="Minimize player"
+        aria-label={t('player.collapsed.minimize')}
       >
         <Minimize2 className="w-4 h-4" />
       </Button>
@@ -45,7 +47,7 @@ function CollapsedPlayerActions() {
         size="icon"
         className="player-button"
         disabled={!currentTrack}
-        aria-label="Expand player"
+        aria-label={t('player.collapsed.expand')}
       >
         <Maximize2 className="w-4 h-4" />
       </Button>

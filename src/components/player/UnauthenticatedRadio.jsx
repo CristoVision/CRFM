@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Radio, Music, X, ChevronUp, Play, Pause, Volume2, VolumeX, Loader2 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // SECTION: Context Setup
 const UnauthenticatedRadioContext = createContext();
@@ -41,6 +42,7 @@ export const useUnauthenticatedRadio = () => {
 
 // SECTION: Provider
 const UnauthenticatedRadioProvider = ({ children }) => {
+  const { t } = useLanguage();
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentStation, setCurrentStation] = useState(null);
@@ -84,11 +86,11 @@ const UnauthenticatedRadioProvider = ({ children }) => {
         await audioRef.current.play();
         setIsPlaying(true);
       } else {
-        toast({ title: "Station is empty", description: "This station currently has no tracks to play.", variant: "destructive" });
+        toast({ title: t('player.radio.stationEmptyTitle'), description: t('player.radio.stationEmptyDescription'), variant: "destructive" });
         pause();
       }
     } catch (error) {
-      toast({ title: "Could not play station", description: error.message, variant: "destructive" });
+      toast({ title: t('player.radio.playErrorTitle'), description: error.message, variant: "destructive" });
       pause();
     } finally {
       setIsLoading(false);
@@ -127,6 +129,7 @@ const RadioPlayerUI = () => {
     isMuted, setIsMuted, volume, setVolume, showPlayer, setShowPlayer,
     isMinimized, setIsMinimized
   } = useUnauthenticatedRadio();
+  const { t } = useLanguage();
 
   if (!showPlayer) return null;
 
@@ -136,7 +139,7 @@ const RadioPlayerUI = () => {
         className="group fixed bottom-6 right-6 z-[55] w-14 h-14 rounded-full golden-gradient flex items-center justify-center cursor-pointer shadow-2xl hover:scale-105 active:scale-95 transition-transform duration-200 ease-out"
         onClick={() => setIsMinimized(false)}
         role="button"
-        title={currentStation?.name || 'Open Radio'}
+        title={currentStation?.name || t('player.radio.open')}
       >
         <AnimatePresence mode="wait">
           {isPlaying ? (
@@ -169,8 +172,8 @@ const RadioPlayerUI = () => {
               <Radio className="w-5 h-5 text-yellow-400" />
             </div>
             <div className="min-w-0">
-              <h4 className="font-semibold text-white truncate">{currentStation?.name || 'CRFM Radio'}</h4>
-              <p className="text-xs text-gray-400">Live Radio</p>
+              <h4 className="font-semibold text-white truncate">{currentStation?.name || t('player.radio.defaultStation')}</h4>
+              <p className="text-xs text-gray-400">{t('player.radio.liveLabel')}</p>
             </div>
           </div>
           <div className="flex items-center">
@@ -182,12 +185,12 @@ const RadioPlayerUI = () => {
         <div className="flex items-center space-x-4">
           <img
             src={currentTrack?.cover_art_url || "/favicon-32x32.png"}
-            alt={currentTrack?.title || 'CRFM radio cover art'}
+            alt={currentTrack?.title || t('player.radio.coverArtAlt')}
             className="w-16 h-16 rounded-md object-cover border border-white/10"
           />
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-white truncate">{isLoading ? 'Loading...' : (currentTrack?.title || 'Up next...')}</p>
-            <p className="text-sm text-gray-400 truncate">{currentTrack?.artist || 'CRFM'}</p>
+            <p className="font-semibold text-white truncate">{isLoading ? t('player.radio.loading') : (currentTrack?.title || t('player.radio.upNext'))}</p>
+            <p className="text-sm text-gray-400 truncate">{currentTrack?.artist || t('player.radio.defaultArtist')}</p>
           </div>
         </div>
 

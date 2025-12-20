@@ -1,27 +1,29 @@
 import React from 'react';
-    import { motion } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-    const AuthLayout = ({ children, title, subtitle }) => {
-      return (
-        <div className="min-h-screen gradient-bg flex flex-col items-center justify-center p-4 font-montserrat">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-8 text-center"
-          >
-            <img 
-              src="/favicon-32x32.png"
-              alt="CRFM Animated Logo"
-              className="h-[110px] md:h-[130px] w-auto mx-auto mb-3"
-            />
-            <h1 className="text-3xl md:text-4xl font-bold golden-text mb-1">
-              {title || "CRFM Streaming"}
-            </h1>
-            <p className="text-sm md:text-base text-gray-300 max-w-md mx-auto">
-              {subtitle || "Welcome to CRFMinistry – Stream, Create, and Connect."}
-            </p>
-          </motion.div>
+const AuthLayout = ({ children, title, subtitle }) => {
+  const { t } = useLanguage();
+  return (
+    <div className="min-h-screen gradient-bg flex flex-col items-center justify-center p-4 font-montserrat">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="mb-8 text-center"
+      >
+        <img 
+          src="/favicon-32x32.png"
+          alt={t('auth.layout.logoAlt')}
+          className="h-[110px] md:h-[130px] w-auto mx-auto mb-3"
+        />
+        <h1 className="text-3xl md:text-4xl font-bold golden-text mb-1">
+          {title || t('auth.layout.defaultTitle')}
+        </h1>
+        <p className="text-sm md:text-base text-gray-300 max-w-md mx-auto">
+          {subtitle || t('auth.layout.defaultSubtitle')}
+        </p>
+      </motion.div>
 
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -33,13 +35,13 @@ import React from 'react';
               {children}
             </div>
           </motion.div>
-          <footer className="mt-8 text-center">
-            <p className="text-xs text-gray-500">
-              &copy; {new Date().getFullYear()} CRFMinistry.com. All rights reserved.
-            </p>
-          </footer>
-        </div>
-      );
-    };
+      <footer className="mt-8 text-center">
+        <p className="text-xs text-gray-500">
+          &copy; {new Date().getFullYear()} {t('auth.layout.footer')}
+        </p>
+      </footer>
+    </div>
+  );
+};
 
-    export default AuthLayout;
+export default AuthLayout;

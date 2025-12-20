@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function CheckoutForm({ onSuccess, onCancel, returnUrl }) {
   const stripe = useStripe();
   const elements = useElements();
+  const { t } = useLanguage();
 
   const [message, setMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,7 +37,7 @@ export default function CheckoutForm({ onSuccess, onCancel, returnUrl }) {
     if (error.type === 'card_error' || error.type === 'validation_error') {
       setMessage(error.message);
     } else {
-      setMessage('An unexpected error occurred.');
+      setMessage(t('wallet.checkout.unexpectedError'));
     }
 
     setIsLoading(false);
@@ -46,16 +48,16 @@ export default function CheckoutForm({ onSuccess, onCancel, returnUrl }) {
       <PaymentElement id="payment-element" options={{ layout: 'tabs' }} />
       <div className="flex items-center justify-end gap-2 mt-6">
         <Button variant="outline" type="button" onClick={onCancel} disabled={isLoading}>
-          Cancel
+          {t('wallet.checkout.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading || !stripe || !elements}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing...
+              {t('wallet.checkout.processing')}
             </>
           ) : (
-            'Pay now'
+            t('wallet.checkout.payNow')
           )}
         </Button>
       </div>

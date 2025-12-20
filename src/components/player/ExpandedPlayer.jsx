@@ -15,15 +15,17 @@ import ExpandedPlayerProgressBar from './ExpandedPlayerProgressBar.jsx';
 import ExpandedPlayerControls from './ExpandedPlayerControls.jsx';
 import ExpandedPlayerVolumeControl from './ExpandedPlayerVolumeControl.jsx';
 import { ListMusic, ScrollText } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 function ExpandedPlayer() {
   const { currentTrack } = usePlayer();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('lyrics');
 
   if (!currentTrack) {
     return (
       <div className="fixed inset-0 player-background z-50 flex items-center justify-center">
-        <p className="text-white text-xl">No track selected.</p>
+        <p className="text-white text-xl">{t('player.expanded.noTrack')}</p>
       </div>
     );
   }
@@ -51,10 +53,10 @@ function ExpandedPlayer() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
             <TabsList className="bg-transparent border-b border-white/10 rounded-none p-0 h-auto grid grid-cols-2">
               <TabsTrigger value="lyrics" className="player-tab-trigger">
-                <ScrollText className="w-4 h-4 mr-2" /> Lyrics
+                <ScrollText className="w-4 h-4 mr-2" /> {t('player.tabs.lyrics')}
               </TabsTrigger>
               <TabsTrigger value="queue" className="player-tab-trigger">
-                <ListMusic className="w-4 h-4 mr-2" /> Queue
+                <ListMusic className="w-4 h-4 mr-2" /> {t('player.tabs.queue')}
               </TabsTrigger>
             </TabsList>
 

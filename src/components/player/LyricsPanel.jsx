@@ -1,14 +1,15 @@
 import React, { useEffect, useRef } from 'react';
-    import { Button } from '@/components/ui/button';
-    import { Input } from '@/components/ui/input';
-    import { Textarea } from '@/components/ui/textarea';
-    import { Undo, Redo, PlusCircle, Trash2, CheckCircle, Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Undo, Redo, PlusCircle, Trash2, CheckCircle, Info } from 'lucide-react';
 import { formatTime, parseLrcTextToLines } from '../lrcEditorUtils.js';
-    import {
-      Popover,
-      PopoverContent,
-      PopoverTrigger,
-    } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useLanguage } from '@/contexts/LanguageContext';
 
 
     const ClockIcon = (props) => (
@@ -26,6 +27,7 @@ import { formatTime, parseLrcTextToLines } from '../lrcEditorUtils.js';
     }, ref) => {
       const activeLineRef = useRef(null);
       const containerRef = useRef(null);
+      const { t } = useLanguage();
 
 
       useEffect(() => {
@@ -70,7 +72,7 @@ import { formatTime, parseLrcTextToLines } from '../lrcEditorUtils.js';
         <div className="w-full md:w-1/2 flex flex-col overflow-hidden" ref={ref}>
           <div className="flex justify-between items-center mb-2 px-1">
             <div className="flex items-center gap-2">
-                <h3 className="text-lg font-semibold text-gray-200">Lyrics</h3>
+                <h3 className="text-lg font-semibold text-gray-200">{t('player.tabs.lyrics')}</h3>
                 <Popover>
                     <PopoverTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-yellow-400">
@@ -78,18 +80,18 @@ import { formatTime, parseLrcTextToLines } from '../lrcEditorUtils.js';
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-3 glass-effect text-xs text-gray-200 border-white/20" side="bottom" align="start">
-                        <p className="font-semibold mb-1 golden-text">Desktop Shortcuts:</p>
-                        <p><strong className="text-yellow-300">Spacebar:</strong> Sync current line</p>
-                        <p><strong className="text-yellow-300">Backspace:</strong> Go to previous line</p>
-                        <p><strong className="text-yellow-300">Enter (in lyric input):</strong> Sync line</p>
-                        <p className="mt-2 font-semibold mb-1 golden-text">Mobile:</p>
-                        <p>Use on-screen buttons for sync & navigation.</p>
+                        <p className="font-semibold mb-1 golden-text">{t('player.lyricsEditor.shortcutsTitle')}</p>
+                        <p><strong className="text-yellow-300">{t('player.lyricsEditor.shortcutSpace')}</strong> {t('player.lyricsEditor.shortcutSpaceDesc')}</p>
+                        <p><strong className="text-yellow-300">{t('player.lyricsEditor.shortcutBackspace')}</strong> {t('player.lyricsEditor.shortcutBackspaceDesc')}</p>
+                        <p><strong className="text-yellow-300">{t('player.lyricsEditor.shortcutEnter')}</strong> {t('player.lyricsEditor.shortcutEnterDesc')}</p>
+                        <p className="mt-2 font-semibold mb-1 golden-text">{t('player.lyricsEditor.mobileTitle')}</p>
+                        <p>{t('player.lyricsEditor.mobileHint')}</p>
                     </PopoverContent>
                 </Popover>
             </div>
             <div className="flex items-center gap-2">
-              <Button onClick={handleUndo} size="sm" variant="outline" className="text-xs" disabled={historyIndex <= 0}><Undo size={14} className="mr-1"/>Undo</Button>
-              <Button onClick={handleRedo} size="sm" variant="outline" className="text-xs" disabled={historyIndex >= historyLength - 1}><Redo size={14} className="mr-1"/>Redo</Button>
+              <Button onClick={handleUndo} size="sm" variant="outline" className="text-xs" disabled={historyIndex <= 0}><Undo size={14} className="mr-1"/>{t('player.lyricsEditor.undo')}</Button>
+              <Button onClick={handleRedo} size="sm" variant="outline" className="text-xs" disabled={historyIndex >= historyLength - 1}><Redo size={14} className="mr-1"/>{t('player.lyricsEditor.redo')}</Button>
             </div>
           </div>
           <div 
@@ -99,9 +101,9 @@ import { formatTime, parseLrcTextToLines } from '../lrcEditorUtils.js';
             >
             {lyrics.length === 0 && (
               <div className="text-center py-10">
-                <p className="text-gray-400 mb-2">No lyrics loaded.</p>
+                <p className="text-gray-400 mb-2">{t('player.lyricsEditor.emptyTitle')}</p>
                 <Textarea 
-                  placeholder="Paste or type your lyrics here, one line per entry..."
+                  placeholder={t('player.lyricsEditor.emptyPlaceholder')}
                   className="h-40 bg-white/5 border-white/10 text-white placeholder-gray-500"
                   onBlur={(e) => {
                     const newRawLyrics = e.target.value;
@@ -138,10 +140,10 @@ import { formatTime, parseLrcTextToLines } from '../lrcEditorUtils.js';
             ))}
           </div>
           <div className="mt-2 flex items-center justify-between px-1">
-            <Button onClick={() => addLyricLine(lyrics.length > 0 ? lyrics.length -1 : 0)} size="sm" variant="outline" className="text-xs"><PlusCircle size={14} className="mr-1"/>Add Line</Button>
+            <Button onClick={() => addLyricLine(lyrics.length > 0 ? lyrics.length -1 : 0)} size="sm" variant="outline" className="text-xs"><PlusCircle size={14} className="mr-1"/>{t('player.lyricsEditor.addLine')}</Button>
             <div className="flex items-center space-x-2">
               <input type="checkbox" id="autoAdvance" checked={autoAdvance} onChange={(e) => setAutoAdvance(e.target.checked)} className="form-checkbox h-4 w-4 text-yellow-400 bg-gray-700 border-gray-600 rounded focus:ring-yellow-500"/>
-              <label htmlFor="autoAdvance" className="text-xs text-gray-300">Auto-Advance</label>
+              <label htmlFor="autoAdvance" className="text-xs text-gray-300">{t('player.lyricsEditor.autoAdvance')}</label>
             </div>
           </div>
         </div>

@@ -1,10 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { ScrollText } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 function PlayerLyricsView() {
   const { currentLyrics, activeLyricsLineIndex, hasLrc, lrcError } = usePlayer();
   const activeRef = useRef(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (activeRef.current) {
@@ -16,7 +18,7 @@ function PlayerLyricsView() {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-4">
         <ScrollText className="w-10 h-10 text-yellow-400 mb-2" />
-        <p className="text-sm text-red-300">Could not load lyrics.</p>
+        <p className="text-sm text-red-300">{t('player.lyrics.loadError')}</p>
       </div>
     );
   }
@@ -25,7 +27,7 @@ function PlayerLyricsView() {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-4 space-y-2">
         <ScrollText className="w-10 h-10 text-yellow-400" />
-        <p className="text-sm text-gray-300">No lyrics available for this track.</p>
+        <p className="text-sm text-gray-300">{t('player.lyrics.empty')}</p>
       </div>
     );
   }

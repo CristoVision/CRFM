@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import AuthLayout from './AuthLayout';
 import { Lock, CheckCircle, Loader2, LogIn, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const PasswordRequirement = ({ met, text }) => (
   <li className={`flex items-center text-xs ${met ? 'text-green-400' : 'text-gray-400'}`}>
@@ -23,6 +24,7 @@ const ResetPasswordScreen = () => {
   const [passwordUpdated, setPasswordUpdated] = useState(false);
   const { updateUserPassword, loading, user, initialAuthCheckComplete } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [passwordValidation, setPasswordValidation] = useState({
     minLength: false,
@@ -54,12 +56,12 @@ const ResetPasswordScreen = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      toast({ title: 'Passwords do not match', variant: 'destructive' });
+      toast({ title: t('auth.reset.passwordMismatch'), variant: 'destructive' });
       return;
     }
     const allValid = Object.values(passwordValidation).every(Boolean);
     if (!allValid) {
-      toast({ title: 'Password Requirements Not Met', description: 'Please ensure your password meets all criteria.', variant: 'destructive' });
+      toast({ title: t('auth.reset.passwordRequirementsTitle'), description: t('auth.reset.passwordRequirementsDescription'), variant: 'destructive' });
       return;
     }
 
@@ -67,16 +69,16 @@ const ResetPasswordScreen = () => {
     if (success) {
       setPasswordUpdated(true);
     } else if (error) {
-      toast({ title: 'Update failed', description: error, variant: 'destructive' });
+      toast({ title: t('auth.reset.updateFailed'), description: error, variant: 'destructive' });
     }
   };
 
   if (!initialAuthCheckComplete) {
     return (
-      <AuthLayout title="Securing your session…" subtitle="Please wait a moment.">
+      <AuthLayout title={t('auth.reset.securingTitle')} subtitle={t('auth.reset.securingSubtitle')}>
         <div className="flex items-center justify-center py-12 text-gray-300">
           <Loader2 className="w-6 h-6 mr-2 animate-spin" />
-          Processing secure link…
+          {t('auth.reset.processingLink')}
         </div>
       </AuthLayout>
     );
@@ -84,15 +86,15 @@ const ResetPasswordScreen = () => {
 
   if (passwordUpdated) {
     return (
-      <AuthLayout title="Password Reset Successful!" subtitle="Your password has been updated.">
+      <AuthLayout title={t('auth.reset.successTitle')} subtitle={t('auth.reset.successSubtitle')}>
         <div className="text-center space-y-6">
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <p className="text-gray-300">You can now log in with your new password.</p>
+          <p className="text-gray-300">{t('auth.reset.successBody')}</p>
           <Button
             onClick={() => navigate('/login')}
             className="w-full golden-gradient text-black font-semibold hover:opacity-90 transition-opacity text-base py-3 proximity-glow-button h-11"
           >
-            <LogIn className="w-5 h-5 mr-2" /> Back to Sign In
+            <LogIn className="w-5 h-5 mr-2" /> {t('auth.reset.backToSignIn')}
           </Button>
         </div>
       </AuthLayout>
@@ -101,15 +103,15 @@ const ResetPasswordScreen = () => {
   
   if (!canReset) {
     return (
-      <AuthLayout title="Invalid or Expired Link" subtitle="Please request a new password reset link.">
+      <AuthLayout title={t('auth.reset.invalidTitle')} subtitle={t('auth.reset.invalidSubtitle')}>
         <div className="text-center space-y-6">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <p className="text-gray-300">This password reset link is invalid or has expired. For your security, please return to the login page and request a new one.</p>
+          <p className="text-gray-300">{t('auth.reset.invalidBody')}</p>
           <Button
             onClick={() => navigate('/login')}
             className="w-full golden-gradient text-black font-semibold hover:opacity-90 transition-opacity text-base py-3 proximity-glow-button h-11"
           >
-            <LogIn className="w-5 h-5 mr-2" /> Back to Sign In
+            <LogIn className="w-5 h-5 mr-2" /> {t('auth.reset.backToSignIn')}
           </Button>
         </div>
       </AuthLayout>
@@ -117,10 +119,10 @@ const ResetPasswordScreen = () => {
   }
 
   return (
-    <AuthLayout title="Reset Your Password" subtitle="Create a new strong password for your CRFM account.">
+    <AuthLayout title={t('auth.reset.title')} subtitle={t('auth.reset.subtitle')}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1 relative">
-          <Label htmlFor="newPassword-reset" className="text-gray-300 text-sm">New Password</Label>
+          <Label htmlFor="newPassword-reset" className="text-gray-300 text-sm">{t('auth.reset.newPasswordLabel')}</Label>
           <Lock className="absolute left-3 top-8 transform -translate-y-1/2 w-4 h-4 text-yellow-400/70" />
           <Input
             id="newPassword-reset"
@@ -128,7 +130,7 @@ const ResetPasswordScreen = () => {
             value={newPassword}
             onChange={handleNewPasswordChange}
             className="bg-black/20 border-white/10 text-white placeholder-gray-500 pl-10 pr-10 focus:border-yellow-400 h-11"
-            placeholder="Enter your new password"
+            placeholder={t('auth.reset.newPasswordPlaceholder')}
             required
             disabled={loading}
           />
@@ -136,7 +138,7 @@ const ResetPasswordScreen = () => {
             type="button"
             onClick={() => setShowNewPassword(!showNewPassword)}
             className="absolute right-3 top-8 transform -translate-y-1/2 text-yellow-400/70 hover:text-yellow-300 focus:outline-none"
-            aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+            aria-label={showNewPassword ? t('auth.reset.hidePassword') : t('auth.reset.showPassword')}
             disabled={loading}
           >
             {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -144,16 +146,16 @@ const ResetPasswordScreen = () => {
         </div>
 
         <ul className="mt-1 space-y-0.5 px-1">
-          <PasswordRequirement met={passwordValidation.minLength} text="Minimum 8 characters" />
-          <PasswordRequirement met={passwordValidation.lowercase} text="At least one lowercase letter" />
-          <PasswordRequirement met={passwordValidation.uppercase} text="At least one uppercase letter" />
-          <PasswordRequirement met={passwordValidation.number} text="At least one number" />
-          <PasswordRequirement met={passwordValidation.symbol} text="At least one symbol (e.g., !@#$%)" />
-          <li className="text-xs text-gray-500 mt-1">Passwords found in known breaches are not allowed.</li>
+          <PasswordRequirement met={passwordValidation.minLength} text={t('auth.passwordRules.minLength')} />
+          <PasswordRequirement met={passwordValidation.lowercase} text={t('auth.passwordRules.lowercase')} />
+          <PasswordRequirement met={passwordValidation.uppercase} text={t('auth.passwordRules.uppercase')} />
+          <PasswordRequirement met={passwordValidation.number} text={t('auth.passwordRules.number')} />
+          <PasswordRequirement met={passwordValidation.symbol} text={t('auth.passwordRules.symbol')} />
+          <li className="text-xs text-gray-500 mt-1">{t('auth.passwordRules.breachNotice')}</li>
         </ul>
 
         <div className="space-y-1 relative">
-          <Label htmlFor="confirmPassword-reset" className="text-gray-300 text-sm">Confirm New Password</Label>
+          <Label htmlFor="confirmPassword-reset" className="text-gray-300 text-sm">{t('auth.reset.confirmPasswordLabel')}</Label>
           <Lock className="absolute left-3 top-8 transform -translate-y-1/2 w-4 h-4 text-yellow-400/70" />
           <Input
             id="confirmPassword-reset"
@@ -161,7 +163,7 @@ const ResetPasswordScreen = () => {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             className="bg-black/20 border-white/10 text-white placeholder-gray-500 pl-10 pr-10 focus:border-yellow-400 h-11"
-            placeholder="Confirm your new password"
+            placeholder={t('auth.reset.confirmPasswordPlaceholder')}
             required
             disabled={loading}
           />
@@ -169,7 +171,7 @@ const ResetPasswordScreen = () => {
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             className="absolute right-3 top-8 transform -translate-y-1/2 text-yellow-400/70 hover:text-yellow-300 focus:outline-none"
-            aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+            aria-label={showConfirmPassword ? t('auth.reset.hidePassword') : t('auth.reset.showPassword')}
             disabled={loading}
           >
             {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -182,7 +184,7 @@ const ResetPasswordScreen = () => {
           className="w-full golden-gradient text-black font-semibold hover:opacity-90 transition-opacity text-base py-3 proximity-glow-button h-11"
         >
           {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Lock className="w-5 h-5 mr-2" />}
-          Reset Password
+          {t('auth.reset.submitButton')}
         </Button>
       </form>
     </AuthLayout>

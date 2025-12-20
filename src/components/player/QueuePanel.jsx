@@ -4,12 +4,14 @@ import { usePlayer } from '@/contexts/PlayerContext.jsx';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { X, ListMusic, Play, Trash2, Shuffle } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXVkaW98ZW58MHx8MHx8fDA%3D&w=1000&q=80';
 
 const QueuePanel = ({ onClose }) => {
   const queueContext = useContext(QueueContext);
   const playerContext = usePlayer();
+  const { t } = useLanguage();
 
   if (!queueContext) {
     return null;
@@ -58,7 +60,7 @@ const QueuePanel = ({ onClose }) => {
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold flex items-center">
                 <ListMusic className="w-5 h-5 mr-2 text-yellow-400" />
-                Queue (0 tracks)
+                {t('player.queue.title', { count: 0 })}
               </h3>
               <Button variant="ghost" size="icon" onClick={onClose} className="text-gray-400 hover:text-white">
                 <X className="w-5 h-5" />
@@ -66,8 +68,8 @@ const QueuePanel = ({ onClose }) => {
             </div>
             <div className="flex-grow flex flex-col items-center justify-center text-neutral-400">
               <ListMusic className="w-16 h-16 mb-4 text-neutral-600" />
-              <p className="text-lg">Your queue is empty.</p>
-              <p className="text-sm">Add some music to get started!</p>
+              <p className="text-lg">{t('player.queue.emptyTitle')}</p>
+              <p className="text-sm">{t('player.queue.emptySubtitle')}</p>
             </div>
           </div>
         );
@@ -78,7 +80,7 @@ const QueuePanel = ({ onClose }) => {
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-lg font-semibold flex items-center">
               <ListMusic className="w-5 h-5 mr-2 text-yellow-400" />
-              Queue ({activeQueue.length} tracks)
+              {t('player.queue.title', { count: activeQueue.length })}
             </h3>
             <div className="flex items-center space-x-1">
               <Button
@@ -86,7 +88,7 @@ const QueuePanel = ({ onClose }) => {
                 size="icon"
                 onClick={handleShuffleQueue}
                 className={`p-2 ${isShuffling ? 'text-yellow-400 hover:text-yellow-300' : 'text-gray-400 hover:text-white'}`}
-                title={isShuffling ? "Reshuffle" : "Shuffle Queue"}
+                title={isShuffling ? t('player.queue.reshuffle') : t('player.queue.shuffle')}
                 disabled={activeQueue.length < 2}
               >
                 <Shuffle className="w-4 h-4" />
@@ -98,10 +100,10 @@ const QueuePanel = ({ onClose }) => {
                   onClick={handleClearQueue} 
                   className="text-xs border-red-500/50 text-red-400 hover:bg-red-500/20 hover:text-red-300 flex items-center py-1 px-2"
                   disabled={activeQueue.length === 0}
-                  title="Clear Queue"
+                  title={t('player.queue.clear')}
                 >
                   <Trash2 className="w-3 h-3 mr-1" />
-                  Clear
+                  {t('player.queue.clear')}
                 </Button>
               )}
               <Button variant="ghost" size="icon" onClick={onClose} className="text-gray-400 hover:text-white p-2">
@@ -136,7 +138,7 @@ const QueuePanel = ({ onClose }) => {
                         {track.title}
                       </p>
                       <p className="text-xs text-neutral-400 truncate group-hover:text-neutral-300">
-                        {track.creator_display_name || 'Unknown Artist'}
+                        {track.creator_display_name || t('player.queue.unknownArtist')}
                       </p>
                     </div>
                     {isCurrentlyPlaying && (
@@ -147,7 +149,7 @@ const QueuePanel = ({ onClose }) => {
                       size="icon"
                       className="ml-2 w-7 h-7 text-neutral-500 hover:text-red-400 opacity-50 group-hover:opacity-100 transition-opacity flex-shrink-0"
                       onClick={(e) => handleRemoveTrack(e, track.id)}
-                      title="Remove from queue"
+                      title={t('player.queue.remove')}
                     >
                       <X className="w-4 h-4" />
                     </Button>

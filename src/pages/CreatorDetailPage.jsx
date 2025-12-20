@@ -13,18 +13,20 @@ import MembershipPanel from '@/components/creator/MembershipPanel';
     import FlagFormModal from '@/components/common/FlagFormModal';
     import ShareModal from '@/components/ShareModal';
     import { useAuth } from '@/contexts/AuthContext';
+    import { useLanguage } from '@/contexts/LanguageContext';
 
     const DEFAULT_AVATAR = 'https://avatar.vercel.sh/creator.png?text=CR';
 
     const SocialLinkButton = ({ url, platform }) => {
+      const { t } = useLanguage();
       if (!url) return null;
       let IconComponent = ExternalLink;
-      let platformName = "Website";
+      let platformName = t('creatorDetail.social.website');
 
-      if (url.includes('twitter.com') || url.includes('x.com')) { IconComponent = Twitter; platformName = "Twitter/X"; }
-      else if (url.includes('instagram.com')) { IconComponent = Instagram; platformName = "Instagram"; }
-      else if (url.includes('youtube.com') || url.includes('youtu.be')) { IconComponent = Youtube; platformName = "YouTube"; }
-      else if (url.includes('twitch.tv')) { IconComponent = Twitch; platformName = "Twitch"; }
+      if (url.includes('twitter.com') || url.includes('x.com')) { IconComponent = Twitter; platformName = t('creatorDetail.social.twitter'); }
+      else if (url.includes('instagram.com')) { IconComponent = Instagram; platformName = t('creatorDetail.social.instagram'); }
+      else if (url.includes('youtube.com') || url.includes('youtu.be')) { IconComponent = Youtube; platformName = t('creatorDetail.social.youtube'); }
+      else if (url.includes('twitch.tv')) { IconComponent = Twitch; platformName = t('creatorDetail.social.twitch'); }
       
       return (
         <Button variant="outline" size="sm" asChild className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-yellow-400 transition-colors">
@@ -38,6 +40,7 @@ import MembershipPanel from '@/components/creator/MembershipPanel';
     function CreatorDetailPage() {
       const { id } = useParams();
       const navigate = useNavigate();
+      const { t } = useLanguage();
       const [creator, setCreator] = useState(null);
       const [loading, setLoading] = useState(true);
       const [searchQuery, setSearchQuery] = useState(''); 
@@ -99,18 +102,18 @@ const [loadingFavorite, setLoadingFavorite] = useState(true);
               .eq('content_id', id);
             if (error) throw error;
             setIsFavorited(false);
-            toast({ title: "Removed from favorites", description: `${creator.username} removed from your favorites.`, className: "bg-blue-600 border-blue-700 text-white" });
+            toast({ title: t('creatorDetail.toasts.removedFavoriteTitle'), description: t('creatorDetail.toasts.removedFavoriteBody', { name: creator.username }), className: "bg-blue-600 border-blue-700 text-white" });
           } else {
             const { error } = await supabase
               .from('favorites')
               .insert({ user_id: user.id, content_type: 'creator', content_id: id });
             if (error) throw error;
             setIsFavorited(true);
-            toast({ title: "Added to favorites", description: `${creator.username} added to your favorites.`, className: "bg-green-600 border-green-700 text-white" });
+            toast({ title: t('creatorDetail.toasts.addedFavoriteTitle'), description: t('creatorDetail.toasts.addedFavoriteBody', { name: creator.username }), className: "bg-green-600 border-green-700 text-white" });
           }
         } catch (error) {
           console.error('Error toggling favorite:', error);
-          toast({ title: "Error", description: "Could not update favorites.", variant: "destructive" });
+          toast({ title: t('creatorDetail.toasts.favoriteErrorTitle'), description: t('creatorDetail.toasts.favoriteErrorBody'), variant: "destructive" });
         } finally {
           setLoadingFavorite(false);
         }
@@ -119,7 +122,7 @@ const [loadingFavorite, setLoadingFavorite] = useState(true);
 
       const handleOpenFlagModal = () => {
         if (!user) {
-          toast({ title: "Authentication Required", description: "Please log in to flag content.", variant: "destructive" });
+          toast({ title: t('creatorDetail.toasts.authRequiredTitle'), description: t('creatorDetail.toasts.authRequiredBody'), variant: "destructive" });
           return;
         }
         if (!creator) return;
@@ -145,9 +148,9 @@ const [loadingFavorite, setLoadingFavorite] = useState(true);
           });
           if (error) throw error;
           setCreator(prev => prev ? { ...prev, is_public: isPublic } : prev);
-          toast({ title: isPublic ? 'Creator is now public' : 'Creator hidden', className: 'bg-green-600 text-white' });
+          toast({ title: isPublic ? t('creatorDetail.toasts.creatorPublic') : t('creatorDetail.toasts.creatorHidden'), className: 'bg-green-600 text-white' });
         } catch (err) {
-          toast({ title: 'Visibility update failed', description: err.message, variant: 'destructive' });
+          toast({ title: t('creatorDetail.toasts.visibilityFailed'), description: err.message, variant: 'destructive' });
         } finally {
           setVisibilityUpdating(false);
         }
@@ -195,7 +198,7 @@ const [loadingFavorite, setLoadingFavorite] = useState(true);
 
           } catch (error) {
             toast({
-              title: 'Error fetching creator details',
+              title: t('creatorDetail.toasts.fetchErrorTitle'),
               description: error.message,
               variant: 'destructive',
             });
@@ -208,7 +211,7 @@ const [loadingFavorite, setLoadingFavorite] = useState(true);
         if (id) {
           fetchCreatorDetails();
         }
-      }, [id]);
+      }, [id, t]);
 
 
       if (loading) {
@@ -223,10 +226,10 @@ const [loadingFavorite, setLoadingFavorite] = useState(true);
         return (
           <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center text-center">
             <User className="w-24 h-24 text-gray-600 mb-4" />
-            <h1 className="text-3xl font-bold text-white mb-2">Creator Not Found</h1>
-            <p className="text-gray-400 mb-6">The creator profile you are looking for could not be found.</p>
+            <h1 className="text-3xl font-bold text-white mb-2">{t('creatorDetail.notFoundHeading')}</h1>
+            <p className="text-gray-400 mb-6">{t('creatorDetail.notFoundBody')}</p>
             <Button asChild className="golden-gradient text-black font-semibold">
-              <Link to="/">Go Back Home</Link>
+              <Link to="/">{t('creatorDetail.backHome')}</Link>
             </Button>
           </div>
         );
@@ -248,15 +251,15 @@ const [loadingFavorite, setLoadingFavorite] = useState(true);
                     onClick={handleToggleFavorite} 
                     variant="outline" 
                     className={`flex-1 ${isFavorited ? 'bg-red-500/20 border-red-500/40 text-red-300 hover:bg-red-500/30 hover:text-red-200' : 'bg-gray-500/10 border-gray-500/30 text-gray-300 hover:bg-gray-500/20 hover:text-gray-200'}`} 
-                    title={isFavorited ? "Remove from Favorites" : "Add to Favorites"}
+                    title={isFavorited ? t('creatorDetail.actions.removeFavorite') : t('creatorDetail.actions.addFavorite')}
                     disabled={loadingFavorite}
                   >
                     <Heart className={`w-4 h-4 ${isFavorited ? 'fill-current' : ''}`} />
                   </Button>
-                  <Button onClick={handleOpenFlagModal} variant="outline" className="flex-1 bg-red-500/10 border-red-500/30 text-red-300 hover:bg-red-500/20 hover:text-red-200" title="Report Creator">
+                  <Button onClick={handleOpenFlagModal} variant="outline" className="flex-1 bg-red-500/10 border-red-500/30 text-red-300 hover:bg-red-500/20 hover:text-red-200" title={t('creatorDetail.actions.reportCreator')}>
                     <Flag className="w-4 h-4" />
                   </Button>
-                  <Button onClick={() => setIsShareModalOpen(true)} variant="outline" className="flex-1 bg-blue-500/10 border-blue-500/30 text-blue-300 hover:bg-blue-500/20 hover:text-blue-200" title="Share Creator Profile">
+                  <Button onClick={() => setIsShareModalOpen(true)} variant="outline" className="flex-1 bg-blue-500/10 border-blue-500/30 text-blue-300 hover:bg-blue-500/20 hover:text-blue-200" title={t('creatorDetail.actions.shareCreator')}>
                     <ShareIcon className="w-4 h-4" />
                   </Button>
                   {profile?.is_admin && (
@@ -266,7 +269,7 @@ const [loadingFavorite, setLoadingFavorite] = useState(true);
                         variant="outline"
                         className="flex-1 bg-red-500/10 border-red-500/40 text-red-200 hover:bg-red-500/20"
                         disabled={visibilityUpdating}
-                        title="Hide creator"
+                        title={t('creatorDetail.actions.hideCreator')}
                       >
                         <EyeOff className="w-4 h-4 mr-1" />
                       </Button>
@@ -275,7 +278,7 @@ const [loadingFavorite, setLoadingFavorite] = useState(true);
                         variant="outline"
                         className="flex-1 bg-emerald-500/10 border-emerald-500/40 text-emerald-200 hover:bg-emerald-500/20"
                         disabled={visibilityUpdating}
-                        title="Make creator public"
+                        title={t('creatorDetail.actions.makePublic')}
                       >
                         <Eye className="w-4 h-4 mr-1" />
                       </Button>
@@ -311,9 +314,9 @@ const [loadingFavorite, setLoadingFavorite] = useState(true);
 
           <Tabs defaultValue="tracks" className="w-full">
             <TabsList className="grid w-full grid-cols-3 gap-2 mb-8 glass-effect p-2rounded-lg">
-              <TabsTrigger value="tracks" className="tab-button"><Music className="w-4 h-4 mr-2"/>Tracks ({tracks.length})</TabsTrigger>
-              <TabsTrigger value="albums" className="tab-button"><Disc className="w-4 h-4 mr-2"/>Albums ({albums.length})</TabsTrigger>
-              <TabsTrigger value="playlists" className="tab-button"><ListMusic className="w-4 h-4 mr-2"/>Playlists ({playlists.length})</TabsTrigger>
+              <TabsTrigger value="tracks" className="tab-button"><Music className="w-4 h-4 mr-2"/>{t('creatorDetail.tabs.tracks', { count: tracks.length })}</TabsTrigger>
+              <TabsTrigger value="albums" className="tab-button"><Disc className="w-4 h-4 mr-2"/>{t('creatorDetail.tabs.albums', { count: albums.length })}</TabsTrigger>
+              <TabsTrigger value="playlists" className="tab-button"><ListMusic className="w-4 h-4 mr-2"/>{t('creatorDetail.tabs.playlists', { count: playlists.length })}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="tracks">
@@ -337,10 +340,10 @@ const [loadingFavorite, setLoadingFavorite] = useState(true);
               originalUploaderId={selectedContentForFlag.uploaderId}
               onFlagSubmitted={() => {
                 setIsFlagModalOpen(false);
-                toast({ title: "Content Flagged", description: `${selectedContentForFlag.title} has been flagged and will be reviewed.`});
+                toast({ title: t('creatorDetail.toasts.contentFlaggedTitle'), description: t('creatorDetail.toasts.contentFlaggedBody', { title: selectedContentForFlag.title })});
                 if (selectedContentForFlag.type === 'creator' && selectedContentForFlag.id === creator?.id) {
                   setCreator(prev => prev ? ({ ...prev, is_public: false }) : null);
-                  toast({ title: "Creator Profile Hidden", description: "This creator's profile is now hidden pending review.", variant: "destructive" });
+                  toast({ title: t('creatorDetail.toasts.creatorHiddenTitle'), description: t('creatorDetail.toasts.creatorHiddenBody'), variant: "destructive" });
                   navigate('/'); 
                 }
               }}

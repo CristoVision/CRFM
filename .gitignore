@@ -7,3 +7,12 @@ dist/
 !.env.production
 
 .vscode/
+
+# Capacitor native artifacts (keep ios/ and android/ source committed once generated)
+ios/App/build/
+ios/App/Pods/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/

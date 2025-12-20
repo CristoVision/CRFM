@@ -11,6 +11,7 @@ import { redeemCode } from '@/lib/billingActions';
 import { AlertCircle, CheckCircle, Loader2, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { CROSSCOIN_ICON_URL } from '@/lib/brandAssets';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // --- Stripe Imports ---
 import { loadStripe } from '@stripe/stripe-js';
@@ -19,21 +20,6 @@ import CheckoutForm from './CheckoutForm';
 
 const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : null;
-
-const ACTION_COPY = {
-  add_funds: {
-    title: 'Add Funds',
-    description: 'Top up your CrossCoins balance. All payments are processed securely by Stripe.',
-  },
-  withdraw: {
-    title: 'Withdraw',
-    description: 'Request a payout from your withdrawable balance (stream royalties). Top-ups are spendable inside the platform and are not withdrawable.',
-  },
-  redeem_code: {
-    title: 'Redeem Code',
-    description: 'Redeem a promo or gift code. Codes are validated server-side.',
-  },
-};
 
 const defaultState = {
   amount: '',
@@ -44,6 +30,7 @@ const defaultState = {
 };
 
 const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId, onSuccess, returnUrl }) => {
+  const { t } = useLanguage();
   const [formState, setFormState] = useState(defaultState);
   const [submitting, setSubmitting] = useState(false);
   const [addFundsUnit, setAddFundsUnit] = useState('cc'); // 'cc' | 'usd'
@@ -62,7 +49,30 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
     }
   }, [open, actionType]);
 
-  const copy = useMemo(() => ACTION_COPY[actionType] || {}, [actionType]);
+  const actionCopy = useMemo(
+    () => ({
+      add_funds: {
+        title: t('wallet.actions.addFundsTitle'),
+        description: t('wallet.actions.addFundsDesc'),
+        successTitle: t('wallet.actions.successTitleAdd'),
+        successDescription: t('wallet.actions.successDescAdd'),
+      },
+      withdraw: {
+        title: t('wallet.actions.withdrawTitle'),
+        description: t('wallet.actions.withdrawDesc'),
+        successTitle: t('wallet.actions.successTitleWithdraw'),
+        successDescription: t('wallet.actions.successDescWithdraw'),
+      },
+      redeem_code: {
+        title: t('wallet.actions.redeemCodeTitle'),
+        description: t('wallet.actions.redeemCodeDesc'),
+        successTitle: t('wallet.actions.successTitleRedeem'),
+        successDescription: t('wallet.actions.successDescRedeem'),
+      },
+    }),
+    [t]
+  );
+  const copy = actionCopy[actionType] || {};
 
   if (!actionType) return null;
 
@@ -84,20 +94,20 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
 
   const handleContinueToAddFunds = async () => {
     if (!userId) {
-      toast({ title: 'Login required', description: 'Please sign in to continue.', variant: 'destructive' });
+      toast({ title: t('wallet.actions.loginRequired'), description: t('wallet.actions.loginRequiredBody'), variant: 'destructive' });
       return;
     }
     if (!STRIPE_PUBLISHABLE_KEY || !stripePromise) {
       toast({
-        title: 'Stripe not configured',
-        description: 'Missing VITE_STRIPE_PUBLISHABLE_KEY on this deployment.',
+        title: t('wallet.actions.stripeNotConfigured'),
+        description: t('wallet.actions.stripeMissingKey'),
         variant: 'destructive',
       });
       return;
     }
     const amountCc = amountCcDerived;
     if (!Number.isFinite(amountCc) || amountCc <= 0) {
-      toast({ title: 'Invalid amount', description: 'Enter a positive amount.', variant: 'destructive' });
+      toast({ title: t('wallet.actions.invalidAmount'), description: t('wallet.actions.invalidAmountBody'), variant: 'destructive' });
       return;
     }
     setSubmitting(true);
@@ -112,8 +122,8 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
       setStep('payment');
     } catch (err) {
       toast({
-        title: 'Could not start payment',
-        description: err.message || 'An unexpected error occurred. Please try again.',
+        title: t('wallet.actions.paymentStartFailed'),
+        description: err.message || t('wallet.actions.paymentStartFailedBody'),
         variant: 'destructive',
       });
     } finally {
@@ -140,16 +150,16 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
 
     if (result.success) {
       toast({
-        title: ACTION_COPY[actionType].successTitle,
-        description: result?.data?.type === 'membership_grant' ? 'Membership granted.' : ACTION_COPY[actionType].successDescription,
+        title: actionCopy[actionType].successTitle,
+        description: result?.data?.type === 'membership_grant' ? t('wallet.actions.membershipGranted') : actionCopy[actionType].successDescription,
         className: 'bg-green-600 text-white',
       });
       onSuccess?.(result);
       onOpenChange(false);
     } else {
       toast({
-        title: 'Request failed',
-        description: result.error || 'Could not submit your request.',
+        title: t('wallet.actions.requestFailed'),
+        description: result.error || t('wallet.actions.requestFailedBody'),
         variant: 'destructive',
       });
     }
@@ -163,15 +173,15 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
             <DialogHeader className="space-y-2">
               <DialogTitle className="golden-text text-2xl flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-yellow-400" />
-                Stripe not configured
+                {t('wallet.actions.stripeNotConfigured')}
               </DialogTitle>
               <DialogDescription className="text-gray-300 leading-relaxed">
-                Missing <span className="font-semibold">VITE_STRIPE_PUBLISHABLE_KEY</span> on this deployment.
+                {t('wallet.actions.stripeMissingKey')}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="pt-5">
               <Button type="button" variant="outline" onClick={() => setStep('amount')} className="text-gray-300 border-gray-500 hover:border-yellow-400 hover:text-yellow-300">
-                Back
+                {t('wallet.actions.back')}
               </Button>
             </DialogFooter>
           </>
@@ -185,10 +195,10 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
               <Button variant="ghost" size="icon" onClick={() => setStep('amount')} className="h-7 w-7">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <DialogTitle className="golden-text text-2xl">Complete Your Payment</DialogTitle>
+              <DialogTitle className="golden-text text-2xl">{t('wallet.actions.completePayment')}</DialogTitle>
             </div>
             <DialogDescription className="text-gray-300 leading-relaxed pl-10">
-              Your payment is processed securely by Stripe. We do not handle your card information.
+              {t('wallet.actions.stripePaymentNote')}
             </DialogDescription>
           </DialogHeader>
           <div className="px-1 py-4">
@@ -216,7 +226,7 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
           <div className="space-y-2">
             <div className="flex items-end justify-between gap-3">
               <Label htmlFor="wallet-amount" className="text-gray-200">
-                Amount ({addFundsUnit === 'usd' ? 'USD' : 'CrossCoins'})
+                {t('wallet.actions.amountLabel', { unit: addFundsUnit === 'usd' ? t('wallet.actions.unitUsd') : t('wallet.actions.unitCc') })}
               </Label>
               <div className="flex items-center gap-2 text-xs text-gray-300">
                 <button
@@ -224,14 +234,14 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
                   onClick={() => setAddFundsUnit('cc')}
                   className={`px-2 py-1 rounded-md border ${addFundsUnit === 'cc' ? 'border-yellow-400/60 text-yellow-200 bg-yellow-400/10' : 'border-white/10 hover:border-white/20'}`}
                 >
-                  CC
+                  {t('wallet.actions.unitCc')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setAddFundsUnit('usd')}
                   className={`px-2 py-1 rounded-md border ${addFundsUnit === 'usd' ? 'border-yellow-400/60 text-yellow-200 bg-yellow-400/10' : 'border-white/10 hover:border-white/20'}`}
                 >
-                  USD
+                  {t('wallet.actions.unitUsd')}
                 </button>
               </div>
             </div>
@@ -242,7 +252,7 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
               step={addFundsUnit === 'usd' ? '0.01' : 'any'}
               value={formState.amount}
               onChange={(e) => setFormState((prev) => ({ ...prev, amount: e.target.value }))}
-              placeholder={addFundsUnit === 'usd' ? 'e.g., 10' : 'e.g., 500'}
+              placeholder={addFundsUnit === 'usd' ? t('wallet.actions.amountPlaceholderUsd') : t('wallet.actions.amountPlaceholderCc')}
               className="bg-black/20 border-white/10 text-white placeholder-gray-500 focus:border-yellow-400"
               required
             />
@@ -257,19 +267,23 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
                     e.currentTarget.src = '/favicon-32x32.png';
                   }}
                 />
-                <span>Rate: 1 CC = ${ccToUsd.toFixed(2)} USD</span>
+                <span>{t('wallet.actions.rateLabel', { rate: ccToUsd.toFixed(2) })}</span>
               </p>
-              <p>Typical limits: $5–$100 per top-up (server-enforced).</p>
+              <p>{t('wallet.actions.typicalLimits')}</p>
               {Number.isFinite(amountCcDerived) && amountCcDerived > 0 && (
                 <p>
-                  You pay <span className="text-gray-200">${Number(amountUsdDerived).toFixed(2)}</span> and receive{' '}
-                  <span className="text-yellow-200">{Number(amountCcDerived).toFixed(2)} CC</span> (estimated).
+                  {t('wallet.actions.youPay', {
+                    amount: `$${Number(amountUsdDerived).toFixed(2)}`,
+                    cc: Number(amountCcDerived).toFixed(2),
+                  })}
                 </p>
               )}
               {Number.isFinite(amountCcDerived) && amountCcDerived > 0 && (
                 <p>
-                  After top-up: <span className="text-yellow-200">{Number((Number(balance) || 0) + amountCcDerived).toFixed(2)} CC</span>{' '}
-                  (~${Number(((Number(balance) || 0) + amountCcDerived) * ccToUsd).toFixed(2)} USD)
+                  {t('wallet.actions.afterTopUp', {
+                    cc: Number((Number(balance) || 0) + amountCcDerived).toFixed(2),
+                    usd: `$${Number(((Number(balance) || 0) + amountCcDerived) * ccToUsd).toFixed(2)}`,
+                  })}
                 </p>
               )}
             </div>
@@ -282,11 +296,11 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
             onClick={() => onOpenChange(false)}
             className="text-gray-300 border-gray-500 hover:border-yellow-400 hover:text-yellow-300"
           >
-            Cancel
+            {t('wallet.actions.cancel')}
           </Button>
           <Button type="button" onClick={handleContinueToAddFunds} className="golden-gradient text-black font-semibold" disabled={submitting}>
             {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-            Continue
+            {t('wallet.actions.continue')}
           </Button>
         </DialogFooter>
       </>
@@ -308,38 +322,38 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
       {actionType !== 'redeem_code' && (
         <div className="space-y-2">
           <Label htmlFor="wallet-amount-legacy" className="text-gray-200">
-            {actionType === 'withdraw' ? 'Amount (Withdrawable CC)' : 'Amount (CrossCoins)'}
+            {actionType === 'withdraw' ? t('wallet.actions.amountWithdrawable') : t('wallet.actions.amountCrossCoins')}
           </Label>
-          <Input id="wallet-amount-legacy" type="number" min="0" step="any" value={formState.amount} onChange={(e) => setFormState((prev) => ({ ...prev, amount: e.target.value }))} placeholder="e.g., 250" className="bg-black/20 border-white/10 text-white placeholder-gray-500 focus:border-yellow-400" required/>
-          {actionType === 'withdraw' && (<p className="text-xs text-gray-400">Available: {balance?.toLocaleString?.() || balance} CC</p>)}
+          <Input id="wallet-amount-legacy" type="number" min="0" step="any" value={formState.amount} onChange={(e) => setFormState((prev) => ({ ...prev, amount: e.target.value }))} placeholder={t('wallet.actions.amountLegacyPlaceholder')} className="bg-black/20 border-white/10 text-white placeholder-gray-500 focus:border-yellow-400" required/>
+          {actionType === 'withdraw' && (<p className="text-xs text-gray-400">{t('wallet.actions.available', { amount: balance?.toLocaleString?.() || balance })}</p>)}
         </div>
       )}
       {actionType === 'redeem_code' && (
          <div className="space-y-2">
-            <Label htmlFor="wallet-code" className="text-gray-200">Code</Label>
-            <Input id="wallet-code" type="text" value={formState.code} onChange={(e) => setFormState((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))} placeholder="ENTER-CODE-123" className="bg-black/20 border-white/10 text-white placeholder-gray-500 focus:border-yellow-400 uppercase" required />
+            <Label htmlFor="wallet-code" className="text-gray-200">{t('wallet.actions.codeLabel')}</Label>
+            <Input id="wallet-code" type="text" value={formState.code} onChange={(e) => setFormState((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))} placeholder={t('wallet.actions.codePlaceholder')} className="bg-black/20 border-white/10 text-white placeholder-gray-500 focus:border-yellow-400 uppercase" required />
          </div>
       )}
       {actionType === 'withdraw' && (
         <>
           <div className="space-y-2">
-            <Label>Payout Method</Label>
+            <Label>{t('wallet.actions.payoutMethod')}</Label>
             <Select value={formState.method} onValueChange={(value) => setFormState((prev) => ({ ...prev, method: value }))}>
               <SelectTrigger className="w-full bg-black/20 border-white/10 text-white focus:border-yellow-400"><SelectValue /></SelectTrigger>
               <SelectContent className="bg-neutral-900 border-neutral-700 text-white">
-                <SelectItem value="paypal">PayPal</SelectItem>
-                <SelectItem value="bank_transfer">Bank Transfer (ACH)</SelectItem>
-                <SelectItem value="wise">Wise / International</SelectItem>
+                <SelectItem value="paypal">{t('wallet.actions.payoutOptions.paypal')}</SelectItem>
+                <SelectItem value="bank_transfer">{t('wallet.actions.payoutOptions.bankTransfer')}</SelectItem>
+                <SelectItem value="wise">{t('wallet.actions.payoutOptions.wise')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Payout Details</Label>
-            <Input type="text" value={formState.details} onChange={(e) => setFormState((prev) => ({ ...prev, details: e.target.value }))} placeholder="PayPal email or bank account details" className="bg-black/20 border-white/10 text-white placeholder-gray-500 focus:border-yellow-400" />
+            <Label>{t('wallet.actions.payoutDetails')}</Label>
+            <Input type="text" value={formState.details} onChange={(e) => setFormState((prev) => ({ ...prev, details: e.target.value }))} placeholder={t('wallet.actions.payoutDetailsPlaceholder')} className="bg-black/20 border-white/10 text-white placeholder-gray-500 focus:border-yellow-400" />
           </div>
           <div className="space-y-2">
-            <Label className="text-gray-200">Notes (Optional)</Label>
-            <Textarea value={formState.notes} onChange={(e) => setFormState((prev) => ({ ...prev, notes: e.target.value }))} placeholder="Timing constraints, compliance details, etc." className="bg-black/20 border-white/10 text-white placeholder-gray-500 focus:border-yellow-400 min-h-[90px]" />
+            <Label className="text-gray-200">{t('wallet.actions.notesOptional')}</Label>
+            <Textarea value={formState.notes} onChange={(e) => setFormState((prev) => ({ ...prev, notes: e.target.value }))} placeholder={t('wallet.actions.notesPlaceholder')} className="bg-black/20 border-white/10 text-white placeholder-gray-500 focus:border-yellow-400 min-h-[90px]" />
           </div>
         </>
       )}
@@ -347,13 +361,13 @@ const WalletActionModal = ({ actionType, open, onOpenChange, balance = 0, userId
       <DialogFooter className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pt-4">
         <div className="flex items-center text-green-300 text-xs gap-2">
           <CheckCircle className="w-4 h-4" />
-          <span>Secure handling via admin review.</span>
+          <span>{t('wallet.actions.secureHandling')}</span>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1 sm:flex-none text-gray-300 border-gray-500 hover:border-yellow-400 hover:text-yellow-300">Cancel</Button>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1 sm:flex-none text-gray-300 border-gray-500 hover:border-yellow-400 hover:text-yellow-300">{t('wallet.actions.cancel')}</Button>
           <Button type="submit" className="flex-1 sm:flex-none golden-gradient text-black font-semibold" disabled={submitting}>
             {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-            Submit Request
+            {t('wallet.actions.submitRequest')}
           </Button>
         </div>
       </DialogFooter>
