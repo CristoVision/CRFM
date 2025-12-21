@@ -192,7 +192,6 @@ import React, { useState, useEffect, useCallback } from 'react';
                   return {
                     playlist_id: initialPlaylist.id,
                     track_id: track.id,
-                    added_at: new Date().toISOString(),
                     order_in_playlist: maxOrder,
                   };
                 });

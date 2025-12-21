@@ -52,7 +52,9 @@ function TracksTab({ searchQuery = '', viewMode = 'grid', initialTracks, isCreat
             setLoading(true);
             const { data, error } = await supabase
               .from('tracks')
-              .select('id, title, creator_display_name, uploader_id, audio_file_url, genre, cover_art_url, album_id, release_date, created_at, stream_cost, is_public')
+              .select(
+                'id, title, creator_display_name, uploader_id, audio_file_url, genre, cover_art_url, video_cover_art_url, album_id, release_date, created_at, stream_cost, is_public, albums(cover_art_url, video_cover_art_url), profiles!tracks_uploader_id_profiles_fkey(avatar_url)'
+              )
               .eq('is_public', true)
               .order('created_at', { ascending: false });
 

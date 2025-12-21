@@ -16,8 +16,18 @@ const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1505740420928-5e560
       const { user, favorites, addFavorite, removeFavorite } = useAuth();
       const { isProcessingPayment, currentTrack: playerCurrentTrack } = usePlayer();
       const { 
-        id, title, creator_display_name, cover_art_url, genre, 
-        release_date, stream_cost, lrc_file_path, is_instrumental
+        id,
+        title,
+        creator_display_name,
+        cover_art_url,
+        video_cover_art_url,
+        genre,
+        release_date,
+        stream_cost,
+        lrc_file_path,
+        is_instrumental,
+        albums,
+        profiles
       } = item;
 
       const [isFavorite, setIsFavorite] = useState(false);
@@ -94,11 +104,18 @@ const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1505740420928-5e560
           >
             <div className="relative flex-shrink-0">
               <img 
-                src={cover_art_url || DEFAULT_COVER_ART}
+                src={
+                  cover_art_url ||
+                  video_cover_art_url ||
+                  albums?.video_cover_art_url ||
+                  albums?.cover_art_url ||
+                  profiles?.avatar_url ||
+                  DEFAULT_COVER_ART
+                }
                 alt={title}
                 className="w-12 h-12 rounded-md object-cover border border-white/10"
               />
-              <div className="absolute inset-0 bg-black/50 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <div className="absolute inset-0 bg-black/50 rounded-md flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
                 <Button
                   variant="ghost"
                   size="icon"

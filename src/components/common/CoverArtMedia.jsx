@@ -26,7 +26,10 @@ const CoverArtMedia = ({
     if (cleaned.startsWith('storage/v1/')) {
       return `${supabaseUrl}/${cleaned}`;
     }
-    const path = cleaned.includes('/') ? cleaned : `videocoverart/${cleaned}`;
+    if (!cleaned.includes('/')) {
+      return null;
+    }
+    const path = cleaned;
     return `${supabaseUrl}/storage/v1/object/public/${path}`;
   }, [videoUrl, supabaseUrl]);
 

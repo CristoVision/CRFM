@@ -109,7 +109,6 @@ import { ListMusic, PlusCircle, Loader2, Image as ImageIcon } from 'lucide-react
             const playlistTracksData = selectedTracks.map((track, index) => ({
               playlist_id: newPlaylist.id,
               track_id: track.id,
-              added_at: new Date().toISOString(),
               order_in_playlist: index + 1, // Basic ordering
             }));
             const { error: tracksError } = await supabase

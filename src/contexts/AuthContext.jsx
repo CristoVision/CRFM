@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
@@ -29,6 +29,7 @@ export function AuthProvider({ children }) {
   const [authTestErrorDetails, setAuthTestErrorDetails] = useState(null);
   const [authTestLoading, setAuthTestLoading] = useState(false);
   const [authTestLastRun, setAuthTestLastRun] = useState(null);
+  const ensuredPlaylistsRef = useRef({});
   const navigate = useNavigate();
 
   const normalizeProfile = useCallback((rawProfile) => {
@@ -61,6 +62,47 @@ setUser(currentUser);
   if (userProfile) {
     const userFavorites = await fetchFavorites(currentUser.id);
     setFavorites(userFavorites);
+    const alreadyEnsured = ensuredPlaylistsRef.current[currentUser.id];
+    if (!alreadyEnsured) {
+      ensuredPlaylistsRef.current[currentUser.id] = true;
+      try {
+        const { data: existingPlaylists, error: playlistError } = await supabase
+          .from('playlists')
+          .select('id, title, is_favorites_playlist')
+          .eq('creator_id', currentUser.id);
+        if (playlistError) throw playlistError;
+        const favoritesExists = (existingPlaylists || []).some(p => p.is_favorites_playlist);
+        const totalCount = (existingPlaylists || []).length;
+        const creates = [];
+        if (!favoritesExists) {
+          creates.push({
+            title: 'Favorites',
+            description: 'Your saved favorites.',
+            creator_id: currentUser.id,
+            is_public: false,
+            is_favorites_playlist: true
+          });
+        }
+        if (totalCount < 3) {
+          const missing = Math.max(0, 3 - totalCount - (favoritesExists ? 0 : 1));
+          for (let i = 0; i < missing; i += 1) {
+            creates.push({
+              title: `My Playlist ${i + 1}`,
+              description: 'Personal playlist.',
+              creator_id: currentUser.id,
+              is_public: false,
+              is_favorites_playlist: false
+            });
+          }
+        }
+        if (creates.length) {
+          const { error: createError } = await supabase.from('playlists').insert(creates);
+          if (createError) throw createError;
+        }
+      } catch (playlistErr) {
+        console.warn('Default playlist seed failed:', playlistErr?.message || playlistErr);
+      }
+    }
   } else {
     setFavorites([]);
   }
