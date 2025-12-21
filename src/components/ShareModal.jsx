@@ -74,7 +74,14 @@ import React, { useState, useEffect, useRef } from 'react';
             p_entity_id: entityId,
           });
 
-          if (error) throw error;
+          if (error) {
+            if (String(error.message || '').includes('404')) {
+              console.warn('Share counts RPC missing; skipping counts fetch.');
+              setLoadingCounts(false);
+              return;
+            }
+            throw error;
+          }
           
           setShareCounts({
             total: data.total_shares || 0,
@@ -254,7 +261,7 @@ import React, { useState, useEffect, useRef } from 'react';
                     <iframe
                       srcDoc={currentEmbedCode}
                       className="w-full h-full"
-                      sandbox="allow-scripts allow-same-origin allow-presentation" 
+                      sandbox="allow-scripts allow-same-origin"
                       allow="autoplay; encrypted-media"
                       title="Embed Preview"
                     />

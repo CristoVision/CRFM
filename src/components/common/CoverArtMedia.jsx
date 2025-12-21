@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 const detectCarMode = () => {
@@ -16,25 +16,36 @@ const CoverArtMedia = ({
   showBadge = false,
 }) => {
   const [useVideo, setUseVideo] = useState(false);
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
+  const normalizedVideoUrl = useMemo(() => {
+    if (!videoUrl) return null;
+    if (videoUrl.startsWith('http') || videoUrl.startsWith('data:') || videoUrl.startsWith('blob:')) return videoUrl;
+    if (videoUrl.startsWith('/')) return videoUrl;
+    if (!supabaseUrl) return null;
+    const cleaned = videoUrl.replace(/^\/+/, '');
+    const path = cleaned.includes('/') ? cleaned : `videocoverart/${cleaned}`;
+    return `${supabaseUrl}/storage/v1/object/public/${path}`;
+  }, [videoUrl, supabaseUrl]);
 
   useEffect(() => {
-    if (!videoUrl) {
+    if (!normalizedVideoUrl) {
       setUseVideo(false);
       return;
     }
     const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
     const blockVideo = detectCarMode();
     setUseVideo(!prefersReducedMotion && !blockVideo);
-  }, [videoUrl]);
+  }, [normalizedVideoUrl]);
 
   const handleVideoError = () => setUseVideo(false);
 
-  if (useVideo && videoUrl) {
+  if (useVideo && normalizedVideoUrl) {
     return (
       <div className={cn('relative overflow-hidden bg-black', roundedClass, className)}>
         <video
-          key={videoUrl}
-          src={videoUrl}
+          key={normalizedVideoUrl}
+          src={normalizedVideoUrl}
           poster={imageUrl || undefined}
           className={cn('w-full h-full', objectFitClass)}
           loop
