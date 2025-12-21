@@ -10,6 +10,21 @@ import { Loader2, PlaySquare, RefreshCw, UploadCloud, X } from 'lucide-react';
 const ACCEPTED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'image/gif'];
 const MAX_VIDEO_COVER_ART_SECONDS = 20;
 const MAX_VIDEO_COVER_ART_TOLERANCE_SECONDS = 0.5;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+const normalizeVideoUrl = (value) => {
+  if (!value || typeof value !== 'string') return null;
+  if (value.startsWith('http') || value.startsWith('data:') || value.startsWith('blob:')) return value;
+  if (!SUPABASE_URL) return null;
+
+  const cleaned = value.replace(/^\/+/, '');
+  if (cleaned.startsWith('storage/v1/')) {
+    return `${SUPABASE_URL}/${cleaned}`;
+  }
+  if (!cleaned.includes('/')) return null;
+  if (!cleaned.startsWith('videocoverart/')) return null;
+  return `${SUPABASE_URL}/storage/v1/object/public/${cleaned}`;
+};
 
 const VideoCoverArtSelector = ({
   userId,
@@ -27,7 +42,7 @@ const VideoCoverArtSelector = ({
   const selectedLabel = useMemo(() => {
     if (!value) return null;
     try {
-      const url = new URL(value);
+      const url = new URL(normalizeVideoUrl(value) || value);
       return decodeURIComponent(url.pathname.split('/').pop() || 'Selected video');
     } catch {
       return 'Selected video';
@@ -146,11 +161,11 @@ const VideoCoverArtSelector = ({
         </Button>
       </div>
 
-      {value && (
+      {value && normalizeVideoUrl(value) && (
         <div className="relative rounded-lg overflow-hidden border border-yellow-500/30">
           <video
             key={value}
-            src={value}
+            src={normalizeVideoUrl(value)}
             className="w-full h-48 object-cover bg-black"
             loop
             muted
