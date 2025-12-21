@@ -112,8 +112,18 @@ begin
 end;
 $$;
 
+create or replace function public.ensure_default_playlists_trigger()
+returns trigger
+language plpgsql
+as $$
+begin
+  perform public.ensure_default_playlists(new.id);
+  return new;
+end;
+$$;
+
 drop trigger if exists trg_profiles_default_playlists on public.profiles;
 create trigger trg_profiles_default_playlists
   after insert on public.profiles
   for each row
-  execute function public.ensure_default_playlists(new.id);
+  execute function public.ensure_default_playlists_trigger();
