@@ -10,8 +10,8 @@ const PublicGamesDisplay = () => {
   const [games, setGames] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { t } = useLanguage();
-  const duTcgUrl = import.meta.env.VITE_DU_TCG_PR_URL;
-  const duTcgMedia = import.meta.env.VITE_DU_TCG_PR_MEDIA_URL;
+  const duTcgUrl = import.meta.env.VITE_DU_TCG_PR_URL || '/du';
+  const duTcgMedia = import.meta.env.VITE_DU_TCG_PR_MEDIA_URL || '/icon-512.png';
 
   const mergeDuTcg = (list) => {
     const normalized = list.map(game => ({ ...game, titleKey: (game.title || '').toLowerCase().trim() }));
