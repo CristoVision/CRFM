@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Disc, Save, Loader2, UploadCloud, Music, PlusCircle, Trash2, GripVertical } from 'lucide-react';
-import { uploadFileToSupabase } from '@/components/formUtils';
+import { uploadFileToSupabase, normalizeTextInput } from '@/components/formUtils';
 import { parseBlob } from 'music-metadata-browser';
 import VideoCoverArtSelector from '@/components/formElements/VideoCoverArtSelector';
 
@@ -268,7 +268,7 @@ const EditAlbumModal = ({ isOpen, onOpenChange, album, onAlbumUpdated }) => {
           const trackPayload = {
             uploader_id: user.id,
             creator_display_name: profile.display_name || profile.username || 'Unknown Artist',
-            title: item.meta?.title || item.file.name.replace(/\.[^/.]+$/, ''),
+            title: normalizeTextInput(item.meta?.title || item.file.name.replace(/\.[^/.]+$/, '')),
             genre: album.genre || null,
             languages: Array.isArray(album.languages) ? album.languages : (typeof album.languages === 'string' ? album.languages.split(',').map(s => s.trim()).filter(Boolean) : []),
             release_date: album.release_date || null,

@@ -10,7 +10,7 @@ import React, { useState, useEffect } from 'react';
     import { toast } from '@/components/ui/use-toast';
     import { Edit3, Loader2, CheckCircle } from 'lucide-react';
     import MultiSelectCombobox from '@/components/formElements/MultiSelectCombobox';
-    import { defaultLanguages } from '@/components/formUtils';
+    import { defaultLanguages, normalizeTextInput } from '@/components/formUtils';
     import FileUploadProgress from '@/components/formElements/FileUploadProgress';
 
     const VIDEO_BUCKET = 'video';
@@ -169,6 +169,8 @@ import React, { useState, useEffect } from 'react';
         try {
           const updateData = {
             ...formData,
+            title: normalizeTextInput(formData.title),
+            description: normalizeTextInput(formData.description),
             storage_path: updatedVideoStoragePath,
             cover_art_url: updatedCoverArtUrl,
             updated_at: new Date().toISOString(),

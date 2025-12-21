@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Music, Save, Loader2 } from 'lucide-react';
-import { uploadFileToSupabase } from '@/components/formUtils'; 
+import { uploadFileToSupabase, normalizeTextInput } from '@/components/formUtils';
 import VideoCoverArtSelector from '@/components/formElements/VideoCoverArtSelector';
 
     const EditTrackModal = ({ isOpen, onOpenChange, track, onTrackUpdated }) => {
@@ -94,6 +94,9 @@ import VideoCoverArtSelector from '@/components/formElements/VideoCoverArtSelect
 
           if (key === 'languages' && typeof formValue === 'string') {
             formValue = formValue.split(',').map(lang => lang.trim()).filter(Boolean);
+          }
+          if (key === 'title' || key === 'lyrics_text') {
+            formValue = normalizeTextInput(formValue);
           }
           if (key === 'track_number_on_album') {
             formValue = parseInt(formValue, 10);

@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
+import { normalizeTextInput } from '@/components/formUtils';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertTriangle, CheckCircle, Cloud, FolderUp, Loader2, Music, RefreshCw, Upload, XCircle } from 'lucide-react';
 
@@ -742,7 +743,7 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
 
         const albumPayload = {
           uploader_id: user.id,
-          title: albumTitle.trim(),
+          title: normalizeTextInput(albumTitle.trim()),
           creator_display_name: creatorDisplayName,
           cover_art_url: albumCoverUrl,
           is_public: DEFAULTS.is_public,
@@ -774,7 +775,7 @@ const CreatorBulkUploadWorkspace = ({ open, onOpenChange }) => {
 
         const trackPayload = {
           uploader_id: user.id,
-          title: t.title?.trim() || 'Untitled',
+          title: normalizeTextInput(t.title?.trim() || 'Untitled'),
           creator_display_name: creatorDisplayName,
           audio_file_url: audioUrl,
           audio_storage_key: audioMeta.storageKey,

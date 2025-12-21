@@ -9,7 +9,7 @@ import React, { useState, useEffect, useCallback } from 'react';
     import ConfettiCelebration from '@/components/common/ConfettiCelebration';
     import TrackFormFields from '@/components/formElements/TrackFormFields';
     import AcknowledgementField from '@/components/formElements/AcknowledgementField';
-    import { uploadFileToSupabase, validateTrackForm, initialTrackFormData as formUtilsInitialTrackData } from '@/components/formUtils';
+    import { uploadFileToSupabase, validateTrackForm, initialTrackFormData as formUtilsInitialTrackData, normalizeTextInput } from '@/components/formUtils';
     import { UploadCloud, Save, Loader2 } from 'lucide-react';
 
     const LOCAL_STORAGE_KEY_CREATE_TRACK = 'crfm_create_track_draft';
@@ -194,7 +194,7 @@ import React, { useState, useEffect, useCallback } from 'react';
           const trackToInsert = {
             uploader_id: user.id,
             creator_display_name: profile.display_name || profile.username || 'Unknown Artist',
-            title: formData.title,
+            title: normalizeTextInput(formData.title),
             genre: formData.genre === 'Other' ? formData.customGenre : formData.genre,
             languages: formData.languages.map(lang => lang.value),
             release_date: formData.release_date,
@@ -204,7 +204,7 @@ import React, { useState, useEffect, useCallback } from 'react';
             ai_in_production: formData.ai_in_production,
             ai_in_artwork: formData.ai_in_artwork,
             ai_in_lyrics: formData.ai_in_lyrics,
-            lyrics_text: formData.lyrics_text,
+            lyrics_text: normalizeTextInput(formData.lyrics_text),
             lrc_file_path: formData.lrc_file_path,
             audio_file_url,
             cover_art_url,

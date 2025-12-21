@@ -9,7 +9,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
     import ConfettiCelebration from '@/components/common/ConfettiCelebration';
 import AlbumFormFields from '@/components/formElements/AlbumFormFields';
 import AlbumTrackList from '@/components/formElements/AlbumTrackList';
-import { uploadFileToSupabase, validateTrackForm, initialTrackFormData as formUtilsInitialTrackData } from '@/components/formUtils';
+import { uploadFileToSupabase, validateTrackForm, initialTrackFormData as formUtilsInitialTrackData, normalizeTextInput } from '@/components/formUtils';
     import { Disc, Save, Loader2 } from 'lucide-react';
 
     const LOCAL_STORAGE_KEY_CREATE_ALBUM = 'crfm_create_album_draft';
@@ -254,7 +254,7 @@ const initialAlbumFormData = {
           const albumToInsert = {
             uploader_id: user.id,
             creator_display_name: profile.display_name || profile.username || 'Unknown Artist',
-            title: albumData.title,
+            title: normalizeTextInput(albumData.title),
             release_date: albumData.release_date,
             genre: albumData.genre === 'Other' ? albumData.customGenre : albumData.genre,
             languages: albumData.languages.map(lang => lang.value),
@@ -273,7 +273,7 @@ const initialAlbumFormData = {
             album_id: newAlbum.id,
             uploader_id: user.id,
             creator_display_name: profile.display_name || profile.username || 'Unknown Artist',
-            title: track.title,
+            title: normalizeTextInput(track.title),
             genre: track.genre === 'Other' ? track.customGenre : track.genre,
             languages: track.languages.map(lang => lang.value),
             release_date: track.release_date,
@@ -283,7 +283,7 @@ const initialAlbumFormData = {
             ai_in_production: track.ai_in_production,
             ai_in_artwork: track.ai_in_artwork,
             ai_in_lyrics: track.ai_in_lyrics,
-            lyrics_text: track.lyrics_text,
+            lyrics_text: normalizeTextInput(track.lyrics_text),
             lrc_file_path: track.lrc_file_path,
             audio_file_url: track.audio_file_url,
             cover_art_url: track.cover_art_url,

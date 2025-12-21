@@ -9,6 +9,11 @@ export const defaultLanguages = [
   { value: "Japanese", label: "Japanese (日本語)" },
 ];
 
+export const normalizeTextInput = (value) => {
+  if (typeof value !== 'string') return value;
+  return value.normalize('NFC');
+};
+
 export const initialTrackFormData = {
   title: '',
   genre: '',

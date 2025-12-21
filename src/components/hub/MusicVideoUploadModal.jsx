@@ -11,7 +11,7 @@ import React, { useState, useEffect, useRef } from 'react';
     import { toast } from '@/components/ui/use-toast';
     import { UploadCloud, Loader2 } from 'lucide-react';
     import MultiSelectCombobox from '@/components/formElements/MultiSelectCombobox';
-    import { defaultLanguages } from '@/components/formUtils';
+import { defaultLanguages, normalizeTextInput } from '@/components/formUtils';
     import ConfettiCelebration from '@/components/common/ConfettiCelebration';
 
     const VIDEO_BUCKET = 'video';
@@ -156,8 +156,8 @@ import React, { useState, useEffect, useRef } from 'react';
 
             const videoData = {
                 uploader_id: user.id,
-                title,
-                description,
+                title: normalizeTextInput(title),
+                description: normalizeTextInput(description),
                 language,
                 cost_cc: 0.5,
                 is_public: isPublic,
