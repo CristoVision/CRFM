@@ -97,6 +97,20 @@ error: lrcError,
 hasLrc
   } = useLrcLoader(activePlayingTrack, currentTime);
 
+  const normalizeTrackForPlayer = useCallback((track) => {
+    if (!track) return track;
+    const albumCover = track.album_cover_art_url || track.albums?.cover_art_url || null;
+    const albumVideo = track.album_video_cover_art_url || track.albums?.video_cover_art_url || null;
+    const creatorAvatar = track.creator_avatar_url || track.profiles?.avatar_url || null;
+    return {
+      ...track,
+      album_cover_art_url: albumCover,
+      album_video_cover_art_url: albumVideo,
+      creator_avatar_url: creatorAvatar,
+      cover_art_url: track.cover_art_url || albumCover || creatorAvatar || track.cover_art_url,
+    };
+  }, []);
+
   // SECTION: Core playback orchestrator
   const actuallyPlayTrack = useCallback((track, resumeAt = 0) => {
 setActivePlayingTrack(track);
@@ -112,31 +126,32 @@ setTimeout(() => {
   // SECTION: Public entry point to request playback (handles billing/embeds/self-uploader)
   const handlePlayRequest = useCallback(async (trackToPlay, _trackQueueIgnored = []) => {
 if (!trackToPlay || (isProcessingPayment && activePlayingTrack?.id !== trackToPlay.id)) return;
+const normalizedTrack = normalizeTrackForPlayer(trackToPlay);
 
 // Free for uploader
-if (user && trackToPlay.uploader_id === user.id) {
-  const resumePos = getSavedTrackPosition(trackToPlay.id);
-  actuallyPlayTrack(trackToPlay, resumePos);
+if (user && normalizedTrack.uploader_id === user.id) {
+  const resumePos = getSavedTrackPosition(normalizedTrack.id);
+  actuallyPlayTrack(normalizedTrack, resumePos);
   return;
 }
 
 // Embed preview (no-auth but priced) -> allow play
-if (isEmbedContext && !user && trackToPlay.stream_cost > 0) {
-  const resumePos = getSavedTrackPosition(trackToPlay.id);
-  actuallyPlayTrack(trackToPlay, resumePos);
+if (isEmbedContext && !user && normalizedTrack.stream_cost > 0) {
+  const resumePos = getSavedTrackPosition(normalizedTrack.id);
+  actuallyPlayTrack(normalizedTrack, resumePos);
   return;
 }
 
-const resumePos = getSavedTrackPosition(trackToPlay.id);
+const resumePos = getSavedTrackPosition(normalizedTrack.id);
 
 // Paid streams
-if (trackToPlay.stream_cost && trackToPlay.stream_cost > 0) {
+if (normalizedTrack.stream_cost && normalizedTrack.stream_cost > 0) {
   if (!user?.id) { setActivePlayingTrack(null); return; }
   setIsProcessingPayment(true);
   try {
-    const res = await rpcStartOrResumeStream(trackToPlay.id, user.id, resumePos);
+    const res = await rpcStartOrResumeStream(normalizedTrack.id, user.id, resumePos);
     if (res?.ok || res?.reason === 'already_charged') {
-      actuallyPlayTrack(trackToPlay, resumePos);
+      actuallyPlayTrack(normalizedTrack, resumePos);
       try { await refreshUserProfile?.(); } catch { /* noop */ }
     } else {
       setActivePlayingTrack(null);
@@ -147,11 +162,11 @@ if (trackToPlay.stream_cost && trackToPlay.stream_cost > 0) {
   }
 } else {
   // Free streams
-  actuallyPlayTrack(trackToPlay, resumePos);
+  actuallyPlayTrack(normalizedTrack, resumePos);
 }
   }, [
 user, isProcessingPayment, activePlayingTrack?.id,
-actuallyPlayTrack, refreshUserProfile, isEmbedContext
+actuallyPlayTrack, refreshUserProfile, isEmbedContext, normalizeTrackForPlayer
   ]);
 
   // SECTION: Initial rehydrate from URL + localStorage
@@ -208,6 +223,52 @@ if (trackFromQueue) {
 queueContext?.currentTrack, isRehydrated,
 queueContext?.isShuffling, queueContext?.queue, queueContext?.shuffledQueue,
 activePlayingTrack, pauseAudio, resetAudio, handlePlayRequest
+  ]);
+
+  // SECTION: Enrich track with album/creator art when missing
+  useEffect(() => {
+    if (!activePlayingTrack?.id) return;
+    const needsEnrichment = !activePlayingTrack.cover_art_url ||
+      !activePlayingTrack.album_cover_art_url ||
+      !activePlayingTrack.album_video_cover_art_url ||
+      !activePlayingTrack.creator_avatar_url;
+    if (!needsEnrichment) return;
+
+    let isMounted = true;
+    const enrichTrack = async () => {
+      const { data, error } = await supabase
+        .from('tracks')
+        .select('id, cover_art_url, video_cover_art_url, album_id, albums(cover_art_url, video_cover_art_url), profiles!tracks_uploader_id_profiles_fkey(avatar_url)')
+        .eq('id', activePlayingTrack.id)
+        .maybeSingle();
+      if (!isMounted || error || !data) return;
+
+      setActivePlayingTrack((prev) => {
+        if (!prev || prev.id !== data.id) return prev;
+        const merged = normalizeTrackForPlayer({
+          ...prev,
+          ...data,
+          albums: data.albums || prev.albums,
+          profiles: data.profiles || prev.profiles,
+        });
+        const didChange = merged.cover_art_url !== prev.cover_art_url ||
+          merged.album_cover_art_url !== prev.album_cover_art_url ||
+          merged.album_video_cover_art_url !== prev.album_video_cover_art_url ||
+          merged.creator_avatar_url !== prev.creator_avatar_url ||
+          merged.video_cover_art_url !== prev.video_cover_art_url;
+        return didChange ? merged : prev;
+      });
+    };
+
+    enrichTrack();
+    return () => { isMounted = false; };
+  }, [
+    activePlayingTrack?.id,
+    activePlayingTrack?.cover_art_url,
+    activePlayingTrack?.album_cover_art_url,
+    activePlayingTrack?.album_video_cover_art_url,
+    activePlayingTrack?.creator_avatar_url,
+    normalizeTrackForPlayer,
   ]);
 
   // SECTION: Wire audio element events -> player state

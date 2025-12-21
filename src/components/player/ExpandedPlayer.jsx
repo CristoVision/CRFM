@@ -36,9 +36,9 @@ function ExpandedPlayer() {
       <ExpandedPlayerHeader />
 
       {/* SECTION: Main layout (artwork + tabs) */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
         {/* Artwork + primary controls */}
-        <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-6 md:p-8">
+        <div className="w-full md:w-1/2 flex flex-col items-start justify-start md:items-center md:justify-center p-4 md:p-8">
           <div className="max-w-md w-full">
             <ExpandedPlayerArtwork />
             <ExpandedPlayerTrackDetails />
@@ -49,9 +49,9 @@ function ExpandedPlayer() {
         </div>
 
         {/* Lyrics/Queue tabs */}
-        <div className="w-full md:w-1/2 border-t md:border-t-0 md:border-l border-white/10 flex flex-col player-lyrics-panel-bg">
+        <div className="w-full md:w-1/2 border-t md:border-t-0 md:border-l border-white/10 flex flex-col player-lyrics-panel-bg min-h-[40vh] md:min-h-0">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-            <TabsList className="bg-transparent border-b border-white/10 rounded-none p-0 h-auto grid grid-cols-2">
+            <TabsList className="bg-black/70 backdrop-blur border-b border-white/10 rounded-none p-0 h-auto grid grid-cols-2 sticky top-0 z-10">
               <TabsTrigger value="lyrics" className="player-tab-trigger">
                 <ScrollText className="w-4 h-4 mr-2" /> {t('player.tabs.lyrics')}
               </TabsTrigger>

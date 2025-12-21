@@ -79,7 +79,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
             onClick={(e) => { e.stopPropagation(); cycleShuffleMode(); }}
             variant="ghost"
             size="icon"
-            className={`player-button hidden md:flex ${shuffleMode ? 'active-icon' : ''}`}
+            className={`player-button ${shuffleMode ? 'active-icon' : ''}`}
             disabled={!currentTrack}
             aria-label={t('player.controls.shuffle')}
           >
@@ -122,7 +122,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
             onClick={(e) => { e.stopPropagation(); cycleRepeatMode(); }}
             variant="ghost"
             size="icon"
-            className={`player-button hidden md:flex ${repeatMode ? 'active-icon' : ''}`}
+            className={`player-button ${repeatMode ? 'active-icon' : ''}`}
             disabled={!currentTrack}
             aria-label={t('player.controls.repeat')}
           >
