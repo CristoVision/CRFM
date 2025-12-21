@@ -21,9 +21,11 @@ const CoverArtMedia = ({
   const normalizedVideoUrl = useMemo(() => {
     if (!videoUrl) return null;
     if (videoUrl.startsWith('http') || videoUrl.startsWith('data:') || videoUrl.startsWith('blob:')) return videoUrl;
-    if (videoUrl.startsWith('/')) return videoUrl;
     if (!supabaseUrl) return null;
     const cleaned = videoUrl.replace(/^\/+/, '');
+    if (cleaned.startsWith('storage/v1/')) {
+      return `${supabaseUrl}/${cleaned}`;
+    }
     const path = cleaned.includes('/') ? cleaned : `videocoverart/${cleaned}`;
     return `${supabaseUrl}/storage/v1/object/public/${path}`;
   }, [videoUrl, supabaseUrl]);

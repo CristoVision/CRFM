@@ -31,7 +31,7 @@ function ExpandedPlayerControls() {
       <Button 
         variant="ghost" 
         size="icon" 
-        className={`player-button ${shuffleMode === 'on' ? 'active-icon' : ''}`} 
+        className={`player-button ${shuffleMode ? 'active-icon' : ''}`} 
         aria-label={t('player.controls.shuffle')}
         onClick={cycleShuffleMode}
       >
@@ -70,7 +70,7 @@ function ExpandedPlayerControls() {
       <Button 
         variant="ghost" 
         size="icon" 
-        className={`player-button ${repeatMode !== 'off' ? 'active-icon' : ''}`} 
+        className={`player-button ${repeatMode ? 'active-icon' : ''}`} 
         aria-label={t('player.controls.repeat')}
         onClick={cycleRepeatMode}
       >
