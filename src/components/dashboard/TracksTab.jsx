@@ -98,25 +98,9 @@ function TracksTab({ searchQuery = '', viewMode = 'grid', initialTracks, isCreat
         )
         .filter(track => filterByRange(track.created_at || track.release_date));
 
-      const logStream = async (trackId) => {
-        if (!user || !trackId) return;
-        try {
-          const { error } = await supabase.from('stream_events').insert({
-            track_id: trackId,
-            user_id: user.id
-          });
-          if (error) {
-            console.error('Error logging stream event:', error.message);
-          }
-        } catch (err) {
-          console.error('Exception while logging stream event:', err.message);
-        }
-      };
-
       const handleInitiatePlay = (trackItem, index) => {
         if (!trackItem || !trackItem.id || !playerContext || !queueContext) return;
 
-        logStream(trackItem.id);
         setPopulatingTrackId(trackItem.id);
 
         queueContext.setPlaybackQueue(filteredTracks, index);

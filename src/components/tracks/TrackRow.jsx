@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { toast } from '@/components/ui/use-toast';
 import { CROSSCOIN_ICON_URL } from '@/lib/brandAssets';
+import CoverArtMedia from '@/components/common/CoverArtMedia';
 
 const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXVkaW98ZW58MHx8MHx8fDA%3D&w=1000&q=80';
 
@@ -92,6 +93,14 @@ const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1505740420928-5e560
 
       const hasSyncedLyrics = lrc_file_path && lrc_file_path.trim() !== '';
 
+      const imageFallback =
+        cover_art_url ||
+        albums?.cover_art_url ||
+        profiles?.avatar_url ||
+        DEFAULT_COVER_ART;
+
+      const videoFallback = video_cover_art_url || albums?.video_cover_art_url || null;
+
       return (
         <TooltipProvider delayDuration={100}>
           <motion.div 
@@ -103,17 +112,12 @@ const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1505740420928-5e560
             onClick={handleRowClick}
           >
             <div className="relative flex-shrink-0">
-              <img 
-                src={
-                  cover_art_url ||
-                  video_cover_art_url ||
-                  albums?.video_cover_art_url ||
-                  albums?.cover_art_url ||
-                  profiles?.avatar_url ||
-                  DEFAULT_COVER_ART
-                }
-                alt={title}
-                className="w-12 h-12 rounded-md object-cover border border-white/10"
+              <CoverArtMedia
+                videoUrl={videoFallback}
+                imageUrl={imageFallback}
+                className="w-12 h-12 border border-white/10"
+                objectFitClass="object-cover"
+                roundedClass="rounded-md"
               />
               <div className="absolute inset-0 bg-black/50 rounded-md flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
                 <Button
