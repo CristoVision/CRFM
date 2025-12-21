@@ -11,6 +11,7 @@ import { CROSSCOIN_ICON_URL } from '@/lib/brandAssets';
 import CoverArtMedia from '@/components/common/CoverArtMedia';
 
 const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXVkaW98ZW58MHx8MHx8fDA%3D&w=1000&q=80';
+const isLikelyVideoUrl = (value) => typeof value === 'string' && /\.(mp4|webm|ogg|mov)$/i.test(value);
 
     const TrackCard = ({ item, onPlay, isPlaying, currentTrackId, onFlag, onShare }) => {
       const navigate = useNavigate();
@@ -94,11 +95,12 @@ const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1505740420928-5e560
 
       const hasSyncedLyrics = lrc_file_path && lrc_file_path.trim() !== '';
 
-      const imageFallback =
-        cover_art_url ||
-        albums?.cover_art_url ||
-        profiles?.avatar_url ||
-        DEFAULT_COVER_ART;
+      const imageFallback = [
+        cover_art_url,
+        albums?.cover_art_url,
+        profiles?.avatar_url,
+        DEFAULT_COVER_ART,
+      ].find((url) => url && !isLikelyVideoUrl(url));
 
       const videoFallback = video_cover_art_url || albums?.video_cover_art_url || null;
 

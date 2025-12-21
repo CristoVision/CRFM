@@ -62,6 +62,9 @@ const LeaderboardCard = ({ item, itemType, rank }) => {
     creator: 'https://avatar.vercel.sh/creator.png?text=CR',
   };
 
+  const isLikelyVideoUrl = (value) => typeof value === 'string' && /\.(mp4|webm|ogg|mov)$/i.test(value);
+  const normalizedCoverArt = coverArt && !isLikelyVideoUrl(coverArt) ? coverArt : null;
+
   return (
     <Card 
       className={`w-full glass-effect-hoverable cursor-pointer border-2 ${rankBorderColors[rank] || 'border-transparent'}`}
@@ -71,7 +74,7 @@ const LeaderboardCard = ({ item, itemType, rank }) => {
         <div className="flex items-center space-x-4">
           <div className="relative flex-shrink-0">
             <img
-              src={coverArt || defaultCovers[itemType]}
+              src={normalizedCoverArt || defaultCovers[itemType]}
               alt={displayTitle}
               className="w-20 h-20 rounded-lg object-cover"
             />
