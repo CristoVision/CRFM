@@ -167,10 +167,10 @@ function HomePage() {
           <PlaylistsTab searchQuery={searchQuery} viewMode={viewMode} timeRange={timeRange} />
         </TabsContent>
         <TabsContent value="videos">
-          <MusicVideosTab searchQuery={searchQuery} viewMode={viewMode} />
+          <MusicVideosTab searchQuery={searchQuery} viewMode={viewMode} timeRange={timeRange} />
         </TabsContent>
         <TabsContent value="creators">
-          <CreatorsTab searchQuery={searchQuery} viewMode={viewMode} />
+          <CreatorsTab searchQuery={searchQuery} viewMode={viewMode} timeRange={timeRange} />
         </TabsContent>
         <TabsContent value="radio">
           <RadioStationsTab searchQuery={searchQuery} viewMode={viewMode} />

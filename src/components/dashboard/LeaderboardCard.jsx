@@ -46,6 +46,14 @@ const LeaderboardCard = ({ item, itemType, rank }) => {
     3: 'border-yellow-600',
   };
 
+  const displayTitle = itemType === 'creator'
+    ? (item.username || item.full_name || 'Creator')
+    : item.title;
+
+  const coverArt = itemType === 'creator'
+    ? item.avatar_url
+    : item.cover_art_url;
+
   const defaultCovers = {
     track: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500',
     album: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500',
@@ -63,8 +71,8 @@ const LeaderboardCard = ({ item, itemType, rank }) => {
         <div className="flex items-center space-x-4">
           <div className="relative flex-shrink-0">
             <img
-              src={item.cover_art_url || defaultCovers[itemType]}
-              alt={item.title}
+              src={coverArt || defaultCovers[itemType]}
+              alt={displayTitle}
               className="w-20 h-20 rounded-lg object-cover"
             />
             <div className={`absolute -top-2 -left-2 w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm shadow-lg ${rankColors[rank]}`}>
@@ -73,7 +81,7 @@ const LeaderboardCard = ({ item, itemType, rank }) => {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-base font-semibold text-white truncate group-hover:text-yellow-400 transition-colors">
-              {item.title}
+              {displayTitle}
             </p>
             {itemType !== 'creator' && (
               <div 

@@ -53,7 +53,7 @@ import React, { useState, useEffect } from 'react';
     };
 
 
-    function CreatorsTab({ searchQuery, viewMode = 'grid', isCreatorPageContext = false }) {
+    function CreatorsTab({ searchQuery, viewMode = 'grid', isCreatorPageContext = false, timeRange = 'all' }) {
       const [creators, setCreators] = useState([]);
       const [loading, setLoading] = useState(true);
       const { user } = useAuth();
@@ -119,7 +119,7 @@ import React, { useState, useEffect } from 'react';
 
       return (
         <motion.div layout className="space-y-6">
-          {!isCreatorPageContext && <LeaderboardCarousel itemType="creator" />}
+          {!isCreatorPageContext && <LeaderboardCarousel itemType="creator" timeframe={timeRange} />}
           {filteredCreators.length === 0 && !loading && (
             <div className="text-center py-12">
               <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />

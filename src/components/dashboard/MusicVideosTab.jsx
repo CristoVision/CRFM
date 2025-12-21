@@ -14,7 +14,7 @@ import LeaderboardCarousel from './LeaderboardCarousel';
 const ITEMS_PER_PAGE = 12;
 const DEFAULT_VIDEO_COVER_ART = 'https://images.unsplash.com/photo-1516280440614-3793959696b4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fHZpZGVvfGVufDB8fDB8fHww&w=1000&q=80';
 
-function MusicVideosTab({ searchQuery = '', viewMode = 'grid', isCreatorPageContext = false }) {
+function MusicVideosTab({ searchQuery = '', viewMode = 'grid', isCreatorPageContext = false, timeRange = 'all' }) {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -195,7 +195,7 @@ function MusicVideosTab({ searchQuery = '', viewMode = 'grid', isCreatorPageCont
 
   return (
     <motion.div layout className="space-y-6">
-      {!isCreatorPageContext && <LeaderboardCarousel itemType="music_video" />}
+      {!isCreatorPageContext && <LeaderboardCarousel itemType="music_video" timeframe={timeRange} />}
       {renderContent()}
 
       {loading && videos.length > 0 && (
