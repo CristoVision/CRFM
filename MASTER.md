@@ -17,6 +17,14 @@
 | 2025-12-13T00:00:00Z | Codex | CRFM — Registro central de RPCs Supabase | docs/SUPABASE_RPCS.md, MASTER.md | Registro compartido de RPCs (usados/faltantes/propuestos) para reemplazar edge functions/admin writes. | TODO | Crear/ajustar RPCs propuestos y actualizar frontend con checks admin. |
 | 2025-11-09T21:30:00Z | Codex | Refine Génesis 2 translation & evaluation | translations/es/genesis_2.md, evaluations/gn-2-summary.md | Correcciones sugeridas (puntuación 2:12, matiz “ayuda” 2:18, verbo “tendría” 2:19) y actualización en resumen de evaluación. | OK | Revisar Génesis 3 con mismo flujo de cotejo. |
 
+### CRFM — Merge & Deploy Guardrails (para proyectos combinados)
+- **Raíz única:** Todo merge debe aterrizar dentro de `workspace/CRFM/` sin crear subcarpetas nuevas en el hosting (`public_html/public_html` es un error).
+- **Deploy target correcto:** `HOSTINGER_FTP_SERVER_DIR` debe apuntar a `/public_html` (no a `/public_html/public_html`).
+- **Clean-slate controlado:** Si hay mezcla previa en Hostinger, mover/limpiar contenido y re‑deploy con `dangerous-clean-slate: true` desde CI para que quede exactamente como `dist/`.
+- **Commit clarity:** Usa commits separados para cada “sub‑proyecto” (ej. `feat: add bible tab`, `feat: add du stories`) y evita mezclar cambios de infraestructura en esos mismos commits.
+- **Contenido agregado:** Archivos nuevos deben ir bajo `src/` o `public/` del proyecto primario. Si se incorpora un repo externo, copiar únicamente los artefactos necesarios y documentar su origen en `MASTER.md`.
+- **Validación previa:** Verificar `npm run build` local y confirmar que `dist/.htaccess` existe antes de desplegar.
+
 ### CRFM — Monetización (borrador de producto)
 - CRFM retiene 10% de todas las regalías antes de withdrawal.
 - Upload policies para creadores (selección en Hub):

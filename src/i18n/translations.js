@@ -141,6 +141,7 @@ const translations = {
     home: {
       titleSuffix: 'Streaming',
       subtitle: 'Discover, Stream, and Connect with Creators.',
+      playDuTcpr: 'Play DU TCG PR',
       searchPlaceholder: 'Search tracks, albums, creators...',
       tabs: {
         tracks: 'Tracks',
@@ -1258,6 +1259,7 @@ const translations = {
     home: {
       titleSuffix: 'Streaming',
       subtitle: 'Descubre, transmite y conecta con creadores.',
+      playDuTcpr: 'Jugar DU TCG PR',
       searchPlaceholder: 'Buscar pistas, albums, creadores...',
       tabs: {
         tracks: 'Pistas',

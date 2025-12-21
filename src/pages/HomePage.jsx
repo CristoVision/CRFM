@@ -18,6 +18,7 @@ function HomePage() {
   const [timeRange, setTimeRange] = useState('all'); // all, daily, weekly, monthly, yearly
   const { user } = useAuth();
   const { t } = useLanguage();
+  const duTcgUrl = import.meta.env.VITE_DU_TCG_PR_URL;
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-8">
@@ -28,6 +29,20 @@ function HomePage() {
         <p className="text-lg sm:text-xl text-gray-300 mb-8">
           {t('home.subtitle')}
         </p>
+        {duTcgUrl ? (
+          <div className="flex justify-center mb-6">
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="border-yellow-400/30 text-yellow-200 hover:text-yellow-100 hover:border-yellow-300"
+            >
+              <a href={duTcgUrl} rel="noreferrer">
+                {t('home.playDuTcpr')}
+              </a>
+            </Button>
+          </div>
+        ) : null}
         
         <div className="max-w-2xl mx-auto w-full relative glass-effect rounded-xl p-1 sm:p-2">
           <Search className="absolute left-4 sm:left-5 top-1/2 transform -translate-y-1/2 text-yellow-400 w-5 h-5" />

@@ -10,6 +10,25 @@ const PublicGamesDisplay = () => {
   const [games, setGames] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { t } = useLanguage();
+  const duTcgUrl = import.meta.env.VITE_DU_TCG_PR_URL;
+  const duTcgMedia = import.meta.env.VITE_DU_TCG_PR_MEDIA_URL;
+
+  const mergeDuTcg = (list) => {
+    const normalized = list.map(game => ({ ...game, titleKey: (game.title || '').toLowerCase().trim() }));
+    const hasDu = normalized.some(game => game.titleKey === 'du tcg pr' || game.titleKey === 'dutcgpr');
+    if (hasDu) return list;
+    return [
+      ...list,
+      {
+        id: 'du-tcg-pr-static',
+        title: 'DU TCG PR',
+        description: 'Trading card game inspirado en Puerto Rico con combates por turnos y domesticar criaturas.',
+        media_url: duTcgMedia || null,
+        site_url: duTcgUrl || null,
+        is_public: true,
+      }
+    ];
+  };
 
   useEffect(() => {
     const fetchPublicGames = async () => {
@@ -22,7 +41,7 @@ const PublicGamesDisplay = () => {
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        setGames(data || []);
+        setGames(mergeDuTcg(data || []));
       } catch (error) {
         toast({
           title: t('games.errorTitle'),
