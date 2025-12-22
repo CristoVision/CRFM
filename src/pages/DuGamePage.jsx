@@ -25,8 +25,8 @@ function DuGamePage() {
       <iframe
         title="DU TCG PR"
         src={duGameIframeUrl}
-        className="absolute top-0 left-0 right-0 w-full border-0"
-        style={{ bottom: 'var(--crfm-player-offset, 120px)' }}
+        className="absolute top-0 left-0 w-full border-0"
+        style={{ height: 'calc(100% - var(--crfm-player-offset, 120px))' }}
         allow="fullscreen; clipboard-read; clipboard-write"
       />
       <div className="absolute inset-x-0 bottom-0 h-[120px] pointer-events-none" />
