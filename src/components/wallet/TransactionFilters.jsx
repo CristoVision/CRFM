@@ -15,6 +15,8 @@ const transactionTypeOptions = [
   'manual_credit',
   'interest',
   'stream_purchase',
+  'store_purchase',
+  'store_sale',
   'withdrawal',
   'fee',
   'manual_debit',
@@ -65,7 +67,25 @@ const TransactionFilters = ({ filters, setFilters, onApplyFilters }) => {
           <SelectContent className="bg-neutral-900 border-neutral-700 text-white">
             {transactionTypeOptions.map(option => (
               <SelectItem key={option} value={option} className="hover:bg-neutral-800 focus:bg-neutral-700">
-                {option === 'all' ? t('wallet.transactionTypes.all') : t(`wallet.transactionTypes.${option === 'top-up' ? 'topUp' : option === 'manual_credit' ? 'manualCredit' : option === 'stream_purchase' ? 'streamPurchase' : option === 'manual_debit' ? 'manualDebit' : option}`)}
+                {option === 'all'
+                  ? t('wallet.transactionTypes.all')
+                  : t(
+                      `wallet.transactionTypes.${
+                        option === 'top-up'
+                          ? 'topUp'
+                          : option === 'manual_credit'
+                          ? 'manualCredit'
+                          : option === 'stream_purchase'
+                          ? 'streamPurchase'
+                          : option === 'store_purchase'
+                          ? 'storePurchase'
+                          : option === 'store_sale'
+                          ? 'storeSale'
+                          : option === 'manual_debit'
+                          ? 'manualDebit'
+                          : option
+                      }`
+                    )}
               </SelectItem>
             ))}
           </SelectContent>

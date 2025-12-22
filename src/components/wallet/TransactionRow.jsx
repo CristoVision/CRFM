@@ -31,6 +31,8 @@ const TransactionRow = ({ transaction }) => {
     'manual_credit': { text: t('wallet.transactionTypes.manualCredit'), icon: <Gift className="w-4 h-4 mr-2 text-blue-400" />, color: 'text-blue-400' },
     'interest': { text: t('wallet.transactionTypes.interest'), icon: <TrendingUp className="w-4 h-4 mr-2 text-green-400" />, color: 'text-green-400' },
     'stream_purchase': { text: t('wallet.transactionTypes.streamPurchase'), icon: <ShoppingCart className="w-4 h-4 mr-2 text-red-400" />, color: 'text-red-400' },
+    'store_purchase': { text: t('wallet.transactionTypes.storePurchase'), icon: <ShoppingCart className="w-4 h-4 mr-2 text-red-400" />, color: 'text-red-400' },
+    'store_sale': { text: t('wallet.transactionTypes.storeSale'), icon: <TrendingUp className="w-4 h-4 mr-2 text-green-400" />, color: 'text-green-400' },
     'withdrawal': { text: t('wallet.transactionTypes.withdrawal'), icon: <TrendingDown className="w-4 h-4 mr-2 text-red-400" />, color: 'text-red-400' },
     'fee': { text: t('wallet.transactionTypes.fee'), icon: <TrendingDown className="w-4 h-4 mr-2 text-orange-400" />, color: 'text-orange-400' },
     'manual_debit': { text: t('wallet.transactionTypes.manualDebit'), icon: <TrendingDown className="w-4 h-4 mr-2 text-red-400" />, color: 'text-red-400' },

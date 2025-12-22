@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/components/ui/use-toast';
 import { BadgeDollarSign, Filter, Package, PlayCircle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const PRICE_USD_RATE = 0.01;
 
@@ -25,6 +26,7 @@ const withinWindow = (product) => {
 
 const MarketplaceTab = ({ searchQuery = '' }) => {
   const { t } = useLanguage();
+  const { user, refreshUserProfile } = useAuth();
   const [products, setProducts] = useState([]);
   const [formatsByProduct, setFormatsByProduct] = useState({});
   const [creatorsById, setCreatorsById] = useState({});
@@ -34,6 +36,8 @@ const MarketplaceTab = ({ searchQuery = '' }) => {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
+  const [selectedFormatByProduct, setSelectedFormatByProduct] = useState({});
+  const [purchasePending, setPurchasePending] = useState({});
 
   useEffect(() => {
     const loadMarketplace = async () => {
@@ -89,6 +93,56 @@ const MarketplaceTab = ({ searchQuery = '' }) => {
     };
     loadMarketplace();
   }, []);
+
+  useEffect(() => {
+    if (!products.length) return;
+    setSelectedFormatByProduct((prev) => {
+      const next = { ...prev };
+      products.forEach((product) => {
+        if (next[product.id]) return;
+        const formats = formatsByProduct[product.id] || [];
+        if (!formats.length) return;
+        const sorted = [...formats].sort((a, b) => Number(a.price_cc) - Number(b.price_cc));
+        next[product.id] = sorted[0]?.id;
+      });
+      return next;
+    });
+  }, [products, formatsByProduct]);
+
+  const handlePurchase = async (productId) => {
+    if (!user?.id) {
+      toast({ title: t('marketplace.loginRequired'), description: t('marketplace.loginRequiredBody'), variant: 'destructive' });
+      return;
+    }
+    const formatId = selectedFormatByProduct[productId];
+    if (!formatId) {
+      toast({ title: t('marketplace.selectFormat'), description: t('marketplace.selectFormatBody'), variant: 'destructive' });
+      return;
+    }
+    setPurchasePending((prev) => ({ ...prev, [productId]: true }));
+    try {
+      const { data, error } = await supabase.rpc('purchase_creator_store_item', {
+        p_format_id: formatId,
+        p_quantity: 1,
+      });
+      if (error || !data?.ok) {
+        throw new Error(error?.message || data?.reason || 'Purchase failed.');
+      }
+      toast({
+        title: t('marketplace.buySuccessTitle'),
+        description: t('marketplace.buySuccessBody', { total: data.total_cc, fee: data.fee_cc }),
+      });
+      await refreshUserProfile?.();
+    } catch (purchaseError) {
+      toast({
+        title: t('marketplace.buyErrorTitle'),
+        description: purchaseError.message || t('marketplace.buyErrorBody'),
+        variant: 'destructive',
+      });
+    } finally {
+      setPurchasePending((prev) => ({ ...prev, [productId]: false }));
+    }
+  };
 
   const creatorOptions = useMemo(() => {
     const list = Object.values(creatorsById);
@@ -210,6 +264,8 @@ const MarketplaceTab = ({ searchQuery = '' }) => {
             const creator = creatorsById[product.creator_id];
             const creatorName = creator?.display_name || creator?.username || 'Creador';
             const formatLabel = formats.map((f) => f.format).join(', ');
+            const selectedFormatId = selectedFormatByProduct[product.id];
+            const selectedFormat = formats.find((f) => f.id === selectedFormatId);
             const detailHref =
               product.content_type === 'track'
                 ? `/track/${product.content_id}`
@@ -235,23 +291,45 @@ const MarketplaceTab = ({ searchQuery = '' }) => {
                   )}
                 </div>
                 <div className="text-xs text-gray-400">{t('marketplace.formatsLabel')} {formatLabel || '—'}</div>
+                {formats.length ? (
+                  <Select
+                    value={selectedFormatId || ''}
+                    onValueChange={(value) =>
+                      setSelectedFormatByProduct((prev) => ({ ...prev, [product.id]: value }))
+                    }
+                  >
+                    <SelectTrigger className="bg-black/30 border-white/10 text-white">
+                      <SelectValue placeholder={t('marketplace.formatPlaceholder')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {formats.map((format) => (
+                        <SelectItem key={format.id} value={format.id}>
+                          {format.format} · {format.price_cc} CC
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : null}
                 <div className="flex flex-wrap gap-2 mt-auto">
                   <Button asChild variant="outline" className="border-white/10 text-white hover:text-yellow-300">
                     <a href={detailHref}>{t('marketplace.viewDetails')}</a>
                   </Button>
                   <Button
-                    onClick={() =>
-                      toast({
-                        title: t('marketplace.buyTitle'),
-                        description: t('marketplace.buyBody'),
-                        variant: 'default',
-                      })
-                    }
+                    onClick={() => handlePurchase(product.id)}
+                    disabled={purchasePending[product.id] || !selectedFormat}
                     className="golden-gradient text-black font-semibold"
                   >
                     <PlayCircle className="w-4 h-4 mr-2" />
-                    {t('marketplace.buy')}
+                    {purchasePending[product.id] ? t('marketplace.buying') : t('marketplace.buy')}
                   </Button>
+                  {selectedFormat ? (
+                    <div className="text-xs text-gray-400 self-center">
+                      {t('marketplace.selectedFormat', {
+                        format: selectedFormat.format,
+                        price: selectedFormat.price_cc,
+                      })}
+                    </div>
+                  ) : null}
                 </div>
               </div>
             );
