@@ -19,6 +19,7 @@ import PlaylistDetailPage from '@/pages/PlaylistDetailPage';
 import CreatorDetailPage from '@/pages/CreatorDetailPage';
 import VideoDetailPage from '@/pages/VideoDetailPage';
 import NotFoundPage from '@/pages/NotFoundPage';
+import DuGamePage from '@/pages/DuGamePage';
 
 import EmbedTrackPage from '@/pages/embed/EmbedTrackPage';
 import EmbedAlbumPage from '@/pages/embed/EmbedAlbumPage';
@@ -107,6 +108,9 @@ function AppContent() {
         <Route path="/embed/album/:id" element={<EmbedAlbumPage />} />
         <Route path="/embed/playlist/:id" element={<EmbedPlaylistPage />} />
         <Route path="/embed/creator/:id" element={<EmbedCreatorPage />} />
+
+        {/* DU TCG PR fullscreen experience */}
+        <Route path="/games/du" element={<DuGamePage />} />
 
         {/* Main app routes are now under a single layout */}
         <Route path="/" element={<MainLayout />}>

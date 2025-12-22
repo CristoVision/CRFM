@@ -10,7 +10,7 @@ const PublicGamesDisplay = () => {
   const [games, setGames] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { t } = useLanguage();
-  const duTcgUrl = import.meta.env.VITE_DU_TCG_PR_URL || '/du';
+  const duTcgUrl = import.meta.env.VITE_DU_TCG_PR_URL || '/games/du';
   const duTcgMedia = import.meta.env.VITE_DU_TCG_PR_MEDIA_URL || '/icon-512.png';
 
   const mergeDuTcg = (list) => {

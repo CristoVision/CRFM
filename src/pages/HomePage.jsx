@@ -18,7 +18,7 @@ function HomePage() {
   const [timeRange, setTimeRange] = useState('all'); // all, daily, weekly, monthly, yearly
   const { user } = useAuth();
   const { t } = useLanguage();
-  const duTcgUrl = import.meta.env.VITE_DU_TCG_PR_URL || '/du';
+  const duTcgUrl = import.meta.env.VITE_DU_TCG_PR_URL || '/games/du';
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-8">
