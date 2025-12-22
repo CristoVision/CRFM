@@ -25,6 +25,15 @@ function MusicPlayer() {
 
   const { user } = useAuth();
 
+  useEffect(() => {
+    const root = document.documentElement;
+    const offset = playerState === 'collapsed' && currentTrack ? '120px' : '0px';
+    root.style.setProperty('--crfm-player-offset', offset);
+    return () => {
+      root.style.setProperty('--crfm-player-offset', '0px');
+    };
+  }, [playerState, currentTrack]);
+
   // SECTION: Media Session metadata + handlers
   useEffect(() => {
     if (!('mediaSession' in navigator) || !currentTrack) {

@@ -25,6 +25,7 @@ import {
   MessageSquare,
   DollarSign,
   Sparkles,
+  Music2,
 } from 'lucide-react';
 
 import AdminContentFlagsTab from '@/components/admin/AdminContentFlagsTab';
@@ -38,6 +39,7 @@ import AdminAchievementsTab from '@/components/admin/AdminAchievementsTab';
 import WalletAdminTab from '@/components/admin/WalletAdminTab';
 import AdminSupportTab from '@/components/admin/AdminSupportTab';
 import AdminBetaApplicationsTab from '@/components/admin/AdminBetaApplicationsTab';
+import DuGameMusicTab from '@/components/admin/DuGameMusicTab';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 function SectionShell({ children }) {
@@ -85,6 +87,7 @@ export default function AdminPage() {
     () => [
       { value: 'appsAdmin', label: t('admin.ecosystemTabs.appsAdmin'), Icon: Package },
       { value: 'gamesAdmin', label: t('admin.ecosystemTabs.gamesAdmin'), Icon: Gamepad2 },
+      { value: 'duMusic', label: t('admin.ecosystemTabs.duMusic'), Icon: Music2 },
       { value: 'storiesAdmin', label: t('admin.ecosystemTabs.storiesAdmin'), Icon: BookOpen },
       { value: 'portfolioAdmin', label: t('admin.ecosystemTabs.portfolioAdmin'), Icon: Briefcase },
       { value: 'storesAdmin', label: t('admin.ecosystemTabs.storesAdmin'), Icon: Store },
@@ -174,6 +177,7 @@ export default function AdminPage() {
             <div className="mt-2">
               {ecoTab === 'appsAdmin' && <AppsTab />}
               {ecoTab === 'gamesAdmin' && <GamesTab />}
+              {ecoTab === 'duMusic' && <DuGameMusicTab />}
               {ecoTab === 'storiesAdmin' && (
                 <PlaceholderContent title={t('admin.titles.storiesManagement')} icon={<BookOpen />} />
               )}

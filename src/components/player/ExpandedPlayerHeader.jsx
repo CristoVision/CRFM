@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { X, Star, MoreHorizontal, Loader2 } from 'lucide-react';
+import { X, Star, MoreHorizontal, Loader2, Gamepad2 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 
     function ExpandedPlayerHeader() {
-      const { currentTrack, setPlayerState } = usePlayer();
+      const { currentTrack, setPlayerState, playbackMode, toggleGameMusicMode, isDuRoute } = usePlayer();
       const { user, favorites, addFavorite, removeFavorite } = useAuth();
       const { t } = useLanguage();
 
@@ -67,6 +67,17 @@ import { useLanguage } from '@/contexts/LanguageContext';
           </div>
           
           <div className="flex items-center space-x-1">
+            {isDuRoute && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`player-button ${playbackMode === 'game' ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-300'}`}
+                aria-label={playbackMode === 'game' ? 'Musica del juego' : 'Musica CRFM'}
+                onClick={() => toggleGameMusicMode?.()}
+              >
+                <Gamepad2 className="w-5 h-5" />
+              </Button>
+            )}
             <Button 
               variant="ghost" 
               size="icon" 

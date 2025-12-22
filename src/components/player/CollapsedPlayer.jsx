@@ -3,7 +3,7 @@
 // EXPORTED: default
 // DEPENDS: PlayerContext (usePlayer), framer-motion, subcomponentes (Controls, TrackInfo, Volume, Actions, ProgressBar)
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import CollapsedPlayerControls from './CollapsedPlayerControls.jsx';
@@ -20,6 +20,24 @@ function CollapsedPlayer() {
     activeLyricsLineIndex,
     hasLrc,
   } = usePlayer();
+  const [isDocked, setIsDocked] = useState(false);
+
+  useEffect(() => {
+    const sentinel = document.getElementById('player-dock-sentinel');
+    if (!sentinel || typeof IntersectionObserver === 'undefined') {
+      setIsDocked(false);
+      return () => {};
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        setIsDocked(Boolean(entry?.isIntersecting));
+      },
+      { root: null, threshold: 0.1 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
 
   const activeLyricText =
     hasLrc &&
@@ -29,7 +47,7 @@ function CollapsedPlayer() {
       : null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 player-background border-t border-white/10 player-shadow z-50">
+    <div className={`${isDocked ? 'absolute' : 'fixed'} bottom-0 left-0 right-0 player-background border-t border-white/10 player-shadow z-50`}>
       {/* SECTION: Active lyric ticker */}
       <AnimatePresence>
         {showCollapsedLyrics && hasLrc && activeLyricText && currentTrack && (

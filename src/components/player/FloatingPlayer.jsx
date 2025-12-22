@@ -18,6 +18,7 @@ function FloatingPlayer() {
   const { t } = useLanguage();
   const [showOptions, setShowOptions] = useState(false);
   const optionsRef = useRef(null);
+  const [isDocked, setIsDocked] = useState(false);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -33,6 +34,23 @@ function FloatingPlayer() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [optionsRef, showOptions]);
+
+  useEffect(() => {
+    const sentinel = document.getElementById('player-dock-sentinel');
+    if (!sentinel || typeof IntersectionObserver === 'undefined') {
+      setIsDocked(false);
+      return () => {};
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        setIsDocked(Boolean(entry?.isIntersecting));
+      },
+      { root: null, threshold: 0.1 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
 
   // If there's no user, this component shouldn't render at all.
   // The logic in App.jsx handles this, but we'll keep the check here.
@@ -58,7 +76,7 @@ function FloatingPlayer() {
   return (
     <>
       <div 
-        className="floating-player-button-main-trigger group fixed bottom-6 right-6 z-[55] w-14 h-14 rounded-full golden-gradient flex items-center justify-center cursor-pointer shadow-2xl hover:scale-105 active:scale-95 transition-transform duration-200 ease-out"
+        className={`floating-player-button-main-trigger group ${isDocked ? 'absolute' : 'fixed'} bottom-6 right-6 z-[55] w-14 h-14 rounded-full golden-gradient flex items-center justify-center cursor-pointer shadow-2xl hover:scale-105 active:scale-95 transition-transform duration-200 ease-out`}
         onClick={handleMainClick}
         role="button"
         tabIndex={0}
@@ -76,7 +94,7 @@ function FloatingPlayer() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.9 }}
             transition={{ duration: 0.2, ease: "circOut" }}
-            className="fixed bottom-24 right-6 w-auto p-2 bg-black/90 backdrop-blur-md rounded-lg shadow-xl flex flex-col items-start space-y-1.5 border border-yellow-400/30 z-[60]"
+            className={`${isDocked ? 'absolute' : 'fixed'} bottom-24 right-6 w-auto p-2 bg-black/90 backdrop-blur-md rounded-lg shadow-xl flex flex-col items-start space-y-1.5 border border-yellow-400/30 z-[60]`}
             onClick={(e) => e.stopPropagation()} 
           >
             <Button

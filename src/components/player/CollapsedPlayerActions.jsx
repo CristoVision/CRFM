@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { usePlayer } from '@/contexts/PlayerContext';
-import { Maximize2, Minimize2, Baseline, Text } from 'lucide-react';
+import { Maximize2, Minimize2, Baseline, Text, Gamepad2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 function CollapsedPlayerActions() {
@@ -11,7 +11,10 @@ function CollapsedPlayerActions() {
     showCollapsedLyrics, 
     toggleCollapsedLyrics,
     currentLyrics,
-    lrcError
+    lrcError,
+    playbackMode,
+    toggleGameMusicMode,
+    isDuRoute
   } = usePlayer();
   const { t } = useLanguage();
 
@@ -28,6 +31,17 @@ function CollapsedPlayerActions() {
           aria-label={showCollapsedLyrics ? t('player.collapsed.hideLyrics') : t('player.collapsed.showLyrics')}
         >
           {showCollapsedLyrics ? <Text className="w-4 h-4" /> : <Baseline className="w-4 h-4" />}
+        </Button>
+      )}
+      {isDuRoute && (
+        <Button
+          onClick={(e) => { e.stopPropagation(); toggleGameMusicMode?.(); }}
+          variant="ghost"
+          size="icon"
+          className={`player-button ${playbackMode === 'game' ? 'active-icon' : ''}`}
+          aria-label={playbackMode === 'game' ? 'Musica del juego' : 'Musica CRFM'}
+        >
+          <Gamepad2 className="w-4 h-4" />
         </Button>
       )}
       <Button

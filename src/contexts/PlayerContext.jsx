@@ -3,7 +3,8 @@
 // EXPORTED: usePlayer, PlayerProvider
 // DEPENDS: AuthContext, QueueContext, usePlayerAudioControls, useLrcLoader, supabase (RPC), playerUtils (localStorage)
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLrcLoader } from '@/hooks/useLrcLoader';
 import { loadStateFromLocalStorage, saveStateToLocalStorage } from '@/player/playerUtils.jsx';
@@ -11,6 +12,7 @@ import { usePlayerAudioControls } from '@/player/usePlayerAudioControls.js';
 import { QueueContext } from '@/contexts/QueueContext.jsx';
 import { supabase } from '@/lib/supabaseClient';
 import { logTrackPlay } from '@/lib/analyticsClient';
+import { toast } from '@/components/ui/use-toast';
 
 // SECTION: Context bootstrap
 const PlayerContext = createContext();
@@ -70,6 +72,7 @@ export function PlayerProvider({ children }) {
   // SECTION: External contexts
   const queueContext = useContext(QueueContext);
   const { user, refreshUserProfile } = useAuth();
+  const location = useLocation();
 
   // SECTION: UI/Player state
   const [activePlayingTrack, setActivePlayingTrack] = useState(null);
@@ -79,6 +82,13 @@ export function PlayerProvider({ children }) {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [isRehydrated, setIsRehydrated] = useState(false);
   const [isEmbedContext, setIsEmbedContext] = useState(false);
+  const [playbackMode, setPlaybackMode] = useState('crfm'); // 'crfm' | 'game'
+  const [gameMusicQueue, setGameMusicQueue] = useState([]);
+  const [gameMusicStatus, setGameMusicStatus] = useState('idle'); // 'idle' | 'loading' | 'ready' | 'error'
+  const [queueSnapshot, setQueueSnapshot] = useState(null);
+
+  const isDuRoute = useMemo(() => location.pathname.startsWith('/games/du'), [location.pathname]);
+  const isGameMusicMode = playbackMode === 'game';
 
   // SECTION: Audio controls (single <audio> ref + state)
   const {
@@ -111,6 +121,36 @@ hasLrc
     };
   }, []);
 
+  const loadGameMusicQueue = useCallback(async () => {
+    if (!supabase) return [];
+    setGameMusicStatus('loading');
+    try {
+      const { data, error } = await supabase
+        .from('game_music_tracks')
+        .select(
+          'id, track_id, order_index, tracks:tracks(id, title, audio_file_url, cover_art_url, stream_cost, uploader_id, creator_display_name, albums:albums(id, title, cover_art_url, video_cover_art_url))'
+        )
+        .eq('is_active', true)
+        .eq('game_slug', 'du_tcg_pr')
+        .order('order_index', { ascending: true });
+      if (error) throw error;
+      const normalized = (data || [])
+        .map((row) => {
+          if (!row.tracks) return null;
+          return normalizeTrackForPlayer(row.tracks);
+        })
+        .filter(Boolean);
+      setGameMusicQueue(normalized);
+      setGameMusicStatus('ready');
+      return normalized;
+    } catch (err) {
+      console.error('Failed to load game music queue', err);
+      setGameMusicQueue([]);
+      setGameMusicStatus('error');
+      return [];
+    }
+  }, [normalizeTrackForPlayer]);
+
   // SECTION: Core playback orchestrator
   const actuallyPlayTrack = useCallback((track, resumeAt = 0) => {
 setActivePlayingTrack(track);
@@ -127,31 +167,33 @@ setTimeout(() => {
   const handlePlayRequest = useCallback(async (trackToPlay, _trackQueueIgnored = []) => {
 if (!trackToPlay || (isProcessingPayment && activePlayingTrack?.id !== trackToPlay.id)) return;
 const normalizedTrack = normalizeTrackForPlayer(trackToPlay);
+const isGamePlay = isGameMusicMode;
+const playableTrack = isGamePlay ? { ...normalizedTrack, stream_cost: 0, is_game_music: true } : normalizedTrack;
 
 // Free for uploader
-if (user && normalizedTrack.uploader_id === user.id) {
-  const resumePos = getSavedTrackPosition(normalizedTrack.id);
-  actuallyPlayTrack(normalizedTrack, resumePos);
+if (user && playableTrack.uploader_id === user.id) {
+  const resumePos = getSavedTrackPosition(playableTrack.id);
+  actuallyPlayTrack(playableTrack, resumePos);
   return;
 }
 
 // Embed preview (no-auth but priced) -> allow play
-if (isEmbedContext && !user && normalizedTrack.stream_cost > 0) {
-  const resumePos = getSavedTrackPosition(normalizedTrack.id);
-  actuallyPlayTrack(normalizedTrack, resumePos);
+if (!isGamePlay && isEmbedContext && !user && playableTrack.stream_cost > 0) {
+  const resumePos = getSavedTrackPosition(playableTrack.id);
+  actuallyPlayTrack(playableTrack, resumePos);
   return;
 }
 
-const resumePos = getSavedTrackPosition(normalizedTrack.id);
+const resumePos = getSavedTrackPosition(playableTrack.id);
 
 // Paid streams
-if (normalizedTrack.stream_cost && normalizedTrack.stream_cost > 0) {
+if (!isGamePlay && playableTrack.stream_cost && playableTrack.stream_cost > 0) {
   if (!user?.id) { setActivePlayingTrack(null); return; }
   setIsProcessingPayment(true);
   try {
-    const res = await rpcStartOrResumeStream(normalizedTrack.id, user.id, resumePos);
+    const res = await rpcStartOrResumeStream(playableTrack.id, user.id, resumePos);
     if (res?.ok || res?.reason === 'already_charged') {
-      actuallyPlayTrack(normalizedTrack, resumePos);
+      actuallyPlayTrack(playableTrack, resumePos);
       try { await refreshUserProfile?.(); } catch { /* noop */ }
     } else {
       setActivePlayingTrack(null);
@@ -162,11 +204,11 @@ if (normalizedTrack.stream_cost && normalizedTrack.stream_cost > 0) {
   }
 } else {
   // Free streams
-  actuallyPlayTrack(normalizedTrack, resumePos);
+  actuallyPlayTrack(playableTrack, resumePos);
 }
   }, [
 user, isProcessingPayment, activePlayingTrack?.id,
-actuallyPlayTrack, refreshUserProfile, isEmbedContext, normalizeTrackForPlayer
+actuallyPlayTrack, refreshUserProfile, isEmbedContext, normalizeTrackForPlayer, isGameMusicMode
   ]);
 
   // SECTION: Initial rehydrate from URL + localStorage
@@ -184,6 +226,15 @@ if (saved.playerState) setPlayerState(saved.playerState);
 if (saved.showCollapsedLyrics !== undefined) setShowCollapsedLyrics(saved.showCollapsedLyrics);
 if (saved.floatingLyricsMode) setFloatingLyricsMode(saved.floatingLyricsMode);
 
+try {
+  const storedMode = localStorage.getItem('crfm_playback_mode');
+  if (storedMode === 'game' || storedMode === 'crfm') {
+    setPlaybackMode(storedMode);
+  }
+} catch {
+  // ignore storage errors
+}
+
 setIsRehydrated(true);
   }, [audioRef, setCurrentTime, setVolume]);
 
@@ -199,6 +250,28 @@ saveStateToLocalStorage({
 activePlayingTrack, currentTime, volume, playerState,
 showCollapsedLyrics, floatingLyricsMode, isPlaying, isRehydrated, audioRef
   ]);
+
+  useEffect(() => {
+    if (!isRehydrated) return;
+    try {
+      localStorage.setItem('crfm_playback_mode', playbackMode);
+    } catch {
+      // ignore storage errors
+    }
+  }, [playbackMode, isRehydrated]);
+
+  useEffect(() => {
+    if (user) return;
+    setPlaybackMode('crfm');
+    setQueueSnapshot(null);
+  }, [user]);
+
+  useEffect(() => {
+    if (playbackMode !== 'game') return;
+    if (gameMusicStatus === 'idle') {
+      loadGameMusicQueue();
+    }
+  }, [playbackMode, gameMusicStatus, loadGameMusicQueue]);
 
   // SECTION: React to QueueContext changes (auto-play or stop)
   useEffect(() => {
@@ -303,11 +376,11 @@ const handleAudioEnded = () => {
     logTrackPlay({
       trackId: activePlayingTrack.id,
       userId: user?.id || null,
-      isPaid: !!activePlayingTrack?.stream_cost && activePlayingTrack.stream_cost > 0,
+      isPaid: !isGameMusicMode && !!activePlayingTrack?.stream_cost && activePlayingTrack.stream_cost > 0,
       amountCreatorCents: 0,
       amountOrgCents: 0,
       currencyCode: 'USD',
-      source: isEmbedContext ? 'embed' : 'web',
+      source: isGameMusicMode ? 'game' : (isEmbedContext ? 'embed' : 'web'),
       playMs,
       completed: true,
     });
@@ -333,7 +406,8 @@ return () => {
 };
   }, [
 activePlayingTrack?.id, queueContext,
-setCurrentTime, setDuration, setIsPlaying, audioRef
+setCurrentTime, setDuration, setIsPlaying, audioRef,
+duration, user?.id, isEmbedContext, isGameMusicMode
   ]);
 
   // SECTION: Keep audio play/pause synced with isPlaying + track presence
@@ -354,15 +428,15 @@ if (audioRef.current && activePlayingTrack && isRehydrated) {
     logTrackPlay({
       trackId: activePlayingTrack.id,
       userId: user?.id || null,
-      isPaid: !!activePlayingTrack?.stream_cost && activePlayingTrack.stream_cost > 0,
+      isPaid: !isGameMusicMode && !!activePlayingTrack?.stream_cost && activePlayingTrack.stream_cost > 0,
       amountCreatorCents: 0,
       amountOrgCents: 0,
       currencyCode: 'USD',
-      source: isEmbedContext ? 'embed' : 'web',
+      source: isGameMusicMode ? 'game' : (isEmbedContext ? 'embed' : 'web'),
       playMs,
       completed: false,
     });
-  }, [activePlayingTrack, isPlaying, audioRef, currentTime, user?.id, isEmbedContext]);
+  }, [activePlayingTrack, isPlaying, audioRef, currentTime, user?.id, isEmbedContext, isGameMusicMode]);
 
   // SECTION: Public controls
   const togglePlay = useCallback(() => {
@@ -376,6 +450,78 @@ if (!activePlayingTrack && queueContext?.currentTrack) {
   else playAudio();
 }
   }, [activePlayingTrack, queueContext, handlePlayRequest, isPlaying, pauseAudio, playAudio]);
+
+  const captureQueueSnapshot = useCallback(() => {
+    if (!queueContext) return null;
+    return {
+      queue: queueContext.queue,
+      currentTrackIndex: queueContext.currentTrackIndex,
+      isShuffling: queueContext.isShuffling,
+    };
+  }, [queueContext]);
+
+  const restoreQueueSnapshot = useCallback(
+    (snapshot) => {
+      if (!queueContext) return;
+      const queueToRestore = snapshot?.queue || [];
+      const indexToRestore = typeof snapshot?.currentTrackIndex === 'number' ? snapshot.currentTrackIndex : 0;
+      queueContext.setPlaybackQueue(queueToRestore, Math.max(indexToRestore, 0));
+      if (snapshot?.isShuffling !== undefined && snapshot.isShuffling !== queueContext.isShuffling) {
+        queueContext.toggleShuffle();
+      }
+    },
+    [queueContext]
+  );
+
+  const enableGameMusicMode = useCallback(async () => {
+    if (!queueContext) return false;
+    const snapshot = captureQueueSnapshot();
+    if (!queueSnapshot) setQueueSnapshot(snapshot);
+    if (queueContext.isShuffling) {
+      queueContext.toggleShuffle();
+    }
+    let tracks = gameMusicQueue;
+    if (!tracks.length) {
+      tracks = await loadGameMusicQueue();
+    }
+    if (!tracks.length) {
+      toast({ title: 'Game music unavailable', description: 'No game music tracks are configured yet.' });
+      return false;
+    }
+    queueContext.setPlaybackQueue(tracks, 0);
+    setPlaybackMode('game');
+    return true;
+  }, [queueContext, captureQueueSnapshot, queueSnapshot, gameMusicQueue, loadGameMusicQueue]);
+
+  const disableGameMusicMode = useCallback(() => {
+    if (!queueContext) return;
+    if (queueSnapshot) {
+      restoreQueueSnapshot(queueSnapshot);
+      setQueueSnapshot(null);
+    } else {
+      queueContext.clearQueue();
+    }
+    setPlaybackMode('crfm');
+  }, [queueContext, queueSnapshot, restoreQueueSnapshot]);
+
+  const toggleGameMusicMode = useCallback(async () => {
+    if (playbackMode === 'game') {
+      disableGameMusicMode();
+      return;
+    }
+    await enableGameMusicMode();
+  }, [playbackMode, enableGameMusicMode, disableGameMusicMode]);
+
+  const setGameMusicMode = useCallback(
+    async (mode) => {
+      if (mode === 'game') {
+        return enableGameMusicMode();
+      }
+      disableGameMusicMode();
+      return true;
+    },
+    [enableGameMusicMode, disableGameMusicMode]
+  );
 
   const playerContextPlayNext = useCallback(() => { if (queueContext) queueContext.playNext(); }, [queueContext]);
   const playerContextPlayPrevious = useCallback(() => { if (queueContext) queueContext.playPrev(); }, [queueContext]);
@@ -406,6 +552,11 @@ togglePlay,
 playNext: playerContextPlayNext,
 playPrevious: playerContextPlayPrevious,
 seekTo,
+playbackMode,
+toggleGameMusicMode,
+setGameMusicMode,
+isDuRoute,
+gameMusicStatus,
 
 // audio properties
 setVolumeLevel, toggleMute, setPlayerState, toggleCollapsedLyrics, cycleFloatingLyricsMode,
