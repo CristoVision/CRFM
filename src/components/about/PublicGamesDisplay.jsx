@@ -101,16 +101,26 @@ const PublicGamesDisplay = () => {
             </CardContent>
             <CardFooter className="p-4 bg-black/20">
               {game.site_url ? (
-                <Button 
-                  asChild 
+                <Button
+                  asChild
                   className="w-full golden-gradient text-black font-semibold proximity-glow-button"
                 >
-                  <a href={game.site_url} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="w-4 h-4 mr-2" /> {t('games.play')}
-                  </a>
+                  {(() => {
+                    const titleKey = (game.title || '').toLowerCase().trim();
+                    const isDu = game.site_url === duTcgUrl || titleKey === 'du tcg pr' || titleKey === 'dutcgpr';
+                    return (
+                      <a
+                        href={game.site_url}
+                        target={isDu ? undefined : '_blank'}
+                        rel={isDu ? undefined : 'noopener noreferrer'}
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" /> {t('games.play')}
+                      </a>
+                    );
+                  })()}
                 </Button>
               ) : (
-                 <Button disabled className="w-full bg-neutral-600 text-neutral-400 cursor-not-allowed">
+                <Button disabled className="w-full bg-neutral-600 text-neutral-400 cursor-not-allowed">
                   {t('games.linkUnavailable')}
                 </Button>
               )}
