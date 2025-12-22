@@ -5,8 +5,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { X, ListMusic, Play, Trash2, Shuffle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import CoverArtMedia from '@/components/common/CoverArtMedia';
 
 const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXVkaW98ZW58MHx8MHx8fDA%3D&w=1000&q=80';
+const isLikelyVideoUrl = (value) => typeof value === 'string' && /\.(mp4|webm|ogg|mov)$/i.test(value);
+const isUsableMediaUrl = (value) =>
+  typeof value === 'string' &&
+  (value.startsWith('http') || value.startsWith('data:') || value.startsWith('blob:') || value.includes('/'));
 
 const QueuePanel = ({ onClose }) => {
   const queueContext = useContext(QueueContext);
@@ -128,11 +133,23 @@ const QueuePanel = ({ onClose }) => {
                                 }`}
                     onClick={() => handlePlayTrack(index)}
                   >
-                    <img
-                      src={track.cover_art_url || DEFAULT_COVER_ART}
-                      alt={track.title}
-                      className="w-10 h-10 rounded object-cover mr-3 shadow-sm"
-                    />
+                    <div className="w-10 h-10 mr-3 shadow-sm flex-shrink-0">
+                      <CoverArtMedia
+                        videoUrl={isUsableMediaUrl(track.video_cover_art_url || track.album_video_cover_art_url || track.albums?.video_cover_art_url) ? (track.video_cover_art_url || track.album_video_cover_art_url || track.albums?.video_cover_art_url) : null}
+                        imageUrl={[
+                          track.cover_art_url,
+                          track.album_cover_art_url,
+                          track.albums?.cover_art_url,
+                          track.creator_avatar_url,
+                          track.profiles?.avatar_url,
+                          DEFAULT_COVER_ART,
+                        ].find((url) => url && !isLikelyVideoUrl(url))}
+                        className="w-10 h-10"
+                        roundedClass="rounded"
+                        objectFitClass="object-cover"
+                        showBadge={false}
+                      />
+                    </div>
                     <div className="flex-grow min-w-0">
                       <p className={`font-medium truncate ${isCurrentlyPlaying ? 'text-yellow-300' : 'text-white group-hover:text-yellow-400'}`}>
                         {track.title}
