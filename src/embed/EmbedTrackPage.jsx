@@ -6,6 +6,7 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Helmet } from 'react-helmet-async';
 import CoverArtMedia from '@/components/common/CoverArtMedia';
+import { pickImageFallback, pickVideoUrl } from '@/lib/mediaFallbacks';
 
     const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXVkaW98ZW58MHx8MHx8fDA%3D&w=1000&q=80';
     const CRFM_LOGO_URL = '/favicon-32x32.png';
@@ -201,7 +202,7 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
             <meta name="description" content={track ? `Listen to ${track.title} by ${track.creator_display_name} embedded from CRFM.` : "Embedded music player from CRFM."} />
             {track && <meta property="og:title" content={`${track.title} - ${track.creator_display_name}`} />}
             {track && <meta property="og:description" content={`Listen to ${track.title} by ${track.creator_display_name} on CRFM.`} />}
-            {track && <meta property="og:image" content={track.cover_art_url || DEFAULT_COVER_ART} />}
+            {track && <meta property="og:image" content={pickImageFallback([track.cover_art_url, track.albums?.cover_art_url], DEFAULT_COVER_ART)} />}
             {track && <meta property="og:type" content="music.song" />}
             {track && <meta property="og:audio" content={track.audio_file_url} />}
         </Helmet>
@@ -209,8 +210,8 @@ import CoverArtMedia from '@/components/common/CoverArtMedia';
           <div className="flex items-center p-3 space-x-3 flex-grow min-h-0">
             <div className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
               <CoverArtMedia
-                videoUrl={track.video_cover_art_url || track.albums?.video_cover_art_url}
-                imageUrl={track.cover_art_url || track.albums?.cover_art_url || DEFAULT_COVER_ART}
+                videoUrl={pickVideoUrl(track.video_cover_art_url || track.albums?.video_cover_art_url)}
+                imageUrl={pickImageFallback([track.cover_art_url, track.albums?.cover_art_url], DEFAULT_COVER_ART)}
                 className="w-full h-full shadow-lg border border-white/10"
                 roundedClass="rounded-md"
                 showBadge={false}

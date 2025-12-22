@@ -174,8 +174,8 @@ const handleOpenFlagModal = () => {
           <div className="md:flex md:space-x-12 glass-effect-light p-6 sm:p-8 rounded-xl shadow-2xl">
             <div className="md:w-1/3 flex-shrink-0 mb-8 md:mb-0">
               <CoverArtMedia
-                videoUrl={playlist.video_cover_art_url}
-                imageUrl={playlist.cover_art_url || DEFAULT_PLAYLIST_COVER}
+                videoUrl={pickVideoUrl(playlist.video_cover_art_url)}
+                imageUrl={pickImageFallback([playlist.cover_art_url], DEFAULT_PLAYLIST_COVER)}
                 className="w-full aspect-square shadow-xl border-2 border-yellow-400/50"
                 roundedClass="rounded-lg"
                 showBadge={!!playlist.video_cover_art_url}

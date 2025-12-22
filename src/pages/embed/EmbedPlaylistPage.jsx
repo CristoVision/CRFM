@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Helmet } from 'react-helmet-async';
 import CoverArtMedia from '@/components/common/CoverArtMedia';
+import { pickImageFallback, pickVideoUrl } from '@/lib/mediaFallbacks';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cGxheWxpc3R8ZW58MHx8MHx8fDA%3D&w=1000&q=80';
@@ -284,7 +285,12 @@ const EmbedPlaylistPage = () => {
             <meta name="description" content={playlist ? t('embed.playlist.metaDescription', { title: playlist.title }) : t('embed.playlist.metaDescriptionFallback')} />
             {playlist && <meta property="og:title" content={`${playlist.title} - ${playlist.profiles?.username || t('embed.common.defaultUser')}`} />}
             {playlist && <meta property="og:description" content={t('embed.playlist.ogDescription', { title: playlist.title })} />}
-            {playlist && <meta property="og:image" content={playlist.cover_art_url || currentTrack?.cover_art_url || DEFAULT_COVER_ART} />}
+            {playlist && (
+              <meta
+                property="og:image"
+                content={pickImageFallback([playlist.cover_art_url, currentTrack?.cover_art_url], DEFAULT_COVER_ART)}
+              />
+            )}
             {playlist && <meta property="og:type" content="music.playlist" />}
             {currentTrack && <meta property="og:audio" content={currentTrack.audio_file_url} />}
         </Helmet>
@@ -292,8 +298,8 @@ const EmbedPlaylistPage = () => {
           <div className="flex items-center p-3 space-x-3">
             <div className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
               <CoverArtMedia
-                videoUrl={playlist.video_cover_art_url || currentTrack?.video_cover_art_url}
-                imageUrl={playlist.cover_art_url || currentTrack?.cover_art_url || DEFAULT_COVER_ART}
+                videoUrl={pickVideoUrl(playlist.video_cover_art_url || currentTrack?.video_cover_art_url)}
+                imageUrl={pickImageFallback([playlist.cover_art_url, currentTrack?.cover_art_url], DEFAULT_COVER_ART)}
                 className="w-full h-full shadow-lg border border-white/10"
                 roundedClass="rounded-md"
                 showBadge={false}

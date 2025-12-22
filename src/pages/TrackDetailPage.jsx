@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Helmet } from 'react-helmet-async';
 import CoverArtMedia from '@/components/common/CoverArtMedia';
+import { pickImageFallback, pickVideoUrl } from '@/lib/mediaFallbacks';
 import { useLanguage } from '@/contexts/LanguageContext';
 
     const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXVkaW98ZW58MHx8MHx8fDA%3D&w=1000&q=80';
@@ -169,7 +170,7 @@ const handleOpenFlagModal = () => {
           const enrichedTrack = {
             ...track,
             album_video_cover_art_url: track.albums?.video_cover_art_url || null,
-            cover_art_url: track.cover_art_url || track.albums?.cover_art_url || track.cover_art_url,
+            cover_art_url: pickImageFallback([track.cover_art_url, track.albums?.cover_art_url], track.cover_art_url),
           };
           queueContext.setPlaybackQueue([enrichedTrack], 0);
         }
@@ -230,7 +231,7 @@ const handleOpenFlagModal = () => {
             <meta name="description" content={`Listen to ${track.title} by ${track.creator_display_name} on CRFM. Genre: ${track.genre}. Released: ${formatDate(track.release_date)}.`} />
             <meta property="og:title" content={`${track.title} by ${track.creator_display_name} - CRFM`} />
             <meta property="og:description" content={`Listen to ${track.title} by ${track.creator_display_name} on CRFM.`} />
-            <meta property="og:image" content={track.cover_art_url || DEFAULT_COVER_ART} />
+            <meta property="og:image" content={pickImageFallback([track.cover_art_url, albumInfo?.cover_art_url], DEFAULT_COVER_ART)} />
             <meta property="og:type" content="music.song" />
             <meta property="og:url" content={window.location.href} />
             {track.audio_file_url && <meta property="og:audio" content={track.audio_file_url} />}
@@ -241,8 +242,8 @@ const handleOpenFlagModal = () => {
           <div className="md:flex md:space-x-12 glass-effect-light p-6 sm:p-8 rounded-xl shadow-2xl">
             <div className="md:w-1/3 flex-shrink-0 mb-8 md:mb-0">
               <CoverArtMedia
-                videoUrl={track.video_cover_art_url || albumInfo?.video_cover_art_url}
-                imageUrl={track.cover_art_url || albumInfo?.cover_art_url || DEFAULT_COVER_ART}
+                videoUrl={pickVideoUrl(track.video_cover_art_url || albumInfo?.video_cover_art_url)}
+                imageUrl={pickImageFallback([track.cover_art_url, albumInfo?.cover_art_url], DEFAULT_COVER_ART)}
                 className="w-full aspect-square shadow-xl border-2 border-yellow-400/50"
                 roundedClass="rounded-lg"
                 showBadge={!!(track.video_cover_art_url || albumInfo?.video_cover_art_url)}

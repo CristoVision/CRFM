@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Helmet } from 'react-helmet-async';
 import CoverArtMedia from '@/components/common/CoverArtMedia';
+import { pickImageFallback, pickVideoUrl } from '@/lib/mediaFallbacks';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8YWxidW18ZW58MHx8MHx8fDA%3D&w=1000&q=80';
@@ -256,7 +257,7 @@ const EmbedAlbumPage = () => {
             <meta name="description" content={album ? t('embed.album.metaDescription', { title: album.title, creator: album.creator_display_name }) : t('embed.album.metaDescriptionFallback')} />
             {album && <meta property="og:title" content={`${album.title} - ${album.creator_display_name}`} />}
             {album && <meta property="og:description" content={t('embed.album.ogDescription', { title: album.title, creator: album.creator_display_name })} />}
-            {album && <meta property="og:image" content={album.cover_art_url || DEFAULT_COVER_ART} />}
+            {album && <meta property="og:image" content={pickImageFallback([album.cover_art_url], DEFAULT_COVER_ART)} />}
             {album && <meta property="og:type" content="music.album" />}
             {currentTrack && <meta property="og:audio" content={currentTrack.audio_file_url} />}
         </Helmet>
@@ -264,8 +265,8 @@ const EmbedAlbumPage = () => {
           <div className="flex items-center p-3 space-x-3">
             <div className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
               <CoverArtMedia
-                videoUrl={album.video_cover_art_url}
-                imageUrl={album.cover_art_url || DEFAULT_COVER_ART}
+                videoUrl={pickVideoUrl(album.video_cover_art_url)}
+                imageUrl={pickImageFallback([album.cover_art_url], DEFAULT_COVER_ART)}
                 className="w-full h-full shadow-lg border border-white/10"
                 roundedClass="rounded-md"
                 showBadge={false}
