@@ -8,7 +8,8 @@ import PlaylistsTab from '@/components/dashboard/PlaylistsTab';
 import CreatorsTab from '@/components/dashboard/CreatorsTab';
 import MusicVideosTab from '@/components/dashboard/MusicVideosTab';
 import RadioStationsTab from '@/components/dashboard/RadioStationsTab';
-import { Search, Music, Disc, ListMusic, Users, LayoutGrid, List, Film, Radio } from 'lucide-react';
+import MarketplaceTab from '@/components/dashboard/MarketplaceTab';
+import { Search, Music, Disc, ListMusic, Users, LayoutGrid, List, Film, Radio, ShoppingBag } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -129,6 +130,9 @@ function HomePage() {
               <TabsTrigger value="radio" className="tab-button flex-shrink-0">
                 <Radio className="w-4 h-4 mr-2" /> {t('home.tabs.radio')}
               </TabsTrigger>
+              <TabsTrigger value="marketplace" className="tab-button flex-shrink-0">
+                <ShoppingBag className="w-4 h-4 mr-2" /> {t('home.tabs.marketplace')}
+              </TabsTrigger>
             </TabsList>
           </div>
           <div className="flex items-center space-x-2">
@@ -207,6 +211,9 @@ function HomePage() {
         </TabsContent>
         <TabsContent value="radio">
           <RadioStationsTab searchQuery={searchQuery} viewMode={viewMode} />
+        </TabsContent>
+        <TabsContent value="marketplace">
+          <MarketplaceTab searchQuery={searchQuery} />
         </TabsContent>
       </Tabs>
     </div>

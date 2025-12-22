@@ -23,6 +23,7 @@ const DEFAULT_PRODUCT_FORM = {
   sale_starts_at: '',
   sale_ends_at: '',
   is_active: true,
+  is_public: true,
 };
 
 const DEFAULT_FORMAT_FORM = {
@@ -79,7 +80,7 @@ const CreatorDownloadsManager = () => {
       const [{ data: productRows, error: productError }, { data: codeRows, error: codeError }] = await Promise.all([
         supabase
           .from('creator_store_products')
-          .select('id, creator_id, content_type, content_id, title, description, license_text, artist_message, is_active, sale_starts_at, sale_ends_at, created_at, updated_at')
+          .select('id, creator_id, content_type, content_id, title, description, license_text, artist_message, is_active, is_public, sale_starts_at, sale_ends_at, created_at, updated_at')
           .eq('creator_id', user.id)
           .order('created_at', { ascending: false }),
         supabase
@@ -176,6 +177,7 @@ const CreatorDownloadsManager = () => {
       sale_starts_at: p.sale_starts_at ? new Date(p.sale_starts_at).toISOString().slice(0, 16) : '',
       sale_ends_at: p.sale_ends_at ? new Date(p.sale_ends_at).toISOString().slice(0, 16) : '',
       is_active: !!p.is_active,
+      is_public: p.is_public !== false,
       id: p.id,
     });
     setProductDialogOpen(true);
@@ -205,6 +207,7 @@ const CreatorDownloadsManager = () => {
         sale_starts_at: toIsoOrNull(productForm.sale_starts_at),
         sale_ends_at: toIsoOrNull(productForm.sale_ends_at),
         is_active: !!productForm.is_active,
+        is_public: !!productForm.is_public,
         updated_at: new Date().toISOString(),
       };
 
@@ -392,6 +395,7 @@ const CreatorDownloadsManager = () => {
                       <div className="flex items-center gap-2">
                         <div className="text-white font-semibold truncate">{p.title}</div>
                         {p.is_active ? <Badge className="bg-green-500/20 text-green-200">Active</Badge> : <Badge className="bg-gray-500/20 text-gray-200">Inactive</Badge>}
+                        <Badge className="bg-yellow-500/10 text-yellow-200">{p.is_public ? 'Public' : 'Private'}</Badge>
                         <Badge className="bg-white/10 text-gray-200">{p.content_type}</Badge>
                       </div>
                       {p.description ? <div className="text-sm text-gray-300 mt-1">{p.description}</div> : null}
@@ -518,6 +522,13 @@ const CreatorDownloadsManager = () => {
                 <div className="text-xs text-gray-400">Inactive products will not appear to buyers.</div>
               </div>
               <input type="checkbox" checked={productForm.is_active} onChange={(e) => setProductForm((prev) => ({ ...prev, is_active: e.target.checked }))} className="h-5 w-5 accent-yellow-400" />
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/5 p-3">
+              <div className="text-sm text-gray-300">
+                <div className="text-white font-semibold">Public listing</div>
+                <div className="text-xs text-gray-400">Public products appear in the Marketplace tab.</div>
+              </div>
+              <input type="checkbox" checked={productForm.is_public} onChange={(e) => setProductForm((prev) => ({ ...prev, is_public: e.target.checked }))} className="h-5 w-5 accent-yellow-400" />
             </div>
           </div>
 
