@@ -36,6 +36,9 @@ function HomePage() {
                 <Button asChild variant="outline" className="border-yellow-400/40 text-yellow-200 hover:text-yellow-100">
                   <a href="/about?tab=how">{t('home.heroCtaHow')}</a>
                 </Button>
+                <Button asChild variant="outline" className="border-yellow-400/40 text-yellow-200 hover:text-yellow-100">
+                  <a href="/about?tab=beta">{t('home.heroCtaApply')}</a>
+                </Button>
                 <Button asChild variant="ghost" className="text-yellow-200 hover:text-yellow-100">
                   <a href="/?auth=login">{t('about.creators.ctaHub')}</a>
                 </Button>

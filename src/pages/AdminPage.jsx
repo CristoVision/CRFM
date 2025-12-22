@@ -24,6 +24,7 @@ import {
   Trophy,
   MessageSquare,
   DollarSign,
+  Sparkles,
 } from 'lucide-react';
 
 import AdminContentFlagsTab from '@/components/admin/AdminContentFlagsTab';
@@ -36,6 +37,7 @@ import AdsTab from '@/components/admin/AdsTab';
 import AdminAchievementsTab from '@/components/admin/AdminAchievementsTab';
 import WalletAdminTab from '@/components/admin/WalletAdminTab';
 import AdminSupportTab from '@/components/admin/AdminSupportTab';
+import AdminBetaApplicationsTab from '@/components/admin/AdminBetaApplicationsTab';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 function SectionShell({ children }) {
@@ -73,6 +75,7 @@ export default function AdminPage() {
       { value: 'ads', label: t('admin.mainTabs.ads'), Icon: Megaphone },
       { value: 'wallet', label: t('admin.mainTabs.wallet'), Icon: DollarSign },
       { value: 'support', label: t('admin.mainTabs.support'), Icon: MessageSquare },
+      { value: 'betaApps', label: t('admin.mainTabs.betaApps'), Icon: Sparkles },
     ],
     [t]
   );
@@ -165,6 +168,7 @@ export default function AdminPage() {
           {mainTab === 'ads' && <AdsTab />}
           {mainTab === 'wallet' && <WalletAdminTab />}
           {mainTab === 'support' && <AdminSupportTab />}
+          {mainTab === 'betaApps' && <AdminBetaApplicationsTab />}
 
           {mainTab === 'ecosystem' && (
             <div className="mt-2">

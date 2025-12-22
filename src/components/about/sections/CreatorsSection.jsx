@@ -33,6 +33,9 @@ const CreatorsSection = () => {
         <Button asChild className="golden-gradient text-black font-semibold">
           <a href="/hub">{t('about.creators.ctaHub')}</a>
         </Button>
+        <Button asChild variant="outline" className="border-yellow-400/40 text-yellow-200 hover:text-yellow-100">
+          <a href="/about?tab=beta">{t('about.creators.ctaApply')}</a>
+        </Button>
       </div>
     </SectionShell>
   );

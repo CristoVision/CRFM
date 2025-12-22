@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, Users, Mail, Package, Gamepad2, BookOpen, Briefcase, Store, Tag, CalendarDays, Coins, UploadCloud, BadgeDollarSign, Radio } from 'lucide-react';
+import { Eye, Users, Mail, Package, Gamepad2, BookOpen, Briefcase, Store, Tag, CalendarDays, Coins, UploadCloud, BadgeDollarSign, Radio, Sparkles } from 'lucide-react';
 import RequestCreatorTagsTab from '@/components/about/RequestCreatorTagsTab';
 import PublicAppsDisplay from '@/components/about/PublicAppsDisplay';
 import PublicGamesDisplay from '@/components/about/PublicGamesDisplay';
@@ -11,6 +11,7 @@ import HowItWorksSection from '@/components/about/sections/HowItWorksSection';
 import CreatorsSection from '@/components/about/sections/CreatorsSection';
 import MonetizationSection from '@/components/about/sections/MonetizationSection';
 import RadioSection from '@/components/about/sections/RadioSection';
+import BetaSection from '@/components/about/sections/BetaSection';
 import { buildInfo, formatBuildLabel } from '@/lib/buildInfo';
 import { useLanguage } from '@/contexts/LanguageContext';
 import DUStoriesPage from '@/pages/DUStoriesPage';
@@ -55,7 +56,7 @@ function AboutPage() {
   const queryTab = useMemo(() => new URLSearchParams(location.search).get('tab'), [location.search]);
   const querySub = useMemo(() => new URLSearchParams(location.search).get('sub'), [location.search]);
   const allowedTabs = useMemo(
-    () => ['how', 'creators', 'monetization', 'radio', 'vision', 'team', 'contact', 'ecosystem', 'requestTags'],
+    () => ['how', 'creators', 'monetization', 'radio', 'beta', 'vision', 'team', 'contact', 'ecosystem', 'requestTags'],
     []
   );
   const [activeTab, setActiveTab] = useState(allowedTabs.includes(queryTab || '') ? queryTab : 'how');
@@ -90,6 +91,7 @@ function AboutPage() {
                 <TabsTrigger value="creators" className="tab-button text-xs sm:text-sm whitespace-nowrap px-4 py-2 rounded-xl flex-1 sm:flex-none"><UploadCloud className="w-4 h-4 mr-1 sm:mr-2" />{t('about.tabs.creators')}</TabsTrigger>
                 <TabsTrigger value="monetization" className="tab-button text-xs sm:text-sm whitespace-nowrap px-4 py-2 rounded-xl flex-1 sm:flex-none"><BadgeDollarSign className="w-4 h-4 mr-1 sm:mr-2" />{t('about.tabs.monetization')}</TabsTrigger>
                 <TabsTrigger value="radio" className="tab-button text-xs sm:text-sm whitespace-nowrap px-4 py-2 rounded-xl flex-1 sm:flex-none"><Radio className="w-4 h-4 mr-1 sm:mr-2" />{t('about.tabs.radio')}</TabsTrigger>
+                <TabsTrigger value="beta" className="tab-button text-xs sm:text-sm whitespace-nowrap px-4 py-2 rounded-xl flex-1 sm:flex-none"><Sparkles className="w-4 h-4 mr-1 sm:mr-2" />{t('about.tabs.beta')}</TabsTrigger>
                 <TabsTrigger value="vision" className="tab-button text-xs sm:text-sm whitespace-nowrap px-4 py-2 rounded-xl flex-1 sm:flex-none"><Eye className="w-4 h-4 mr-1 sm:mr-2" />{t('about.tabs.vision')}</TabsTrigger>
                 <TabsTrigger value="team" className="tab-button text-xs sm:text-sm whitespace-nowrap px-4 py-2 rounded-xl flex-1 sm:flex-none"><Users className="w-4 h-4 mr-1 sm:mr-2" />{t('about.tabs.team')}</TabsTrigger>
                 <TabsTrigger value="contact" className="tab-button text-xs sm:text-sm whitespace-nowrap px-4 py-2 rounded-xl flex-1 sm:flex-none"><Mail className="w-4 h-4 mr-1 sm:mr-2" />{t('about.tabs.contact')}</TabsTrigger>
@@ -108,6 +110,9 @@ function AboutPage() {
               </TabsContent>
               <TabsContent value="radio">
                 <RadioSection />
+              </TabsContent>
+              <TabsContent value="beta">
+                <BetaSection />
               </TabsContent>
               <TabsContent value="vision">
                 <TextContent title={t('about.vision.title')} icon={<Eye />}>
