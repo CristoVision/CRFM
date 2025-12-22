@@ -10,6 +10,25 @@ const PublicAppsDisplay = () => {
   const [apps, setApps] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { t } = useLanguage();
+  const dualIslandUrl = import.meta.env.VITE_DUAL_ISLAND_URL || '/apps/dual-island';
+  const dualIslandMedia = import.meta.env.VITE_DUAL_ISLAND_MEDIA_URL || '/icon-512.png';
+
+  const mergeDualIsland = (list) => {
+    const normalized = list.map(app => ({ ...app, titleKey: (app.title || '').toLowerCase().trim() }));
+    const hasDual = normalized.some(app => app.titleKey === 'dual island' || app.titleKey === 'isladual');
+    if (hasDual) return list;
+    return [
+      ...list,
+      {
+        id: 'dual-island-static',
+        title: t('apps.dualIslandTitle'),
+        description: t('apps.dualIslandDescription'),
+        media_url: dualIslandMedia || null,
+        site_url: dualIslandUrl || null,
+        is_public: true,
+      }
+    ];
+  };
 
   useEffect(() => {
     const fetchPublicApps = async () => {
@@ -22,7 +41,7 @@ const PublicAppsDisplay = () => {
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        setApps(data || []);
+        setApps(mergeDualIsland(data || []));
       } catch (error) {
         toast({
           title: t('apps.errorTitle'),
@@ -36,7 +55,7 @@ const PublicAppsDisplay = () => {
     };
 
     fetchPublicApps();
-  }, []);
+  }, [t]);
 
   if (isLoading) {
     return (
@@ -86,9 +105,19 @@ const PublicAppsDisplay = () => {
                   asChild 
                   className="w-full golden-gradient text-black font-semibold proximity-glow-button"
                 >
-                  <a href={app.site_url} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="w-4 h-4 mr-2" /> {t('apps.visit')}
-                  </a>
+                  {(() => {
+                    const titleKey = (app.title || '').toLowerCase().trim();
+                    const isDual = app.site_url === dualIslandUrl || titleKey === 'dual island' || titleKey === 'isladual';
+                    return (
+                      <a
+                        href={app.site_url}
+                        target={isDual ? undefined : '_blank'}
+                        rel={isDual ? undefined : 'noopener noreferrer'}
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" /> {t('apps.visit')}
+                      </a>
+                    );
+                  })()}
                 </Button>
               ) : (
                 <Button disabled className="w-full bg-neutral-600 text-neutral-400 cursor-not-allowed">

@@ -146,6 +146,7 @@ const translations = {
       titleSuffix: 'Streaming',
       subtitle: 'Discover, Stream, and Connect with Creators.',
       playDuTcpr: 'Play DU TCG PR',
+      playDualIsland: 'Open Dual Island',
       heroTitle: 'Christian creators + listeners, powered by Puerto Rico.',
       heroBody:
         'CRFMinistry is a faith-first music platform where listeners pay per play, creators earn per stream, and stories meet purpose.',
@@ -1266,6 +1267,8 @@ const translations = {
       linkUnavailable: 'Link Unavailable',
       errorTitle: 'Error Fetching Apps',
       errorBody: 'Could not load public apps at this time. Please try again later.',
+      dualIslandTitle: 'Dual Island',
+      dualIslandDescription: 'Services and vehicle rentals for Puerto Rico, with verified profiles and direct messaging.',
     },
     games: {
       loading: 'Loading Games...',
@@ -1458,6 +1461,7 @@ const translations = {
       titleSuffix: 'Streaming',
       subtitle: 'Descubre, transmite y conecta con creadores.',
       playDuTcpr: 'Jugar DU TCG PR',
+      playDualIsland: 'Abrir Dual Island',
       heroTitle: 'Creadores cristianos + oyentes, con raiz en Puerto Rico.',
       heroBody:
         'CRFMinistry es una plataforma musical de fe donde el oyente paga por lo que escucha y el artista cobra por cada escucha.',
@@ -2578,6 +2582,8 @@ const translations = {
       linkUnavailable: 'Enlace no disponible',
       errorTitle: 'Error cargando apps',
       errorBody: 'No se pudieron cargar las apps. Intenta mas tarde.',
+      dualIslandTitle: 'Dual Island',
+      dualIslandDescription: 'Servicios y renta de vehiculos para Puerto Rico, con perfiles verificados y mensajeria directa.',
     },
     games: {
       loading: 'Cargando juegos...',

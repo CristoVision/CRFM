@@ -20,6 +20,7 @@ function HomePage() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const duTcgUrl = import.meta.env.VITE_DU_TCG_PR_URL || '/games/du';
+  const dualIslandUrl = import.meta.env.VITE_DUAL_ISLAND_URL || '/apps/dual-island';
   const howSteps = useMemo(() => t('about.how.steps') || [], [t]);
 
   return (
@@ -63,8 +64,8 @@ function HomePage() {
         <p className="text-lg sm:text-xl text-gray-300 mb-8">
           {t('home.subtitle')}
         </p>
-        {duTcgUrl ? (
-          <div className="flex justify-center mb-6">
+        {duTcgUrl || dualIslandUrl ? (
+          <div className="flex flex-wrap justify-center gap-3 mb-6">
             <Button
               asChild
               variant="outline"
@@ -73,6 +74,16 @@ function HomePage() {
             >
               <a href={duTcgUrl} rel="noreferrer">
                 {t('home.playDuTcpr')}
+              </a>
+            </Button>
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="text-yellow-200 hover:text-yellow-100 hover:bg-white/10"
+            >
+              <a href={dualIslandUrl} rel="noreferrer">
+                {t('home.playDualIsland')}
               </a>
             </Button>
           </div>

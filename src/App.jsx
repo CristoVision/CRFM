@@ -20,6 +20,7 @@ import CreatorDetailPage from '@/pages/CreatorDetailPage';
 import VideoDetailPage from '@/pages/VideoDetailPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import DuGamePage from '@/pages/DuGamePage';
+import DualIslandPage from '@/pages/DualIslandPage';
 
 import EmbedTrackPage from '@/pages/embed/EmbedTrackPage';
 import EmbedAlbumPage from '@/pages/embed/EmbedAlbumPage';
@@ -111,6 +112,8 @@ function AppContent() {
 
         {/* DU TCG PR fullscreen experience */}
         <Route path="/games/du" element={<DuGamePage />} />
+        {/* Dual Island fullscreen experience */}
+        <Route path="/apps/dual-island" element={<DualIslandPage />} />
 
         {/* Main app routes are now under a single layout */}
         <Route path="/" element={<MainLayout />}>
