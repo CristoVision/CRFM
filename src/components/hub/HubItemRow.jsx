@@ -16,7 +16,7 @@ import React, { useState } from 'react';
     const HubItemRow = ({ item, itemType, onEdit, onDelete, onManageContributors, onPlay, onShare, isProcessingPlay }) => {
       const navigate = useNavigate();
       const { user } = useAuth();
-      const { id, title, cover_art_url, genre, release_date, description, is_public, created_at, uploader_id, creator_id } = item;
+      const { id, title, cover_art_url, video_cover_art_url, album, genre, release_date, description, is_public, created_at, uploader_id, creator_id } = item;
 
       const [isFlagModalOpen, setIsFlagModalOpen] = useState(false);
       const [selectedContentForFlag, setSelectedContentForFlag] = useState(null);
@@ -75,7 +75,7 @@ import React, { useState } from 'react';
             className="flex items-center space-x-3 p-3 hover:bg-white/5 rounded-lg group transition-colors duration-200 glass-effect-hoverable mb-2"
           >
             <img
-              src={pickImageFallback([cover_art_url], defaultCover)}
+              src={pickImageFallback([cover_art_url, video_cover_art_url, album?.cover_art_url], defaultCover)}
               alt={title}
               className="w-12 h-12 rounded-md object-cover border border-white/10 flex-shrink-0"
             />

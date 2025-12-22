@@ -17,7 +17,7 @@ import React, { useState, useEffect } from 'react';
     const HubItemCard = ({ item, itemType, onEdit, onDelete, onManageContributors }) => {
       const navigate = useNavigate();
       const { user } = useAuth();
-      const { id, title, cover_art_url, genre, release_date, description, is_public, created_at, uploader_id, creator_id } = item;
+      const { id, title, cover_art_url, video_cover_art_url, album, genre, release_date, description, is_public, created_at, uploader_id, creator_id } = item;
 
       const [isFlagModalOpen, setIsFlagModalOpen] = useState(false);
       const [selectedContentForFlag, setSelectedContentForFlag] = useState(null);
@@ -95,7 +95,7 @@ import React, { useState, useEffect } from 'react';
               <CardContent className="p-0">
                 <div className="relative aspect-square w-full">
                   <img
-                    src={pickImageFallback([cover_art_url], defaultCover)}
+                    src={pickImageFallback([cover_art_url, video_cover_art_url, album?.cover_art_url], defaultCover)}
                     alt={title}
                     className="absolute inset-0 w-full h-full object-cover border-b border-white/10"
                   />

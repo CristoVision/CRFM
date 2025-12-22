@@ -45,7 +45,7 @@ import React, { useState, useEffect, useCallback } from 'react';
         try {
           const { data, error } = await supabase
             .from('tracks')
-            .select('id, title, cover_art_url, video_cover_art_url, album_id, uploader_id, genre, release_date, languages, is_public, created_at, audio_file_url, lyrics_text, is_christian_nature, is_instrumental, ai_in_artwork, ai_in_production, ai_in_lyrics, stream_cost, total_royalty_percentage_allocated')
+            .select('id, title, cover_art_url, video_cover_art_url, album_id, uploader_id, genre, release_date, languages, is_public, created_at, audio_file_url, lyrics_text, is_christian_nature, is_instrumental, ai_in_artwork, ai_in_production, ai_in_lyrics, stream_cost, total_royalty_percentage_allocated, album:albums(cover_art_url)')
             .eq('uploader_id', user.id)
             .order('created_at', { ascending: false });
 
