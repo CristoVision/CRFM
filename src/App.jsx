@@ -30,6 +30,7 @@ import EmbedCreatorPage from '@/pages/embed/EmbedCreatorPage';
 import MusicPlayer from '@/components/player/MusicPlayer';
 import FloatingLyricsOverlay from '@/components/player/FloatingLyricsOverlay';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { AssistantProvider } from '@/contexts/AssistantContext';
 import { PlayerProvider } from '@/contexts/PlayerContext';
 import { QueueProvider } from '@/contexts/QueueContext';
 import { VideoPlayerProvider } from '@/contexts/VideoPlayerContext';
@@ -168,14 +169,16 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <QueueProvider>
-          <PlayerProvider>
-            <VideoPlayerProvider>
-              <AppContent />
-            </VideoPlayerProvider>
-          </PlayerProvider>
-        </QueueProvider>
-        <Toaster />
+        <AssistantProvider>
+          <QueueProvider>
+            <PlayerProvider>
+              <VideoPlayerProvider>
+                <AppContent />
+              </VideoPlayerProvider>
+            </PlayerProvider>
+          </QueueProvider>
+          <Toaster />
+        </AssistantProvider>
       </AuthProvider>
     </Router>
   );

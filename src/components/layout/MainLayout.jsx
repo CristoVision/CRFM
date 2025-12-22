@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import ErrorMonitorPanel from '@/components/debug/ErrorMonitorPanel';
+import AssistantWidget from '@/components/assistant/AssistantWidget';
 
 function MainLayout() {
   return (
@@ -11,6 +12,7 @@ function MainLayout() {
         <Outlet />
       </main>
       <ErrorMonitorPanel />
+      <AssistantWidget />
       <div id="player-dock-sentinel" className="h-px w-full" aria-hidden="true" />
       {/* Footer could be added here */}
     </div>
