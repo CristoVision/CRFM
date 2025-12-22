@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -19,9 +19,39 @@ function HomePage() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const duTcgUrl = import.meta.env.VITE_DU_TCG_PR_URL || '/games/du';
+  const howSteps = useMemo(() => t('about.how.steps') || [], [t]);
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-8">
+      {!user ? (
+        <div className="glass-effect p-6 sm:p-8 rounded-2xl border border-white/10 mb-10">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl">
+              <h2 className="text-3xl sm:text-4xl font-bold text-white mb-3">{t('home.heroTitle')}</h2>
+              <p className="text-gray-300 text-base sm:text-lg">{t('home.heroBody')}</p>
+              <div className="flex flex-wrap gap-3 mt-5">
+                <Button asChild className="golden-gradient text-black font-semibold">
+                  <a href="/">{t('home.heroCtaExplore')}</a>
+                </Button>
+                <Button asChild variant="outline" className="border-yellow-400/40 text-yellow-200 hover:text-yellow-100">
+                  <a href="/about?tab=how">{t('home.heroCtaHow')}</a>
+                </Button>
+                <Button asChild variant="ghost" className="text-yellow-200 hover:text-yellow-100">
+                  <a href="/?auth=login">{t('about.creators.ctaHub')}</a>
+                </Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full lg:max-w-md">
+              {howSteps.slice(0, 4).map((step) => (
+                <div key={step.title} className="bg-black/30 border border-white/10 rounded-xl p-3">
+                  <div className="text-sm text-yellow-300 font-semibold mb-1">{step.title}</div>
+                  <div className="text-xs text-gray-300">{step.body}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
       <div className="text-center mb-12 mt-4 sm:mt-8">
         <h1 className="text-4xl sm:text-5xl font-bold mb-4">
           <span className="golden-text">CRFM</span> {t('home.titleSuffix')}

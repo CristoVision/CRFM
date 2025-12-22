@@ -18,6 +18,10 @@ const translations = {
       profile: 'Profile',
       bible: 'Bible',
       stories: 'Stories',
+      howItWorks: 'How it works',
+      forCreators: 'For creators',
+      radio: 'Radio',
+      applyBeta: 'Apply Beta',
     },
     auth: {
       signInUp: 'Sign In / Up',
@@ -142,6 +146,11 @@ const translations = {
       titleSuffix: 'Streaming',
       subtitle: 'Discover, Stream, and Connect with Creators.',
       playDuTcpr: 'Play DU TCG PR',
+      heroTitle: 'Christian creators + listeners, powered by Puerto Rico.',
+      heroBody:
+        'CRFMinistry is a faith-first music platform where listeners pay per play, creators earn per stream, and stories meet purpose.',
+      heroCtaExplore: 'Explore Music',
+      heroCtaHow: 'How it works',
       searchPlaceholder: 'Search tracks, albums, creators...',
       tabs: {
         tracks: 'Tracks',
@@ -164,13 +173,17 @@ const translations = {
     },
     about: {
       title: 'About {{brand}}',
-      subtitle: 'Learn more about our vision, team, and how to connect with us.',
+      subtitle: 'Faith-first music + creator economy, built in Puerto Rico.',
       tabs: {
         vision: 'Vision',
         team: 'Team',
         contact: 'Contact',
         ecosystem: 'Ecosystem',
         requestTags: 'Request Tags',
+        how: 'How it works',
+        creators: 'For creators',
+        monetization: 'Monetization',
+        radio: 'Radio',
         apps: 'Apps',
         calendar: 'Calendar',
         games: 'Games',
@@ -179,11 +192,108 @@ const translations = {
         portfolio: 'Portfolio',
         stores: 'Stores',
       },
+      how: {
+        title: 'How CRFM works',
+        subtitle: 'Pay-per-play listening that directly funds Christian creators.',
+        steps: [
+          {
+            title: 'Listeners stream with CrossCoins',
+            body: 'You only pay for what you listen to. CrossCoins (CCs) act as the listening credit on CRFM.',
+          },
+          {
+            title: 'Transparent economy',
+            body: 'Example: $5 = 500 CCs. The current rate averages about 0.5 CC per stream.',
+          },
+          {
+            title: 'Creators earn per play',
+            body: 'Every verified stream sends CCs to the creator with support for royalty splits.',
+          },
+          {
+            title: 'Artists build deeper bonds',
+            body: 'Lyrics, playlists, and stories let fans connect to the message beyond the song.',
+          },
+          {
+            title: 'Future goal',
+            body: 'As the economy grows, we want to reach 1 CC per stream for stronger creator earnings.',
+          },
+        ],
+        economy:
+          'Listeners choose how much to top up. Creators receive pay-per-play royalties and can split payouts with collaborators.',
+      },
+      creators: {
+        title: 'For creators',
+        subtitle: 'Ship releases fast with tools built for Christian artists.',
+        features: [
+          {
+            title: 'Upload tracks, albums, and videos',
+            body: 'Publish singles, full albums, and music videos in one place.',
+          },
+          {
+            title: 'Bulk upload (beta)',
+            body: 'Batch upload is available and improving. Expect occasional hiccups while we polish.',
+          },
+          {
+            title: 'Playlists + curation',
+            body: 'Create playlists, favorite tracks, and curate themed sets for listeners.',
+          },
+          {
+            title: 'Lyrics + LRC sync',
+            body: 'Upload, download, and sync .lrc files so fans can follow every line.',
+          },
+          {
+            title: 'Video cover art',
+            body: 'Add 5–10s looping cover videos for a premium, modern feel.',
+          },
+        ],
+        ctaHub: 'Creator Hub',
+      },
+      monetization: {
+        title: 'Monetization options',
+        subtitle: 'Pick the royalty model that fits each release.',
+        options: [
+          {
+            title: 'Free uploads',
+            body: 'Unlimited uploads with CRFM retaining 10% of royalties.',
+          },
+          {
+            title: 'Permanent track fee',
+            body: 'Pay once per track to keep 100% of royalties for that track.',
+          },
+          {
+            title: 'Permanent album fee',
+            body: 'Pay once per album to keep 100% of royalties for that album.',
+          },
+          {
+            title: 'Membership',
+            body: 'Monthly, 6‑month, or annual plans unlock unlimited uploads and 100% royalties while active.',
+          },
+        ],
+        note:
+          'Uploads include a Christian content acknowledgment checkbox. Content outside the standard may be removed or lead to account action. If a membership lapses, content stays live but royalties during the lapse go to CRFM until renewal or removal.',
+      },
+      radio: {
+        title: 'Radio stations',
+        subtitle: 'Free listening for visitors with admin‑curated stations.',
+        points: [
+          {
+            title: 'Lean-back listening',
+            body: 'Visitors can listen without choosing specific songs—just pick a station.',
+          },
+          {
+            title: 'Curated by CRFM',
+            body: 'Stations are hand‑curated for worship, testimony, and community moods.',
+          },
+          {
+            title: 'Ads + sponsorships (coming)',
+            body: 'Future radio monetization will support free listening and artist discovery.',
+          },
+        ],
+      },
       vision: {
         title: 'Our Vision',
-        p1: 'At CRFM, we believe music is far more than sound—it is story, spirit, and shared experience.',
-        p2: 'We empower artists and listeners with a dynamic platform that brings lyrics to life, deepens connections, and turns every song into a living narrative.',
-        p3: 'Our vision is anchored by three pillars: Unifying Sound & Story, Building Community, and Elevating Expression so faith-filled messages shine with clarity and impact.',
+        p1: 'CRFMinistry is a Christian creator and listener platform rooted in Puerto Rico.',
+        p2: 'We connect faith-driven music with a transparent pay‑per‑play economy so every listen supports artists.',
+        p3: 'Our mission is to elevate worship, testimony, and truth through music, stories, and community.',
       },
       team: {
         title: 'Our Team',
@@ -192,7 +302,7 @@ const translations = {
       },
       contact: {
         title: 'Contact Us',
-        p1: "We'd love to hear from you! Whether you have questions, feedback, or partnership inquiries, feel free to reach out.",
+        p1: "We'd love to hear from you! For partnerships, support, or web development services, reach out anytime.",
         emailLabel: 'Email:',
         supportLabel: 'Support:',
       },
@@ -1136,6 +1246,9 @@ const translations = {
       profile: 'Perfil',
       bible: 'Biblia',
       stories: 'Historias',
+      howItWorks: 'Como funciona',
+      forCreators: 'Para creadores',
+      radio: 'Radio',
     },
     auth: {
       signInUp: 'Iniciar sesion / Registrar',
@@ -1260,6 +1373,11 @@ const translations = {
       titleSuffix: 'Streaming',
       subtitle: 'Descubre, transmite y conecta con creadores.',
       playDuTcpr: 'Jugar DU TCG PR',
+      heroTitle: 'Creadores cristianos + oyentes, con raiz en Puerto Rico.',
+      heroBody:
+        'CRFMinistry es una plataforma musical de fe donde el oyente paga por lo que escucha y el artista cobra por cada escucha.',
+      heroCtaExplore: 'Explorar musica',
+      heroCtaHow: 'Como funciona',
       searchPlaceholder: 'Buscar pistas, albums, creadores...',
       tabs: {
         tracks: 'Pistas',
@@ -1282,13 +1400,17 @@ const translations = {
     },
     about: {
       title: 'Acerca de {{brand}}',
-      subtitle: 'Conoce nuestra vision, equipo y como conectarnos.',
+      subtitle: 'Musica de fe + economia de creadores, nacida en Puerto Rico.',
       tabs: {
         vision: 'Vision',
         team: 'Equipo',
         contact: 'Contacto',
         ecosystem: 'Ecosistema',
         requestTags: 'Solicitar tags',
+        how: 'Como funciona',
+        creators: 'Para creadores',
+        monetization: 'Monetizacion',
+        radio: 'Radio',
         apps: 'Apps',
         calendar: 'Calendario',
         games: 'Juegos',
@@ -1297,11 +1419,108 @@ const translations = {
         portfolio: 'Portafolio',
         stores: 'Tiendas',
       },
+      how: {
+        title: 'Como funciona CRFM',
+        subtitle: 'Escucha pay‑per‑play que financia directamente a los creadores cristianos.',
+        steps: [
+          {
+            title: 'Escucha con CrossCoins',
+            body: 'Solo pagas lo que escuchas. Los CrossCoins (CCs) son el credito de escucha en CRFM.',
+          },
+          {
+            title: 'Economia transparente',
+            body: 'Ejemplo: $5 = 500 CCs. La tarifa actual ronda 0.5 CC por stream.',
+          },
+          {
+            title: 'El creador cobra por play',
+            body: 'Cada stream verificado envía CCs al artista con splits de regalías.',
+          },
+          {
+            title: 'Mas conexion con fans',
+            body: 'Letras, playlists e historias para conectar mas alla de la cancion.',
+          },
+          {
+            title: 'Meta futura',
+            body: 'Queremos llegar a 1 CC por stream cuando la economia sea saludable.',
+          },
+        ],
+        economy:
+          'El oyente decide cuanto recargar. Los creadores reciben regalías pay‑per‑play y pueden dividir con colaboradores.',
+      },
+      creators: {
+        title: 'Para creadores',
+        subtitle: 'Herramientas reales para publicar y crecer en CRFM.',
+        features: [
+          {
+            title: 'Sube tracks, albums y videos',
+            body: 'Publica singles, albums completos y videos musicales.',
+          },
+          {
+            title: 'Bulk upload (beta)',
+            body: 'Disponible y mejorando. Puede fallar ocasionalmente mientras lo pulimos.',
+          },
+          {
+            title: 'Playlists y curacion',
+            body: 'Crea playlists, favoritos y colecciones tematicas.',
+          },
+          {
+            title: 'Letras + LRC sync',
+            body: 'Sube, descarga y sincroniza archivos .lrc.',
+          },
+          {
+            title: 'Video cover art',
+            body: 'Agrega videos de 5–10s para un look premium.',
+          },
+        ],
+        ctaHub: 'Creator Hub',
+      },
+      monetization: {
+        title: 'Opciones de monetizacion',
+        subtitle: 'Elige el modelo de regalías para cada contenido.',
+        options: [
+          {
+            title: 'Subida gratis',
+            body: 'Subidas ilimitadas con CRFM reteniendo 10% de regalías.',
+          },
+          {
+            title: 'Track permanente',
+            body: 'Pago unico por track para quedarte con 100% de regalías.',
+          },
+          {
+            title: 'Album permanente',
+            body: 'Pago unico por album para quedarte con 100% de regalías.',
+          },
+          {
+            title: 'Membresia',
+            body: 'Mensual, 6 meses o anual: ilimitado + 100% de regalías mientras esté activa.',
+          },
+        ],
+        note:
+          'Las subidas incluyen un checkbox de contenido cristiano. El contenido fuera del estandar puede ser removido o causar acciones en la cuenta. Si la membresia vence, el contenido se queda pero las regalías en ese lapso van a CRFM hasta renovar o borrar.',
+      },
+      radio: {
+        title: 'Radio stations',
+        subtitle: 'Escucha gratis para visitantes con estaciones curadas.',
+        points: [
+          {
+            title: 'Modo relajado',
+            body: 'Los visitantes no eligen canciones; solo eligen una estacion.',
+          },
+          {
+            title: 'Curado por CRFM',
+            body: 'Estaciones pensadas para adoracion, testimonio y comunidad.',
+          },
+          {
+            title: 'Ads y auspicios (proximo)',
+            body: 'Monetizacion futura para sostener la escucha gratis.',
+          },
+        ],
+      },
       vision: {
         title: 'Nuestra vision',
-        p1: 'En CRFM creemos que la musica es mas que sonido: es historia, espiritu y experiencia compartida.',
-        p2: 'Empoderamos artistas y oyentes con una plataforma dinamica que da vida a las letras, profundiza conexiones y convierte cada cancion en una narrativa viva.',
-        p3: 'Nuestra vision se sostiene en tres pilares: Unir sonido e historia, construir comunidad y elevar la expresion para que el mensaje de fe brille con claridad e impacto.',
+        p1: 'CRFMinistry es una plataforma cristiana para creadores y oyentes con raiz en Puerto Rico.',
+        p2: 'Conectamos musica de fe con una economia transparente donde cada escucha apoya al artista.',
+        p3: 'Nuestra mision es elevar adoracion, testimonio y verdad con musica, historias y comunidad.',
       },
       team: {
         title: 'Nuestro equipo',
@@ -1310,7 +1529,7 @@ const translations = {
       },
       contact: {
         title: 'Contactanos',
-        p1: 'Nos encantaria escucharte. Si tienes preguntas, comentarios o alianzas, escribenos.',
+        p1: 'Nos encantaria escucharte. Para alianzas, soporte o desarrollo web, escribenos.',
         emailLabel: 'Correo:',
         supportLabel: 'Soporte:',
       },

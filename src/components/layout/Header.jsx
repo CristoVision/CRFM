@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut, UserCircle, Wallet, Home, Info, ShieldCheck, BarChartHorizontalBig, Menu, X, LogIn, BookOpen } from 'lucide-react';
+import { LogOut, UserCircle, Wallet, Home, Info, ShieldCheck, BarChartHorizontalBig, Menu, X, LogIn, BookOpen, Coins, UploadCloud, Radio } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from '@/components/ui/use-toast';
@@ -61,13 +61,20 @@ function Header() {
   
   const mainNavLinks = [
     { to: '/', text: t('nav.home'), icon: <Home className="w-5 h-5" />, auth: null },
+    { to: '/about?tab=how', text: t('nav.howItWorks'), icon: <Coins className="w-5 h-5" />, auth: 'public' },
+    { to: '/about?tab=creators', text: t('nav.forCreators'), icon: <UploadCloud className="w-5 h-5" />, auth: 'public' },
+    { to: '/about?tab=radio', text: t('nav.radio'), icon: <Radio className="w-5 h-5" />, auth: 'public' },
     { to: '/hub', text: t('nav.hub'), icon: <BarChartHorizontalBig className="w-5 h-5" />, auth: true },
     { to: '/about', text: t('nav.about'), icon: <Info className="w-5 h-5" />, auth: null },
     { to: '/stories', text: t('nav.stories'), icon: <BookOpen className="w-5 h-5" />, auth: null },
     { to: '/bible', text: t('nav.bible'), icon: <BookOpen className="w-5 h-5" />, auth: null },
     { to: '/admin', text: t('nav.admin'), icon: <ShieldCheck className="w-5 h-5" />, auth: true },
   ];
-  const filteredNavLinks = mainNavLinks.filter(link => link.auth === null || (link.auth === true && !!user));
+  const filteredNavLinks = mainNavLinks.filter(link => {
+    if (link.auth === 'public') return !user;
+    if (link.auth === true) return !!user;
+    return true;
+  });
 
   const NavItem = ({ to, text, icon, onClick }) => (
     <NavLink
