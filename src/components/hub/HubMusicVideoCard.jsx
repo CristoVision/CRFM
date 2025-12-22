@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
     import { toast } from '@/components/ui/use-toast';
     import { motion } from 'framer-motion';
     import { formatDistanceToNowStrict } from 'date-fns';
+    import { pickImageFallback } from '@/lib/mediaFallbacks';
 
     const DEFAULT_VIDEO_COVER_ART = 'https://images.unsplash.com/photo-1516280440614-3793959696b4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fHZpZGVvfGVufDB8fDB8fHww&w=1000&q=80';
 
@@ -76,7 +77,7 @@ import React, { useState, useEffect } from 'react';
             <CardContent className="p-0">
               <div className="relative aspect-video w-full">
                 <img 
-                  src={video.cover_art_url || DEFAULT_VIDEO_COVER_ART}
+                  src={pickImageFallback([video.cover_art_url], DEFAULT_VIDEO_COVER_ART)}
                   alt={video.title || "Music video cover art"}
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />

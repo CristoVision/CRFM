@@ -8,6 +8,7 @@ import React, { useState, useEffect } from 'react';
     import { useAuth } from '@/contexts/AuthContext';
     import { toast } from '@/components/ui/use-toast';
     import { logContentView } from '@/lib/analyticsClient';
+    import { pickImageFallback } from '@/lib/mediaFallbacks';
 
     const DEFAULT_COVER_ART_TRACK = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXVkaW98ZW58MHx8MHx8fDA%3D&w=1000&q=80';
     const DEFAULT_COVER_ART_ALBUM = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fG11c2ljJTIwYWxidW18ZW58MHx8MHx8fDA%3D&w=1000&q=80';
@@ -94,7 +95,7 @@ import React, { useState, useEffect } from 'react';
               <CardContent className="p-0">
                 <div className="relative aspect-square w-full">
                   <img
-                    src={cover_art_url || defaultCover}
+                    src={pickImageFallback([cover_art_url], defaultCover)}
                     alt={title}
                     className="absolute inset-0 w-full h-full object-cover border-b border-white/10"
                   />

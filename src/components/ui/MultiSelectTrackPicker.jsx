@@ -9,6 +9,7 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { ScrollArea } from '@/components/ui/scroll-area';
     import { cn } from '@/lib/utils';
     import { toast } from '@/components/ui/use-toast';
+    import { pickImageFallback } from '@/lib/mediaFallbacks';
 
     const MultiSelectTrackPicker = ({ selectedTracks = [], onSelectedTracksChange, placeholder = "Select tracks..." }) => {
       const { user } = useAuth();
@@ -109,7 +110,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                         >
                           <div className="flex items-center overflow-hidden">
                             <img-replace 
-                              src={track.cover_art_url || "https://via.placeholder.com/40?text=?"} 
+                              src={pickImageFallback([track.cover_art_url], "https://via.placeholder.com/40?text=?")} 
                               alt={track.title} 
                               className="w-8 h-8 rounded-sm mr-2 object-cover"
                             />

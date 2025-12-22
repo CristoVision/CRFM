@@ -6,6 +6,7 @@ import React, { useState } from 'react';
     import FlagFormModal from '@/components/common/FlagFormModal';
     import { useAuth } from '@/contexts/AuthContext';
     import { toast } from '@/components/ui/use-toast';
+    import { pickImageFallback } from '@/lib/mediaFallbacks';
 
     const DEFAULT_COVER_ART_TRACK = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXVkaW98ZW58MHx8MHx8fDA%3D&w=1000&q=80';
     const DEFAULT_COVER_ART_ALBUM = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fG11c2ljJTIwYWxidW18ZW58MHx8MHx8fDA%3D&w=1000&q=80';
@@ -74,7 +75,7 @@ import React, { useState } from 'react';
             className="flex items-center space-x-3 p-3 hover:bg-white/5 rounded-lg group transition-colors duration-200 glass-effect-hoverable mb-2"
           >
             <img
-              src={cover_art_url || defaultCover}
+              src={pickImageFallback([cover_art_url], defaultCover)}
               alt={title}
               className="w-12 h-12 rounded-md object-cover border border-white/10 flex-shrink-0"
             />

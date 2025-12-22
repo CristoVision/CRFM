@@ -9,6 +9,7 @@ import { toast } from '@/components/ui/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Radio, Music, X, ChevronUp, Play, Pause, Volume2, VolumeX, Loader2 } from 'lucide-react';
+import { pickImageFallback } from '@/lib/mediaFallbacks';
 import { Slider } from '@/components/ui/slider';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -184,7 +185,7 @@ const RadioPlayerUI = () => {
 
         <div className="flex items-center space-x-4">
           <img
-            src={currentTrack?.cover_art_url || "/favicon-32x32.png"}
+            src={pickImageFallback([currentTrack?.cover_art_url], "/favicon-32x32.png")}
             alt={currentTrack?.title || t('player.radio.coverArtAlt')}
             className="w-16 h-16 rounded-md object-cover border border-white/10"
           />

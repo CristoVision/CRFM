@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label';
 import MultiSelectTrackPicker from '@/components/ui/MultiSelectTrackPicker';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { XCircle } from 'lucide-react';
+import { pickImageFallback } from '@/lib/mediaFallbacks';
 
 const PlaylistTrackManager = ({ currentTracks, tracksToAdd, onRemoveExistingTrack, onRemoveStagedTrack, onSelectTracksForStaging, isSubmitting }) => {
   return (
@@ -27,7 +28,7 @@ const PlaylistTrackManager = ({ currentTracks, tracksToAdd, onRemoveExistingTrac
         {currentTracks.map(track => (
           <div key={`current-${track.playlist_track_id || track.id}`} className="p-2 bg-white/5 rounded-md text-sm flex justify-between items-center mb-1">
             <div className="flex items-center overflow-hidden">
-                <img-replace src={track.cover_art_url || "https://via.placeholder.com/32"} alt={track.title} className="w-8 h-8 rounded-sm mr-2 object-cover"/>
+                <img-replace src={pickImageFallback([track.cover_art_url], "https://via.placeholder.com/32")} alt={track.title} className="w-8 h-8 rounded-sm mr-2 object-cover"/>
                 <span className="truncate">{track.title}</span>
             </div>
              <Button variant="ghost" size="sm" onClick={() => onRemoveExistingTrack(track)} className="p-0 h-auto hover:bg-transparent" disabled={isSubmitting}>
@@ -38,7 +39,7 @@ const PlaylistTrackManager = ({ currentTracks, tracksToAdd, onRemoveExistingTrac
         {tracksToAdd.filter(ttd => !currentTracks.some(ct => ct.id === ttd.id)).map(track => (
              <div key={`new-${track.id}`} className="p-2 bg-yellow-500/10 rounded-md text-sm flex justify-between items-center mb-1">
                 <div className="flex items-center overflow-hidden">
-                    <img-replace src={track.cover_art_url || "https://via.placeholder.com/32"} alt={track.title} className="w-8 h-8 rounded-sm mr-2 object-cover"/>
+                    <img-replace src={pickImageFallback([track.cover_art_url], "https://via.placeholder.com/32")} alt={track.title} className="w-8 h-8 rounded-sm mr-2 object-cover"/>
                     <span className="truncate text-yellow-200">{track.title} (New)</span>
                 </div>
                <Button variant="ghost" size="sm" onClick={() => onRemoveStagedTrack(track.id)} className="p-0 h-auto hover:bg-transparent" disabled={isSubmitting}>

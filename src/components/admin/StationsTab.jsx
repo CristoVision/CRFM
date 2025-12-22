@@ -11,6 +11,7 @@ import { toast } from '@/components/ui/use-toast';
 import ConfirmationDialog from '@/components/common/ConfirmationDialog';
 import { Radio, RefreshCcw, Trash2, Save, Plus, ArrowUp, ArrowDown, X, AlertTriangle } from 'lucide-react';
 import MultiSelectTrackPicker from '@/components/ui/MultiSelectTrackPicker';
+import { pickImageFallback } from '@/lib/mediaFallbacks';
 
 function Row({ children }) {
   return <div className="flex flex-col sm:flex-row sm:items-center gap-3">{children}</div>;
@@ -467,7 +468,7 @@ const StationsTab = () => {
                                   className="flex items-center gap-3 p-2 bg-white/5 rounded-md border border-white/10"
                                 >
                                   <img
-                                    src={row.track?.cover_art_url || ''}
+                                    src={pickImageFallback([row.track?.cover_art_url], '')}
                                     alt=""
                                     className="w-10 h-10 rounded object-cover bg-black/40"
                                   />

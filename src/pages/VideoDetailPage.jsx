@@ -13,6 +13,7 @@ import React, { useState, useEffect } from 'react';
     import { Helmet } from 'react-helmet-async';
     import { motion } from 'framer-motion';
     import { useLanguage } from '@/contexts/LanguageContext';
+    import { pickImageFallback } from '@/lib/mediaFallbacks';
 
     const DEFAULT_COVER_ART = 'https://images.unsplash.com/photo-1516280440614-3793959696b4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fHZpZGVvfGVufDB8fDB8fHww&w=1000&q=80';
 
@@ -182,7 +183,7 @@ import React, { useState, useEffect } from 'react';
                   <div className="aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-yellow-500/30">
                     <div className="w-full h-full relative flex items-center justify-center">
                       <img  
-                          src={video.cover_art_url || DEFAULT_COVER_ART} 
+                          src={pickImageFallback([video.cover_art_url], DEFAULT_COVER_ART)} 
                           alt={`Cover art for ${video.title}`} 
                           className="absolute inset-0 w-full h-full object-cover opacity-50"
                       />

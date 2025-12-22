@@ -10,6 +10,7 @@ import FlagFormModal from '@/components/common/FlagFormModal';
 import ShareModal from '@/components/ShareModal';
 import { useAuth } from '@/contexts/AuthContext';
 import CoverArtMedia from '@/components/common/CoverArtMedia';
+import { pickImageFallback, pickVideoUrl } from '@/lib/mediaFallbacks';
 import { useLanguage } from '@/contexts/LanguageContext';
 
     const DEFAULT_ALBUM_COVER = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fG11c2ljJTIwYWxidW18ZW58MHx8MHx8fDA%3D&w=1000&q=80';
@@ -267,7 +268,14 @@ const handleOpenFlagModal = () => {
                     <div key={track.id} className="flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 rounded-lg transition-colors group">
                       <div className="flex items-center space-x-3 flex-1 min-w-0 cursor-pointer" onClick={() => navigate(`/track/${track.id}`)}>
                         <span className="text-sm text-gray-400 w-6 text-right">{index + 1}.</span>
-                        <img src={track.cover_art_url || DEFAULT_TRACK_COVER} alt={track.title} className="w-10 h-10 rounded object-cover"/>
+                        <CoverArtMedia
+                          videoUrl={pickVideoUrl(track.video_cover_art_url || album.video_cover_art_url)}
+                          imageUrl={pickImageFallback([track.cover_art_url, album.cover_art_url], DEFAULT_TRACK_COVER)}
+                          className="w-10 h-10"
+                          roundedClass="rounded"
+                          objectFitClass="object-cover"
+                          showBadge={false}
+                        />
                         <div className="flex-1 min-w-0">
                           <p className="text-base font-medium text-white truncate group-hover:text-yellow-400">
                             {track.title}

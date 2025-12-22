@@ -10,6 +10,7 @@ import { usePlayer } from '@/contexts/PlayerContext';
 import { useVideoPlayer } from '@/contexts/VideoPlayerContext';
 import { Button } from '@/components/ui/button';
 import LeaderboardCarousel from './LeaderboardCarousel';
+import { pickImageFallback } from '@/lib/mediaFallbacks';
 
 const ITEMS_PER_PAGE = 12;
 const DEFAULT_VIDEO_COVER_ART = 'https://images.unsplash.com/photo-1516280440614-3793959696b4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fHZpZGVvfGVufDB8fDB8fHww&w=1000&q=80';
@@ -167,7 +168,7 @@ function MusicVideosTab({ searchQuery = '', viewMode = 'grid', isCreatorPageCont
                 className="flex items-center space-x-4 p-3 hover:bg-white/5 rounded-lg group transition-colors duration-200 glass-effect-hoverable"
               >
                 <img
-                  src={video.cover_art_url || DEFAULT_VIDEO_COVER_ART}
+                  src={pickImageFallback([video.cover_art_url], DEFAULT_VIDEO_COVER_ART)}
                   alt={video.title}
                   className="w-14 h-14 rounded-md object-cover border border-white/10 flex-shrink-0"
                 />

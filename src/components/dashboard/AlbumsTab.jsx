@@ -10,6 +10,7 @@ import React, { useState, useEffect } from 'react';
     import ShareModal from '@/components/ShareModal';
     import { useAuth } from '@/contexts/AuthContext';
     import LeaderboardCarousel from './LeaderboardCarousel';
+    import { pickImageFallback } from '@/lib/mediaFallbacks';
 
     const DEFAULT_ALBUM_COVER = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fG11c2ljJTIwYWxidW18ZW58MHx8MHx8fDA%3D&w=1000&q=80';
 
@@ -44,7 +45,7 @@ const ItemCard = ({ item, onFlag, onShare }) => {
           <CardContent className="p-0">
             <div className="relative aspect-square w-full">
               <img 
-                src={cover_art_url || DEFAULT_ALBUM_COVER}
+                src={pickImageFallback([cover_art_url], DEFAULT_ALBUM_COVER)}
                 alt={title}
                 className="absolute inset-0 w-full h-full object-cover rounded-t-xl border-b border-white/10"
                />
@@ -143,7 +144,7 @@ const ItemCard = ({ item, onFlag, onShare }) => {
           >
             <div className="relative flex-shrink-0">
               <img 
-                src={cover_art_url || DEFAULT_ALBUM_COVER}
+                src={pickImageFallback([cover_art_url], DEFAULT_ALBUM_COVER)}
                 alt={title}
                 className="w-12 h-12 rounded-md object-cover border border-white/10"
                />

@@ -8,6 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { Input } from '@/components/ui/input';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
     import { motion, AnimatePresence } from 'framer-motion';
+    import { pickImageFallback } from '@/lib/mediaFallbacks';
 
     const DEFAULT_TRACK_COVER = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fG11c2ljJTIwYWxidW18ZW58MHx8MHx8fDA%3D&w=1000&q=80'; // A generic music image
 
@@ -122,7 +123,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                       <CardHeader className="p-4">
                         <div className="aspect-square w-full rounded-md overflow-hidden mb-3 relative bg-black/20">
                           <img 
-                            src={track.cover_art_url || DEFAULT_TRACK_COVER}
+                            src={pickImageFallback([track.cover_art_url], DEFAULT_TRACK_COVER)}
                             alt={track.title || 'Track artwork'}
                             className="w-full h-full object-cover"
                           />
