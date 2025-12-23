@@ -39,6 +39,7 @@ import AdminAchievementsTab from '@/components/admin/AdminAchievementsTab';
 import WalletAdminTab from '@/components/admin/WalletAdminTab';
 import AdminSupportTab from '@/components/admin/AdminSupportTab';
 import AdminBetaApplicationsTab from '@/components/admin/AdminBetaApplicationsTab';
+import AdminServicesTab from '@/components/admin/AdminServicesTab';
 import DuGameMusicTab from '@/components/admin/DuGameMusicTab';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -67,17 +68,18 @@ export default function AdminPage() {
   // opciones principales
   const MAIN = useMemo(
     () => [
-      { value: 'creatorTags', label: t('admin.mainTabs.creatorTags'), Icon: Tag },
-      { value: 'contentFlags', label: t('admin.mainTabs.contentFlags'), Icon: Flag },
-      { value: 'userManagement', label: t('admin.mainTabs.userManagement'), Icon: Users },
-      { value: 'platformAnalytics', label: t('admin.mainTabs.platformAnalytics'), Icon: BarChartBig },
-      { value: 'achievements', label: t('admin.mainTabs.achievements'), Icon: Trophy },
-      { value: 'ecosystem', label: t('admin.mainTabs.ecosystem'), Icon: Package },
-      { value: 'stations', label: t('admin.mainTabs.stations'), Icon: Radio },
-      { value: 'ads', label: t('admin.mainTabs.ads'), Icon: Megaphone },
-      { value: 'wallet', label: t('admin.mainTabs.wallet'), Icon: DollarSign },
-      { value: 'support', label: t('admin.mainTabs.support'), Icon: MessageSquare },
-      { value: 'betaApps', label: t('admin.mainTabs.betaApps'), Icon: Sparkles },
+        { value: 'creatorTags', label: t('admin.mainTabs.creatorTags'), Icon: Tag },
+        { value: 'contentFlags', label: t('admin.mainTabs.contentFlags'), Icon: Flag },
+        { value: 'userManagement', label: t('admin.mainTabs.userManagement'), Icon: Users },
+        { value: 'platformAnalytics', label: t('admin.mainTabs.platformAnalytics'), Icon: BarChartBig },
+        { value: 'achievements', label: t('admin.mainTabs.achievements'), Icon: Trophy },
+        { value: 'ecosystem', label: t('admin.mainTabs.ecosystem'), Icon: Package },
+        { value: 'stations', label: t('admin.mainTabs.stations'), Icon: Radio },
+        { value: 'ads', label: t('admin.mainTabs.ads'), Icon: Megaphone },
+        { value: 'wallet', label: t('admin.mainTabs.wallet'), Icon: DollarSign },
+        { value: 'services', label: t('services.admin.tabLabel'), Icon: Briefcase },
+        { value: 'support', label: t('admin.mainTabs.support'), Icon: MessageSquare },
+        { value: 'betaApps', label: t('admin.mainTabs.betaApps'), Icon: Sparkles },
     ],
     [t]
   );
@@ -170,6 +172,7 @@ export default function AdminPage() {
           {mainTab === 'stations' && <StationsTab />}
           {mainTab === 'ads' && <AdsTab />}
           {mainTab === 'wallet' && <WalletAdminTab />}
+          {mainTab === 'services' && <AdminServicesTab />}
           {mainTab === 'support' && <AdminSupportTab />}
           {mainTab === 'betaApps' && <AdminBetaApplicationsTab />}
 

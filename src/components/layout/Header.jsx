@@ -66,6 +66,7 @@ function Header() {
     { to: '/about?tab=radio', text: t('nav.radio'), icon: <Radio className="w-5 h-5" />, auth: 'public' },
     { to: '/about?tab=beta', text: t('nav.applyBeta'), icon: <Sparkles className="w-5 h-5" />, auth: 'public' },
     { to: '/hub', text: t('nav.hub'), icon: <BarChartHorizontalBig className="w-5 h-5" />, auth: true },
+    { to: '/services', text: t('nav.services'), icon: <Briefcase className="w-5 h-5" />, auth: true },
     { to: '/about', text: t('nav.about'), icon: <Info className="w-5 h-5" />, auth: null },
     { to: '/stories', text: t('nav.stories'), icon: <BookOpen className="w-5 h-5" />, auth: null },
     { to: '/bible', text: t('nav.bible'), icon: <BookOpen className="w-5 h-5" />, auth: null },
