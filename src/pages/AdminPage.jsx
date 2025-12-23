@@ -21,7 +21,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import AdminCreatorTagsTab from '@/components/admin/AdminCreatorTagsTab';
 import AdminContentFlagsTab from '@/components/admin/AdminContentFlagsTab';
 import AdminUserManagementTab from '@/components/admin/AdminUserManagementTab';
-import AdminAnalyticsTab from '@/components/admin/AdminAnalyticsTab';
 import AdminAchievementsTab from '@/components/admin/AdminAchievementsTab';
 import AdminEcosystemTab from '@/components/admin/AdminEcosystemTab';
 import AdminStationsTab from '@/components/admin/AdminStationsTab';
@@ -61,8 +60,7 @@ export default function AdminPage() {
       { value: 'creatorTags', label: t('admin.mainTabs.creatorTags'), Icon: Tag },
       { value: 'contentFlags', label: t('admin.mainTabs.contentFlags'), Icon: Flag },
       { value: 'userManagement', label: t('admin.mainTabs.userManagement'), Icon: Users },
-      { value: 'platformAnalytics', label: t('admin.mainTabs.platformAnalytics'), Icon: BarChartBig },
-      { value: 'achievements', label: t('admin.mainTabs.achievements'), Icon: Trophy },
+            { value: 'achievements', label: t('admin.mainTabs.achievements'), Icon: Trophy },
       { value: 'ecosystem', label: t('admin.mainTabs.ecosystem'), Icon: Package },
       { value: 'stations', label: t('admin.mainTabs.stations'), Icon: Radio },
       { value: 'ads', label: t('admin.mainTabs.ads'), Icon: Megaphone },
@@ -120,7 +118,6 @@ export default function AdminPage() {
           {mainTab === 'creatorTags' && <AdminCreatorTagsTab />}
           {mainTab === 'contentFlags' && <AdminContentFlagsTab />}
           {mainTab === 'userManagement' && <AdminUserManagementTab />}
-          {mainTab === 'platformAnalytics' && <AdminAnalyticsTab />}
           {mainTab === 'achievements' && <AdminAchievementsTab />}
           {mainTab === 'ecosystem' && <AdminEcosystemTab />}
           {mainTab === 'stations' && <AdminStationsTab />}
