@@ -13,7 +13,6 @@ import DUStoriesPage from '@/pages/DUStoriesPage';
 import AdminPage from '@/pages/AdminPage';
 import WalletPage from '@/pages/WalletPage';
 import ProfilePage from '@/pages/ProfilePage';
-import ServicesPortalPage from '@/pages/ServicesPortalPage';
 import TrackDetailPage from '@/pages/TrackDetailPage';
 import AlbumDetailPage from '@/pages/AlbumDetailPage';
 import PlaylistDetailPage from '@/pages/PlaylistDetailPage';
@@ -126,10 +125,6 @@ function AppContent() {
           
           {/* Protected Routes */}
           <Route path="hub" element={user ? <HubPage /> : <Navigate to="/?auth=login" />} />
-          <Route
-            path="services"
-            element={user ? <ServicesPortalPage /> : <Navigate to="/?auth=login" />}
-          />
           <Route
             path="admin"
             element={

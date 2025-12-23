@@ -1,136 +1,196 @@
-import React, { useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+// src/pages/AdminPage.jsx
+import React, { useMemo, useState } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useAuth } from '@/contexts/AuthContext';
+
 import {
   Tag,
   Flag,
+  BarChartBig,
+  Package,
+  Gamepad2,
+  BookOpen,
+  Briefcase,
+  Store,
   Users,
-  Trophy,
   Radio,
   Megaphone,
-  DollarSign,
+  Trophy,
   MessageSquare,
+  DollarSign,
   Sparkles,
-  Briefcase,
+  Music2,
 } from 'lucide-react';
 
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useAuth } from '@/contexts/AuthContext';
-
-import AdminCreatorTagsTab from '@/components/admin/AdminCreatorTagsTab';
 import AdminContentFlagsTab from '@/components/admin/AdminContentFlagsTab';
+import AdminCreatorTagsTab from '@/components/admin/AdminCreatorTagsTab';
 import AdminUserManagementTab from '@/components/admin/AdminUserManagementTab';
-import AdminAchievementsTab from '@/components/admin/AdminAchievementsTab';
-
+import AppsTab from '@/components/admin/AppsTab';
+import GamesTab from '@/components/admin/GamesTab';
 import StationsTab from '@/components/admin/StationsTab';
 import AdsTab from '@/components/admin/AdsTab';
-
+import AdminAchievementsTab from '@/components/admin/AdminAchievementsTab';
 import WalletAdminTab from '@/components/admin/WalletAdminTab';
 import AdminSupportTab from '@/components/admin/AdminSupportTab';
 import AdminBetaApplicationsTab from '@/components/admin/AdminBetaApplicationsTab';
-import AdminServicesTab from '@/components/admin/AdminServicesTab';
+import DuGameMusicTab from '@/components/admin/DuGameMusicTab';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-function TabButton({ active, onClick, Icon, label }) {
+function SectionShell({ children }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={[
-        'flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition',
-        active
-          ? 'border-white/20 bg-white/10 text-white'
-          : 'border-white/10 bg-black/20 text-gray-300 hover:bg-white/5 hover:text-white',
-      ].join(' ')}
-    >
-      {Icon ? <Icon className="h-4 w-4" /> : null}
-      <span>{label}</span>
-    </button>
+    <div className="glass-effect rounded-2xl border border-white/10">
+      {children}
+    </div>
+  );
+}
+
+function PlaceholderContent({ title, icon }) {
+  const { t } = useLanguage();
+  return (
+    <div className="min-h-[50vh] flex flex-col items-center justify-center text-center p-8">
+      {React.cloneElement(icon, { className: 'w-16 h-16 text-yellow-400 mb-6 opacity-70' })}
+      <h2 className="text-3xl sm:text-4xl font-bold golden-text mb-4">{title}</h2>
+      <p className="text-base sm:text-lg text-gray-300">{t('admin.placeholder')}</p>
+    </div>
   );
 }
 
 export default function AdminPage() {
-  const { t } = useLanguage();
   const { profile } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const mainTab = searchParams.get('tab') || 'creatorTags';
-
-  const MAIN_TABS = useMemo(
+  const { t } = useLanguage();
+  // opciones principales
+  const MAIN = useMemo(
     () => [
       { value: 'creatorTags', label: t('admin.mainTabs.creatorTags'), Icon: Tag },
       { value: 'contentFlags', label: t('admin.mainTabs.contentFlags'), Icon: Flag },
       { value: 'userManagement', label: t('admin.mainTabs.userManagement'), Icon: Users },
+      { value: 'platformAnalytics', label: t('admin.mainTabs.platformAnalytics'), Icon: BarChartBig },
       { value: 'achievements', label: t('admin.mainTabs.achievements'), Icon: Trophy },
+      { value: 'ecosystem', label: t('admin.mainTabs.ecosystem'), Icon: Package },
       { value: 'stations', label: t('admin.mainTabs.stations'), Icon: Radio },
       { value: 'ads', label: t('admin.mainTabs.ads'), Icon: Megaphone },
       { value: 'wallet', label: t('admin.mainTabs.wallet'), Icon: DollarSign },
-      { value: 'services', label: t('services.admin.tabLabel'), Icon: Briefcase },
       { value: 'support', label: t('admin.mainTabs.support'), Icon: MessageSquare },
       { value: 'betaApps', label: t('admin.mainTabs.betaApps'), Icon: Sparkles },
     ],
     [t]
   );
 
-  const setTab = (value) => {
-    const next = new URLSearchParams(searchParams);
-    next.set('tab', value);
-    setSearchParams(next, { replace: true });
-  };
+  // sub-opciones de Ecosystem
+  const ECO = useMemo(
+    () => [
+      { value: 'appsAdmin', label: t('admin.ecosystemTabs.appsAdmin'), Icon: Package },
+      { value: 'gamesAdmin', label: t('admin.ecosystemTabs.gamesAdmin'), Icon: Gamepad2 },
+      { value: 'duMusic', label: t('admin.ecosystemTabs.duMusic'), Icon: Music2 },
+      { value: 'storiesAdmin', label: t('admin.ecosystemTabs.storiesAdmin'), Icon: BookOpen },
+      { value: 'portfolioAdmin', label: t('admin.ecosystemTabs.portfolioAdmin'), Icon: Briefcase },
+      { value: 'storesAdmin', label: t('admin.ecosystemTabs.storesAdmin'), Icon: Store },
+    ],
+    [t]
+  );
 
-  const hasProfile = Boolean(profile);
+  const [mainTab, setMainTab] = useState('creatorTags');
+  const [ecoTab, setEcoTab] = useState('appsAdmin');
+
+  const CurrentMainIcon = MAIN.find((m) => m.value === mainTab)?.Icon ?? Tag;
+  const CurrentEcoIcon = ECO.find((e) => e.value === ecoTab)?.Icon ?? Package;
+
+  if (!profile?.is_admin) {
+    return (
+      <div className="container mx-auto px-4 py-20 text-center text-white">
+        <h2 className="text-3xl font-bold mb-3">{t('admin.accessDeniedTitle')}</h2>
+        <p className="text-gray-400">{t('admin.accessDeniedBody')}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto px-4 py-10 page-gradient-bg">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <div className="glass-effect rounded-2xl border border-white/10 p-6 shadow-xl">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white">{t('admin.title') || 'Admin'}</h1>
-              <p className="mt-1 text-sm text-gray-300">
-                {t('admin.subtitle') || 'Manage platform settings and moderation tools.'}
-              </p>
-            </div>
-            {!hasProfile && (
-              <p className="text-xs text-gray-400">
-                {t('admin.profileLoading') || 'Loading profile...'}
-              </p>
-            )}
+    <div className="container mx-auto px-4 py-8 page-gradient-bg">
+      {/* Header */}
+      <header className="text-center mb-6 sm:mb-8 mt-4 sm:mt-6">
+        <h1 className="text-4xl sm:text-5xl font-bold mb-3">
+          {t('admin.titlePrefix')} <span className="golden-text">{t('admin.titleAccent')}</span>
+        </h1>
+        <p className="text-base sm:text-xl text-gray-300">{t('admin.subtitle')}</p>
+      </header>
+
+      <SectionShell>
+        {/* Barra de navegación estilo About, responsive con wrap */}
+        <div className="sticky top-0 z-[5] -m-4 sm:-m-6 p-4 sm:p-6 bg-black/30 backdrop-blur-md rounded-t-2xl border-b border-white/10">
+          <div className="w-full px-2 py-2 bg-black/40 backdrop-blur-lg border border-white/10 rounded-2xl shadow-xl flex flex-wrap gap-2 sm:gap-3 justify-start sm:justify-center">
+            {MAIN.map(({ value, label, Icon }) => {
+              const isActive = mainTab === value;
+              return (
+                <button
+                  key={value}
+                  onClick={() => setMainTab(value)}
+                  className={`tab-button text-xs sm:text-sm whitespace-nowrap px-4 py-2 rounded-xl flex items-center gap-2 ${isActive ? 'bg-yellow-400 text-black shadow-lg' : 'bg-white/5 text-white hover:bg-white/10'}`}
+                >
+                  <Icon className="w-4 h-4 text-current" />
+                  {label}
+                </button>
+              );
+            })}
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-2">
-            {MAIN_TABS.map(({ value, label, Icon }) => (
-              <TabButton
-                key={value}
-                active={mainTab === value}
-                onClick={() => setTab(value)}
-                Icon={Icon}
-                label={label}
-              />
-            ))}
-          </div>
+          {mainTab === 'ecosystem' && (
+            <div className="mt-3 px-2 py-2 bg-black/30 backdrop-blur-lg border border-white/10 rounded-xl shadow-lg flex flex-wrap gap-2 sm:gap-3 justify-start sm:justify-center">
+              {ECO.map(({ value, label, Icon }) => {
+                const isActive = ecoTab === value;
+                return (
+                  <button
+                    key={value}
+                    onClick={() => setEcoTab(value)}
+                    className={`tab-button text-xs sm:text-sm whitespace-nowrap px-3 py-2 rounded-lg flex items-center gap-1 ${isActive ? 'bg-yellow-300 text-black shadow-md' : 'bg-white/5 text-white hover:bg-white/10'}`}
+                  >
+                    <Icon className="w-4 h-4 text-current" />
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        <div className="space-y-6">
+        {/* Contenido: espacio dedicado, sin solaparse */}
+        <div className="p-4 sm:p-6">
           {mainTab === 'creatorTags' && <AdminCreatorTagsTab />}
           {mainTab === 'contentFlags' && <AdminContentFlagsTab />}
           {mainTab === 'userManagement' && <AdminUserManagementTab />}
+          {mainTab === 'platformAnalytics' && (
+            <PlaceholderContent title={t('admin.titles.platformAnalytics')} icon={<BarChartBig />} />
+          )}
           {mainTab === 'achievements' && <AdminAchievementsTab />}
           {mainTab === 'stations' && <StationsTab />}
           {mainTab === 'ads' && <AdsTab />}
           {mainTab === 'wallet' && <WalletAdminTab />}
-          {mainTab === 'services' && <AdminServicesTab />}
           {mainTab === 'support' && <AdminSupportTab />}
           {mainTab === 'betaApps' && <AdminBetaApplicationsTab />}
 
-          {!MAIN_TABS.some((tab) => tab.value === mainTab) && (
-            <div className="rounded-2xl border border-white/10 bg-black/30 p-6 text-gray-300">
-              <p className="text-white font-semibold">Unknown tab</p>
-              <p className="mt-2 text-sm">
-                Current tab query param: <span className="font-mono">{String(mainTab)}</span>
-              </p>
+          {mainTab === 'ecosystem' && (
+            <div className="mt-2">
+              {ecoTab === 'appsAdmin' && <AppsTab />}
+              {ecoTab === 'gamesAdmin' && <GamesTab />}
+              {ecoTab === 'duMusic' && <DuGameMusicTab />}
+              {ecoTab === 'storiesAdmin' && (
+                <PlaceholderContent title={t('admin.titles.storiesManagement')} icon={<BookOpen />} />
+              )}
+              {ecoTab === 'portfolioAdmin' && (
+                <PlaceholderContent title={t('admin.titles.portfolioManagement')} icon={<Briefcase />} />
+              )}
+              {ecoTab === 'storesAdmin' && (
+                <PlaceholderContent title={t('admin.titles.storesManagement')} icon={<Store />} />
+              )}
             </div>
           )}
         </div>
-      </div>
+      </SectionShell>
     </div>
   );
 }
