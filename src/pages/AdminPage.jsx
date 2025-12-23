@@ -4,9 +4,7 @@ import {
   Tag,
   Flag,
   Users,
-  BarChartBig,
   Trophy,
-  Package,
   Radio,
   Megaphone,
   DollarSign,
@@ -22,9 +20,10 @@ import AdminCreatorTagsTab from '@/components/admin/AdminCreatorTagsTab';
 import AdminContentFlagsTab from '@/components/admin/AdminContentFlagsTab';
 import AdminUserManagementTab from '@/components/admin/AdminUserManagementTab';
 import AdminAchievementsTab from '@/components/admin/AdminAchievementsTab';
-import AdminEcosystemTab from '@/components/admin/AdminEcosystemTab';
-import AdminStationsTab from '@/components/admin/AdminStationsTab';
-import AdminAdsTab from '@/components/admin/AdminAdsTab';
+
+import StationsTab from '@/components/admin/StationsTab';
+import AdsTab from '@/components/admin/AdsTab';
+
 import WalletAdminTab from '@/components/admin/WalletAdminTab';
 import AdminSupportTab from '@/components/admin/AdminSupportTab';
 import AdminBetaApplicationsTab from '@/components/admin/AdminBetaApplicationsTab';
@@ -60,8 +59,7 @@ export default function AdminPage() {
       { value: 'creatorTags', label: t('admin.mainTabs.creatorTags'), Icon: Tag },
       { value: 'contentFlags', label: t('admin.mainTabs.contentFlags'), Icon: Flag },
       { value: 'userManagement', label: t('admin.mainTabs.userManagement'), Icon: Users },
-            { value: 'achievements', label: t('admin.mainTabs.achievements'), Icon: Trophy },
-      { value: 'ecosystem', label: t('admin.mainTabs.ecosystem'), Icon: Package },
+      { value: 'achievements', label: t('admin.mainTabs.achievements'), Icon: Trophy },
       { value: 'stations', label: t('admin.mainTabs.stations'), Icon: Radio },
       { value: 'ads', label: t('admin.mainTabs.ads'), Icon: Megaphone },
       { value: 'wallet', label: t('admin.mainTabs.wallet'), Icon: DollarSign },
@@ -78,9 +76,6 @@ export default function AdminPage() {
     setSearchParams(next, { replace: true });
   };
 
-  // Nota: aquí NO estoy aplicando un “admin gate” estricto porque
-  // no tengo certeza del campo exacto (role/is_admin/etc.).
-  // Si tú ya tienes una regla, la añadimos luego sin romper build.
   const hasProfile = Boolean(profile);
 
   return (
@@ -119,15 +114,14 @@ export default function AdminPage() {
           {mainTab === 'contentFlags' && <AdminContentFlagsTab />}
           {mainTab === 'userManagement' && <AdminUserManagementTab />}
           {mainTab === 'achievements' && <AdminAchievementsTab />}
-          {mainTab === 'ecosystem' && <AdminEcosystemTab />}
-          {mainTab === 'stations' && <AdminStationsTab />}
-          {mainTab === 'ads' && <AdminAdsTab />}
+          {mainTab === 'stations' && <StationsTab />}
+          {mainTab === 'ads' && <AdsTab />}
           {mainTab === 'wallet' && <WalletAdminTab />}
           {mainTab === 'services' && <AdminServicesTab />}
           {mainTab === 'support' && <AdminSupportTab />}
           {mainTab === 'betaApps' && <AdminBetaApplicationsTab />}
 
-          {!MAIN_TABS.some((t) => t.value === mainTab) && (
+          {!MAIN_TABS.some((tab) => tab.value === mainTab) && (
             <div className="rounded-2xl border border-white/10 bg-black/30 p-6 text-gray-300">
               <p className="text-white font-semibold">Unknown tab</p>
               <p className="mt-2 text-sm">
