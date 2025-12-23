@@ -1,0 +1,397 @@
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/lib/supabaseClient';
+import { uploadFileToSupabase } from '@/lib/uploadFileToSupabase';
+import { Loader2, PlaySquare, RefreshCw, UploadCloud, X } from 'lucide-react';
+
+const BUCKET = 'videocoverart';
+
+// Ajusta si quieres otro límite, pero mantengo lo que tu UI ya comunica.
+const MAX_VIDEO_COVER_ART_SECONDS = 12;
+const MAX_VIDEO_COVER_ART_TOLERANCE_SECONDS = 1;
+
+// Signed URL TTL (1 hora)
+const SIGNED_URL_TTL_SECONDS = 60 * 60;
+
+// Tipos aceptados
+const ACCEPTED_VIDEO_TYPES = [
+  'video/mp4',
+  'video/webm',
+  'video/ogg',
+  'video/quicktime',
+  'image/gif',
+];
+
+const isLikelyHttpUrl = (value) =>
+  typeof value === 'string' && /^https?:\/\//i.test(value);
+
+const cleanLeadingSlashes = (value) => (value || '').replace(/^\/+/, '');
+
+// Convierte cualquier “value” en un path dentro del bucket, por ejemplo: "userId/filename.mp4"
+const toBucketPath = (value, userId) => {
+  if (!value) return null;
+  const cleaned = cleanLeadingSlashes(value);
+
+  // Si ya es URL pública/firmada, no podemos obtener path de forma confiable sin parseo.
+  if (isLikelyHttpUrl(cleaned)) {
+    try {
+      const u = new URL(cleaned);
+      // Busca el patrón "/storage/v1/object/..." y extrae el path después del bucket
+      const parts = u.pathname.split('/').filter(Boolean);
+      // Ej: storage/v1/object/sign/videocoverart/<path...> o storage/v1/object/public/videocoverart/<path...>
+      const idx = parts.findIndex((p) => p === BUCKET);
+      if (idx >= 0 && parts[idx + 1]) {
+        return decodeURIComponent(parts.slice(idx + 1).join('/'));
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  }
+
+  // Casos comunes:
+  // 1) "videocoverart/userId/file.mp4"
+  if (cleaned.startsWith(`${BUCKET}/`)) {
+    return cleaned.slice(`${BUCKET}/`.length);
+  }
+
+  // 2) "storage/v1/object/public/videocoverart/userId/file.mp4" (o sign)
+  if (cleaned.includes(`/storage/v1/object/`) && cleaned.includes(`/${BUCKET/pages}`)) {
+    // Esto casi nunca viene así sin dominio, pero por si acaso.
+    const pivot = `/${BUCKET}/`;
+    const idx = cleaned.indexOf(pivot);
+    if (idx >= 0) return cleaned.slice(idx + pivot.length);
+  }
+
+  // 3) "userId/file.mp4" (bucket path directo)
+  if (cleaned.includes('/') && userId && cleaned.startsWith(`${userId}/`)) {
+    return cleaned;
+  }
+
+  // 4) "file.mp4" (si list() devuelve solo nombres)
+  if (userId && !cleaned.includes('/')) {
+    return `${userId}/${cleaned}`;
+  }
+
+  // Si no podemos inferirlo
+  return null;
+};
+
+async function signBucketPath(path) {
+  if (!path) return null;
+  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, SIGNED_URL_TTL_SECONDS);
+  if (error) return null;
+  return data?.signedUrl || null;
+}
+
+export default function VideoCoverArtSelector({
+  userId,
+  value,
+  onChange,
+  label = `Video cover art (up to ${MAX_VIDEO_COVER_ART_SECONDS}s)`,
+  description = `Upload a short looping video cover art (up to ${MAX_VIDEO_COVER_ART_SECONDS}s) or pick one you have already uploaded. Stored in bucket: videocoverart.`,
+  disabled = false,
+  note,
+}) {
+  const [existingVideos, setExistingVideos] = useState([]); // [{ name, path, url }]
+  const [selectedSignedUrl, setSelectedSignedUrl] = useState(null);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const selectedLabel = useMemo(() => {
+    if (!value) return null;
+
+    // Si value es una URL, el label es el último segmento del path
+    if (isLikelyHttpUrl(value)) {
+      try {
+        const u = new URL(value);
+        return decodeURIComponent(u.pathname.split('/').pop() || 'Selected video');
+      } catch {
+        return 'Selected video';
+      }
+    }
+
+    // Si value es path
+    const cleaned = cleanLeadingSlashes(value);
+    return decodeURIComponent(cleaned.split('/').pop() || 'Selected video');
+  }, [value]);
+
+  // Genera signed URL para el seleccionado (si el bucket es privado)
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      if (!value) {
+        setSelectedSignedUrl(null);
+        return;
+      }
+
+      // Si ya es URL, úsala tal cual
+      if (isLikelyHttpUrl(value)) {
+        setSelectedSignedUrl(value);
+        return;
+      }
+
+      const path = toBucketPath(value, userId);
+      if (!path) {
+        setSelectedSignedUrl(null);
+        return;
+      }
+
+      const signed = await signBucketPath(path);
+      if (!cancelled) setSelectedSignedUrl(signed);
+    };
+
+    run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [value, userId]);
+
+  const fetchExistingVideos = useCallback(async () => {
+    if (!userId) return;
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.storage.from(BUCKET).list(userId, {
+        limit: 100,
+        sortBy: { column: 'created_at', order: 'desc' },
+      });
+      if (error) throw error;
+
+      const items = (data || []).filter((x) => x?.name);
+
+      // Firmar URLs (bucket privado)
+      const signedRows = await Promise.all(
+        items.map(async (item) => {
+          const path = `${userId}/${item.name}`;
+          const url = await signBucketPath(path);
+          if (!url) return null;
+          return { name: item.name, path, url };
+        })
+      );
+
+      setExistingVideos(signedRows.filter(Boolean));
+    } catch (err) {
+      console.error('Error fetching video cover arts', err);
+      toast({
+        title: 'Could not load video cover art',
+        description: err?.message || 'Storage access failed.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    fetchExistingVideos();
+  }, [fetchExistingVideos]);
+
+  const validateDuration = (file) => {
+    if (!file) return Promise.resolve(false);
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      const url = URL.createObjectURL(file);
+      video.preload = 'metadata';
+
+      video.onloadedmetadata = () => {
+        URL.revokeObjectURL(url);
+        const maxAllowed = MAX_VIDEO_COVER_ART_SECONDS + MAX_VIDEO_COVER_ART_TOLERANCE_SECONDS;
+
+        if (video.duration && video.duration > maxAllowed) {
+          toast({
+            title: 'Video too long',
+            description: `Please upload a clip of ${MAX_VIDEO_COVER_ART_SECONDS}s or less.`,
+            variant: 'destructive',
+          });
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      };
+
+      video.onerror = () => {
+        URL.revokeObjectURL(url);
+        // si falla metadata (ej. algunos gifs), no bloqueamos
+        resolve(true);
+      };
+
+      video.src = url;
+    });
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !userId) return;
+
+    const isTypeOk = ACCEPTED_VIDEO_TYPES.some(
+      (type) => file.type === type || (type.startsWith('video/') && file.type.startsWith('video/'))
+    );
+    if (!isTypeOk) {
+      toast({
+        title: 'Invalid file',
+        description: 'Upload MP4/WEBM/OGG/MOV or GIF files.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const isDurationOk = await validateDuration(file);
+    if (!isDurationOk) return;
+
+    setIsUploading(true);
+    try {
+      // uploadFileToSupabase te devuelve algo (a veces URL, a veces path). Lo aceptamos.
+      const uploadedValue = await uploadFileToSupabase(file, BUCKET, userId, true);
+
+      // Guardamos un value estable: preferimos guardar el “path canónico”
+      // para poder re-firmar siempre que sea necesario.
+      const path = toBucketPath(uploadedValue, userId);
+
+      // Si pudimos inferir path, guardamos "videocoverart/<path>" como tu app ya usaba.
+      // Si no, guardamos lo que nos devolvió (fallback).
+      const stableValue = path ? `${BUCKET}/${path}` : uploadedValue;
+
+      onChange?.(stableValue);
+
+      toast({
+        title: 'Video cover art uploaded',
+        description: 'Loop ready to use.',
+        variant: 'success',
+      });
+
+      await fetchExistingVideos();
+    } catch (err) {
+      console.error('Error uploading video cover art', err);
+      toast({
+        title: 'Upload failed',
+        description: err?.message || 'Unable to upload video cover art.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleSelectExisting = (item) => {
+    // Guardamos valor canónico (path) para que siempre funcione en bucket privado
+    const stableValue = `${BUCKET}/${item.path}`;
+    onChange?.(stableValue);
+
+    toast({
+      title: 'Video cover art selected',
+      description: 'Loop will display where supported.',
+      variant: 'success',
+    });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <Label className="text-gray-300">{label}</Label>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-gray-300 hover:text-yellow-300"
+            onClick={fetchExistingVideos}
+            disabled={disabled || isLoading || isUploading}
+          >
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+          </Button>
+
+          {value && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-gray-300 hover:text-red-400"
+              onClick={() => onChange?.('')}
+              disabled={disabled || isUploading}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {description && <p className="text-xs text-gray-400">{description}</p>}
+      {note && <p className="text-xs text-yellow-300">{note}</p>}
+
+      <div className="flex items-center gap-3">
+        <Input
+          type="file"
+          accept="video/*,image/gif"
+          onChange={handleFileChange}
+          disabled={disabled || isUploading}
+          className="bg-white/5 border-white/10 text-gray-400 file:text-yellow-400 hover:file:bg-yellow-400/10"
+        />
+        <Button type="button" variant="outline" className="border-yellow-400/40 text-yellow-300 hover:bg-yellow-400/10" disabled>
+          <UploadCloud className="w-4 h-4 mr-2" />
+          Bucket: {BUCKET}
+        </Button>
+      </div>
+
+      {value && selectedSignedUrl && (
+        <div className="relative rounded-lg overflow-hidden border border-yellow-500/30">
+          <video
+            key={selectedSignedUrl}
+            src={selectedSignedUrl}
+            className="w-full h-48 object-cover bg-black"
+            loop
+            muted
+            playsInline
+            autoPlay
+            poster=""
+          />
+          <div className="absolute bottom-2 left-2 bg-black/60 text-xs text-yellow-200 px-2 py-1 rounded flex items-center gap-1">
+            <PlaySquare className="w-4 h-4" />
+            <span>{selectedLabel}</span>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-200">Your uploaded video cover arts</p>
+          <p className="text-xs text-gray-400">{existingVideos.length} found</p>
+        </div>
+
+        {existingVideos.length === 0 ? (
+          <p className="text-xs text-gray-500 border border-dashed border-white/10 rounded-md p-3">
+            No uploads yet. Add a short loop to get started.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-auto pr-1 custom-scrollbar">
+            {existingVideos.map((item) => (
+              <button
+                key={item.url}
+                type="button"
+                className={`group relative rounded-md overflow-hidden border ${
+                  value === `${BUCKET}/${item.path}` ? 'border-yellow-400/70' : 'border-white/10'
+                } hover:border-yellow-400/60 transition-colors`}
+                onClick={() => handleSelectExisting(item)}
+                disabled={disabled || isUploading}
+              >
+                <video src={item.url} className="w-full h-28 object-cover bg-black" muted loop playsInline />
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10" />
+                <div className="absolute bottom-1 left-1 right-1 bg-black/60 text-[11px] text-gray-200 px-2 py-1 truncate flex items-center gap-1">
+                  <PlaySquare className="w-3 h-3" />
+                  <span title={item.name}>{item.name}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
